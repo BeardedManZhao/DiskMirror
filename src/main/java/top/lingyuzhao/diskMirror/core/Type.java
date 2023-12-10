@@ -1,4 +1,4 @@
-package top.lingyuzhao.cloudPool.core;
+package top.lingyuzhao.diskMirror.core;
 
 public enum Type {
 

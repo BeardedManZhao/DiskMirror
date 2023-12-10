@@ -1,10 +1,10 @@
-package top.lingyuzhao.cloudPool.test;
+package top.lingyuzhao.diskMirror.test;
 
 import com.alibaba.fastjson2.JSONObject;
-import top.lingyuzhao.cloudPool.conf.Config;
-import top.lingyuzhao.cloudPool.core.Adapter;
-import top.lingyuzhao.cloudPool.core.DiskMirror;
-import top.lingyuzhao.cloudPool.core.Type;
+import top.lingyuzhao.diskMirror.conf.Config;
+import top.lingyuzhao.diskMirror.core.Adapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+import top.lingyuzhao.diskMirror.core.Type;
 
 import java.io.FileInputStream;
 import java.io.IOException;

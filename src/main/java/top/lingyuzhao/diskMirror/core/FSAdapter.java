@@ -1,9 +1,9 @@
-package top.lingyuzhao.cloudPool.core;
+package top.lingyuzhao.diskMirror.core;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.sun.istack.internal.NotNull;
-import top.lingyuzhao.cloudPool.conf.Config;
-import top.lingyuzhao.cloudPool.utils.PathGeneration;
+import top.lingyuzhao.diskMirror.conf.Config;
+import top.lingyuzhao.diskMirror.utils.PathGeneration;
 
 import java.io.IOException;
 import java.io.InputStream;

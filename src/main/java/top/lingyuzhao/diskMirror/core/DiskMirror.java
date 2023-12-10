@@ -1,6 +1,6 @@
-package top.lingyuzhao.cloudPool.core;
+package top.lingyuzhao.diskMirror.core;
 
-import top.lingyuzhao.cloudPool.conf.Config;
+import top.lingyuzhao.diskMirror.conf.Config;
 
 public enum DiskMirror {
     LocalFSAdapter {

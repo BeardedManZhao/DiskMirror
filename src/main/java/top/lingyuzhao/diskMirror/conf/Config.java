@@ -1,7 +1,7 @@
-package top.lingyuzhao.cloudPool.conf;
+package top.lingyuzhao.diskMirror.conf;
 
 import com.alibaba.fastjson2.JSONObject;
-import top.lingyuzhao.cloudPool.utils.PathGeneration;
+import top.lingyuzhao.diskMirror.utils.PathGeneration;
 
 
 /**
