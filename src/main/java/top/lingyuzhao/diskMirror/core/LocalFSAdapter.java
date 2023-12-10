@@ -92,4 +92,30 @@ public final class LocalFSAdapter extends FSAdapter {
         jsonObject.put(config.getString(Config.RES_KEY), config.getString(Config.OK_VALUE));
         return jsonObject;
     }
+
+    /**
+     * 路径处理器 接收一个路径 输出结果对象
+     *
+     * @param path       路径对象
+     * @param jsonObject 文件输入的 json 对象
+     * @return {
+     * res : 结果
+     * userId:文件所属用户id,
+     * type:文件类型,
+     * urls:[{url:文件的url, size:文件的大小, name:文件的名字}]
+     * }
+     */
+    @Override
+    protected JSONObject pathProcessorRemove(String path, JSONObject jsonObject) {
+        final Config config = this.getConfig();
+        // 开始进行删除操作
+        final File file = new File(path);
+        if (file.delete()) {
+            // 删除成功
+            jsonObject.put(config.getString(Config.RES_KEY), config.getString(Config.OK_VALUE));
+        } else {
+            jsonObject.put(config.getString(Config.RES_KEY), "删除失败!!!");
+        }
+        return jsonObject;
+    }
 }

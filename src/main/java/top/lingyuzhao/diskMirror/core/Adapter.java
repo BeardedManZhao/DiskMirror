@@ -32,6 +32,7 @@ public interface Adapter {
      * userId:文件所属用户id,
      * type:文件类型
      * }
+     * @throws IOException 操作异常
      */
     JSONObject upload(InputStream inputStream, JSONObject jsonObject) throws IOException;
 
@@ -65,5 +66,4 @@ public interface Adapter {
      * }
      */
     JSONObject getUrls(JSONObject jsonObject);
-
 }

@@ -20,8 +20,8 @@ public final class MAIN {
         config.put(Config.PROTOCOL_PREFIX, "http://xxx.xxx");
         // 装载到适配器 在这里使用本地文件系统
         final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(config);
-
-
+        // 获取到当前适配器所属的版本
+        System.out.println("当前适配器版本：" + DiskMirror.LocalFSAdapter.getVersion());
         // 准备一个文件数据流
         try (final FileInputStream fileInputStream = new FileInputStream("C:\\Users\\zhao\\Pictures\\arc.png")) {
             // 将文件保存到 1024 号空间

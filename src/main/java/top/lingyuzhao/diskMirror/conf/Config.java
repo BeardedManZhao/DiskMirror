@@ -9,7 +9,7 @@ import top.lingyuzhao.diskMirror.utils.PathGeneration;
  *
  * @author zhao
  */
-public final class Config extends JSONObject {
+public class Config extends JSONObject {
     /**
      * 用于文件存储的路径 配置项的名称
      */

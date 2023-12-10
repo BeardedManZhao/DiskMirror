@@ -63,9 +63,9 @@ public final class MAIN {
         config.put(Config.PROTOCOL_PREFIX, "http://xxx.xxx");
         // 装载到适配器 在这里使用本地文件系统
         final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(config);
-
-
-        // 准备一个文件数据流 TODO 在这里的数据流可以是任何类型的数据输入流，因此您可以自由的设置它，例如您要在后端中使用，这里就可以是一个 http 中的数据流
+        // 获取到当前适配器所属的版本
+        System.out.println("当前适配器版本：" + DiskMirror.LocalFSAdapter.getVersion());
+        // 准备一个文件数据流
         try (final FileInputStream fileInputStream = new FileInputStream("C:\\Users\\zhao\\Pictures\\arc.png")) {
             // 将文件保存到 1024 号空间
             // 打印结果: {"fileName":"arc.png","userId":1024,"type":"Binary","res":"ok!!!!","url":"http://xxx.xxx/DiskMirror/1024/Binary/arc.png"}
@@ -131,5 +131,4 @@ public final class MAIN {
         System.out.println(upload.toString());
     }
 }
-
 ```

@@ -4,7 +4,6 @@ import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.conf.Config;
 import top.lingyuzhao.diskMirror.utils.PathGeneration;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -41,6 +40,7 @@ public abstract class FSAdapter implements Adapter {
      * userId:文件所属用户id,
      * type:文件类型
      * }
+     * @throws IOException 操作异常
      */
     protected abstract JSONObject pathProcessorUpload(String path, JSONObject inJson, InputStream inputStream) throws IOException;
 
@@ -57,6 +57,20 @@ public abstract class FSAdapter implements Adapter {
      * }
      */
     protected abstract JSONObject pathProcessorGetUrls(String path, JSONObject inJson);
+
+    /**
+     * 路径处理器 接收一个路径 输出结果对象
+     *
+     * @param path   路径对象
+     * @param inJson 文件输入的 json 对象
+     * @return {
+     * res : 结果
+     * userId:文件所属用户id,
+     * type:文件类型,
+     * urls:[{url:文件的url, size:文件的大小, name:文件的名字}]
+     * }
+     */
+    protected abstract JSONObject pathProcessorRemove(String path, JSONObject inJson);
 
     /**
      * 获取到适配器配置类对象
@@ -111,16 +125,7 @@ public abstract class FSAdapter implements Adapter {
         final String path = ((PathGeneration) config.get(Config.GENERATION_RULES)).function(
                 jsonObject
         );
-        // 开始进行删除操作
-        final File file = new File(path);
-        final JSONObject jsonObject1 = new JSONObject();
-        if (file.delete()) {
-            // 删除成功
-            jsonObject1.put(config.getString(Config.RES_KEY), config.getString(Config.OK_VALUE));
-        } else {
-            jsonObject1.put(config.getString(Config.RES_KEY), "删除失败!!!");
-        }
-        return jsonObject1;
+        return this.pathProcessorRemove(path, jsonObject);
     }
 
     /**
