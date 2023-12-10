@@ -9,6 +9,33 @@ url，在诸多场景中可以简化IO相关的实现操作，能够降低开发
 
 在未来，我们将会提供更多的适配器选项，让适配器的数据终端具有更多的支持。
 
+### 我如何获取 盘镜
+
+您可以通过配置 maven 依赖的方式实现库的获取。
+
+```xml
+
+<dependencies>
+    <dependency>
+        <groupId>io.github.BeardedManZhao</groupId>
+        <artifactId>diskMirror</artifactId>
+        <version>1.0</version>
+    </dependency>
+    <dependency>
+        <groupId>com.alibaba.fastjson2</groupId>
+        <artifactId>fastjson2</artifactId>
+        <version>2.0.25</version>
+        <scope>provided</scope>
+    </dependency>
+    <dependency>
+        <groupId>io.github.BeardedManZhao</groupId>
+        <artifactId>zhao-utils</artifactId>
+        <version>1.0.20231112</version>
+        <scope>provided</scope>
+    </dependency>
+</dependencies>
+```
+
 ## 使用示例
 
 在下面，我们演示了如何将文件数据流和本地文件系统对接，提供给 DiskMirror 进行管理，并获取到结果 url 的示例。

@@ -1,7 +1,6 @@
 package top.lingyuzhao.diskMirror.core;
 
 import com.alibaba.fastjson2.JSONObject;
-import com.sun.istack.internal.NotNull;
 import top.lingyuzhao.diskMirror.conf.Config;
 import top.lingyuzhao.diskMirror.utils.PathGeneration;
 
@@ -86,7 +85,7 @@ public abstract class FSAdapter implements Adapter {
      * }
      */
     @Override
-    public JSONObject upload(@NotNull InputStream inputStream, JSONObject jsonObject) throws IOException {
+    public JSONObject upload(InputStream inputStream, JSONObject jsonObject) throws IOException {
         // 首先获取到 文件的路径
         final Config config = this.getConfig();
         final String path = ((PathGeneration) config.get(Config.GENERATION_RULES)).function(
