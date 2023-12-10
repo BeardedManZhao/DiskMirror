@@ -5,6 +5,7 @@ import com.sun.istack.internal.NotNull;
 import top.lingyuzhao.diskMirror.conf.Config;
 import top.lingyuzhao.diskMirror.utils.PathGeneration;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -92,6 +93,35 @@ public abstract class FSAdapter implements Adapter {
                 jsonObject
         );
         return pathProcessorUpload(path, jsonObject, inputStream);
+    }
+
+    /**
+     * 将一个文件删除
+     *
+     * @param jsonObject {
+     *                   fileName  文件名称
+     *                   userId      空间id
+     *                   type        文件类型
+     *                   }
+     * @return {res: 删除结果}
+     */
+    @Override
+    public JSONObject remove(JSONObject jsonObject) {
+        // 获取到路径
+        final Config config = this.getConfig();
+        final String path = ((PathGeneration) config.get(Config.GENERATION_RULES)).function(
+                jsonObject
+        );
+        // 开始进行删除操作
+        final File file = new File(path);
+        final JSONObject jsonObject1 = new JSONObject();
+        if (file.delete()) {
+            // 删除成功
+            jsonObject1.put(config.getString(Config.RES_KEY), config.getString(Config.OK_VALUE));
+        } else {
+            jsonObject1.put(config.getString(Config.RES_KEY), "删除失败!!!");
+        }
+        return jsonObject1;
     }
 
     /**

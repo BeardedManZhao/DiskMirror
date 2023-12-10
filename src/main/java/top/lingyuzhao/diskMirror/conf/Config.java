@@ -26,6 +26,11 @@ public final class Config extends JSONObject {
     public final static String OK_VALUE = "ok.value";
 
     /**
+     * 操作结果对应的 key
+     */
+    public final static String RES_KEY = "resK";
+
+    /**
      * 协议前缀
      */
     public final static String PROTOCOL_PREFIX = "protocol.prefix";
@@ -38,6 +43,7 @@ public final class Config extends JSONObject {
         super();
         super.put(ROOT_DIR, "/DiskMirror");
         super.put(OK_VALUE, "ok!!!!");
+        super.put(RES_KEY, "res");
         super.put(PROTOCOL_PREFIX, "http://localhost:8080");
         final String rootDir = (String) super.get(ROOT_DIR);
         // 默认的路径生成逻辑  由 <空间id，文件名称> 生成 文件路径

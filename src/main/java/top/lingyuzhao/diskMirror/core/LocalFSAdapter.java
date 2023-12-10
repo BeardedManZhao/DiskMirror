@@ -53,7 +53,7 @@ public final class LocalFSAdapter extends FSAdapter {
             IOUtils.copy(inputStream, bufferedOutputStream, true);
         }
         // 返回结果
-        jsonObject.put("res", config.getString(Config.OK_VALUE));
+        jsonObject.put(config.getString(Config.RES_KEY), config.getString(Config.OK_VALUE));
         jsonObject.put("url", config.get(Config.PROTOCOL_PREFIX) + path);
         return jsonObject;
     }
@@ -85,13 +85,11 @@ public final class LocalFSAdapter extends FSAdapter {
         for (File file : files) {
             final JSONObject jsonObject1 = urls.addObject();
             final String name = file.getName();
-            jsonObject1.put("name", name);
+            jsonObject1.put("fileName", name);
             jsonObject1.put("url", string + path + '/' + name);
             jsonObject1.put("size", file.length());
         }
-        jsonObject.put("res", config.getString(Config.OK_VALUE));
+        jsonObject.put(config.getString(Config.RES_KEY), config.getString(Config.OK_VALUE));
         return jsonObject;
     }
-
-
 }

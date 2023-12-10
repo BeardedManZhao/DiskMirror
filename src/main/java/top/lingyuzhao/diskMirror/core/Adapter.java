@@ -36,6 +36,18 @@ public interface Adapter {
     JSONObject upload(InputStream inputStream, JSONObject jsonObject) throws IOException;
 
     /**
+     * 将一个文件删除
+     *
+     * @param jsonObject {
+     *                   fileName  文件名称
+     *                   userId      空间id
+     *                   type        文件类型
+     *                   }
+     * @return {res: 删除结果}
+     */
+    JSONObject remove(JSONObject jsonObject);
+
+    /**
      * 将一个用户所有的 url 获取到
      *
      * @param jsonObject {
