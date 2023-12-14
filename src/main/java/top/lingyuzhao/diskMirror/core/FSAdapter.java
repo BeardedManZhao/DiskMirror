@@ -17,7 +17,7 @@ public abstract class FSAdapter implements Adapter {
     /**
      * 配置类
      */
-    private final Config config;
+    protected final Config config;
 
     /**
      * 构建一个适配器
@@ -55,8 +55,9 @@ public abstract class FSAdapter implements Adapter {
      * type:文件类型,
      * urls:[{url:文件的url, size:文件的大小, name:文件的名字}]
      * }
+     * @throws IOException 操作异常
      */
-    protected abstract JSONObject pathProcessorGetUrls(String path, JSONObject inJson);
+    protected abstract JSONObject pathProcessorGetUrls(String path, JSONObject inJson) throws IOException;
 
     /**
      * 路径处理器 接收一个路径 输出结果对象
@@ -143,12 +144,20 @@ public abstract class FSAdapter implements Adapter {
      * }
      */
     @Override
-    public JSONObject getUrls(JSONObject jsonObject) {
+    public JSONObject getUrls(JSONObject jsonObject) throws IOException {
         // 获取到路径
         final Config config = this.getConfig();
         final String path = ((PathGeneration) config.get(Config.GENERATION_RULES)).function(
                 jsonObject
         );
         return pathProcessorGetUrls(path, jsonObject);
+    }
+
+    /**
+     * 关闭适配器
+     */
+    @Override
+    public void close() {
+
     }
 }

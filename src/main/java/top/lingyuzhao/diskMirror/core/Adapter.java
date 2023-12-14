@@ -64,6 +64,12 @@ public interface Adapter {
      * }
      * ]
      * }
+     * @throws IOException 操作异常
      */
-    JSONObject getUrls(JSONObject jsonObject);
+    JSONObject getUrls(JSONObject jsonObject) throws IOException;
+
+    /**
+     * 关闭适配器
+     */
+    void close();
 }

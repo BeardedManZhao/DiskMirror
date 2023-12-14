@@ -16,27 +16,29 @@ public final class MAIN {
     public static void main(String[] args) throws IOException {
         // 实例化配置类
         final Config config = new Config();
-        // 设置 路径的协议前缀 默认是 http://localhost:8080
-        config.put(Config.PROTOCOL_PREFIX, "http://xxx.xxx");
-        // 装载到适配器 在这里使用本地文件系统
-        final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(config);
+        // TODO 设置 路径的协议前缀 在这里指向的是 HDFS 文件系统访问地址
+        config.put(Config.PROTOCOL_PREFIX, "http://192.168.0.141:9870/webhdfs/v1");
+        // TODO 设置 HDFS 协议前缀 在这里指向的是 HDFS 文件系统访问地址 是 hdfs 开头
+        config.put(Config.FS_DEFAULT_FS, "hdfs://192.168.0.141:8020");
+        // TODO 装载到适配器 在这里使用HDFS文件系统
+        final Adapter adapter = DiskMirror.HDFSAdapter.getAdapter(config);
         // 获取到当前适配器所属的版本
-        System.out.println("当前适配器版本：" + DiskMirror.LocalFSAdapter.getVersion());
+        System.out.println("当前适配器版本：" + DiskMirror.HDFSAdapter.getVersion());
         // 准备一个文件数据流
         try (final FileInputStream fileInputStream = new FileInputStream("C:\\Users\\zhao\\Pictures\\arc.png")) {
             // 将文件保存到 1024 号空间
-            // 打印结果: {"fileName":"arc.png","userId":1024,"type":"Binary","res":"ok!!!!","url":"http://xxx.xxx/DiskMirror/1024/Binary/arc.png"}
+            // 打印结果: {"fileName":"arc.png","userId":1024,"type":"Binary","res":"ok!!!!","url":"http://192.168.0.141:9870/webhdfs/v1/DiskMirror/1024/Binary/arc.png"}
             save(adapter, fileInputStream, 1024);
         }
 
 
         // 读取 1024 号空间中的所有 url 由于刚刚保存文件的操作出现在这里 所以 1024 号空间应该是有刚才的文件的
-        // 打印结果: {"userId":1024,"type":"Binary","urls":[{"fileName":"arc.png","url":"http://xxx.xxx/DiskMirror/1024/Binary//arc.png","size":4237376}],"res":"ok!!!!"}
+        // 打印结果: {"userId":1024,"type":"Binary","urls":[{"fileName":"arc.png","url":"http://192.168.0.141:9870/webhdfs/v1/DiskMirror/1024/Binary//arc.png","size":4237376}],"res":"ok!!!!"}
         read(adapter, 1024);
 
 
         // 读取 2048 号空间中的所有 url 这里并没有进行过保存 所以在这里的空间是没有数据的
-        // 打印结果: {"userId":2048,"type":"Binary","res":"空间 [/DiskMirror/2048/Binary/] 不可读!!!"}
+        // 打印结果: {"userId":2048,"type":"Binary","urls":[],"res":"ok!!!!"}
         read(adapter, 2048);
 
         // 删除 1024 空间中的文件 arc.png
@@ -56,7 +58,7 @@ public final class MAIN {
         read(adapter, 1024);
     }
 
-    private static void read(Adapter adapter, int userId) {
+    private static void read(Adapter adapter, int userId) throws IOException {
         // 获取到 1024 空间中的所有文件的url 首先准备参数
         final JSONObject jsonObject = new JSONObject();
         // 设置文件所属空间id

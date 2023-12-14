@@ -23,6 +23,7 @@ public final class LocalFSAdapter extends FSAdapter {
      */
     public LocalFSAdapter(Config config) {
         super(config);
+
     }
 
     /**
@@ -100,9 +101,6 @@ public final class LocalFSAdapter extends FSAdapter {
      * @param jsonObject 文件输入的 json 对象
      * @return {
      * res : 结果
-     * userId:文件所属用户id,
-     * type:文件类型,
-     * urls:[{url:文件的url, size:文件的大小, name:文件的名字}]
      * }
      */
     @Override

@@ -16,6 +16,11 @@ public class Config extends JSONObject {
     public final static String ROOT_DIR = "root.dir";
 
     /**
+     * HDFS  主节点链接路径配置名称
+     */
+    public static final String FS_DEFAULT_FS = "fs.defaultFS";
+
+    /**
      * 用于文件路径生成 的配置项的名称
      */
     public final static String GENERATION_RULES = "generation.rules";
@@ -42,6 +47,7 @@ public class Config extends JSONObject {
     public Config() {
         super();
         super.put(ROOT_DIR, "/DiskMirror");
+        super.put(FS_DEFAULT_FS, "hdfs://127.0.0.1:8020");
         super.put(OK_VALUE, "ok!!!!");
         super.put(RES_KEY, "res");
         super.put(PROTOCOL_PREFIX, "http://localhost:8080");
