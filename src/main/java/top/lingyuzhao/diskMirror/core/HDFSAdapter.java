@@ -107,15 +107,14 @@ public class HDFSAdapter extends FSAdapter {
      */
     @Override
     protected JSONObject pathProcessorRemove(String path, JSONObject inJson) {
-        final JSONObject jsonObject = new JSONObject();
         try {
             fileSystem.delete(new Path(path), true);
-            jsonObject.put(config.getString(Config.RES_KEY), config.getString(Config.OK_VALUE));
+            inJson.put(config.getString(Config.RES_KEY), config.getString(Config.OK_VALUE));
         } catch (IOException e) {
-            jsonObject.put(config.getString(Config.RES_KEY), "删除失败:" + e);
+            inJson.put(config.getString(Config.RES_KEY), "删除失败:" + e);
             throw new RuntimeException(e);
         }
-        return jsonObject;
+        return inJson;
     }
 
     /**

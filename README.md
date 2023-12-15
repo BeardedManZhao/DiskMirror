@@ -21,29 +21,264 @@ url，在诸多场景中可以简化IO相关的实现操作，能够降低开发
         <artifactId>diskMirror</artifactId>
         <version>1.0.2</version>
     </dependency>
-    </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
         <artifactId>fastjson2</artifactId>
         <version>2.0.25</version>
-<!--        <scope>provided</scope>-->
+        <!--        <scope>provided</scope>-->
     </dependency>
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>zhao-utils</artifactId>
         <version>1.0.20231112</version>
-<!--        <scope>provided</scope>-->
+        <!--        <scope>provided</scope>-->
     </dependency>
     <dependency>
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-client</artifactId>
         <version>3.3.2</version>
-<!--        <scope>provided</scope>-->
+        <!--        <scope>provided</scope>-->
     </dependency>
 </dependencies>
 ```
 
-## 使用示例
+## 基本使用示例
+
+在这里我们将演示如何使用 盘镜 进行一些基本的 CRUD 操作，能够实现在文件系统中的文件管理操作。
+
+### 实例化适配器
+
+适配器就是在 盘镜 中进行数据的传输的通道，而如果想要使用 盘镜，就需要实例化适配器，下面我们将演示如何实例化本地文件系统的适配器。
+
+```java
+package top.lingyuzhao.diskMirror.test;
+
+import top.lingyuzhao.diskMirror.conf.Config;
+import top.lingyuzhao.diskMirror.core.Adapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+
+/**
+ * @author zhao
+ */
+public final class MAIN {
+    public static void main(String[] args) {
+        // 实例化盘镜配置类 配置类中包含很多的配置项目 对于本地文件系统来说 可以按照下面的方式来进行配置实例化
+        final Config config = new Config();
+        // 配置根目录 也是能够被盘镜 管理的目录，所有的管理操作只会在这个目录中生效，默认是/DiskMirror!
+        config.put(Config.ROOT_DIR, "/DiskMirror");
+        // 配置所有的 url 中的协议前缀，这会影响 getUrls 的结果， 如果您只是在本地文件系统中获取这些数据 就是文件系统的协议前缀，也就是什么都不加
+        // 如果您要在 hdfs 文件系统中获取这些数据 这就是 hdfs 的协议前缀
+        // 如果您要在 web JS 或者通过 url 中获取这些数据 这就是 web 的 http 协议前缀
+        // 在这里我们给定空字符串就是代表使用本地文件系统
+        config.put(Config.PROTOCOL_PREFIX, "");
+        // 开始构建盘镜 由于我们在这里使用的是本地文件系统 所以我们使用 DiskMirror.LocalFSAdapter.getAdapter(config) 来实例化 本地文件系统适配器
+        final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(config);
+    }
+}
+
+```
+
+### 向适配器中写入数据
+
+在这里我们将演示如何向适配器中写入数据，并将写入的数据的 url 返回给您，当您向适配器中写入数据的时候，一切的管理和落盘操作都将由盘镜来处理。
+
+```java
+package top.lingyuzhao.diskMirror.test;
+
+import com.alibaba.fastjson2.JSONObject;
+import top.lingyuzhao.diskMirror.conf.Config;
+import top.lingyuzhao.diskMirror.core.Adapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+import top.lingyuzhao.diskMirror.core.Type;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
+/**
+ * @author zhao
+ */
+public final class MAIN {
+    public static void main(String[] args) throws IOException {
+        // 实例化盘镜配置类 配置类中包含很多的配置项目 对于本地文件系统来说 可以按照下面的方式来进行配置实例化
+        final Config config = new Config();
+        // 配置根目录 也是能够被盘镜 管理的目录，所有的管理操作只会在这个目录中生效，默认是/DiskMirror!
+        config.put(Config.ROOT_DIR, "/DiskMirror");
+        // 配置所有的 url 中的协议前缀，这会影响 getUrls 的结果， 如果您只是在本地文件系统中获取这些数据 就是文件系统的协议前缀，也就是什么都不加
+        // 如果您要在 hdfs 文件系统中获取这些数据 这就是 hdfs 的协议前缀
+        // 如果您要在 web JS 或者通过 url 中获取这些数据 这就是 web 的 http 协议前缀
+        // 在这里我们给定空字符串就是代表使用本地文件系统
+        config.put(Config.PROTOCOL_PREFIX, "");
+        // 开始构建盘镜 由于我们在这里使用的是本地文件系统 所以我们使用 DiskMirror.LocalFSAdapter.getAdapter(config) 来实例化 本地文件系统适配器
+        final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(config);
+        // 准备需要被操作的文件
+        try (final FileInputStream fileInputStream = new FileInputStream("C:\\Users\\zhao\\Pictures\\arc.png")) {
+            // 输出数据
+            final JSONObject save = save(fileInputStream, new JSONObject(), adapter);
+            // 打印结果
+            System.out.println(save);
+        }
+    }
+
+    /**
+     * 保存文件
+     *
+     * @param inputStream 数据流对象 包含需要保存的文件数据
+     * @param jsonObject  任务参数对象 其中包含很多的写数据相关的信息 您可以在这里配置一些参数 upload 方法的注释中描述了您要提供的参数有哪些
+     * @param adapter     适配器对象 数据写到适配器对象中 由适配器对象自动的处理 并实现落盘等操作
+     * @return 操作之后会返回一个 json 对象 其中包含了一些操作的结果 例如是否成功 或者是错误信息 等 在这里会返回写好的数据的信息
+     * @throws IOException 当落盘操作发生异常 会抛出此错误
+     */
+    public static JSONObject save(InputStream inputStream, JSONObject jsonObject, Adapter adapter) throws IOException {
+        // 设置文件名字
+        jsonObject.put("fileName", "arc.png");
+        // 设置文件所属空间id 不同id 的空间相互隔离 不能互相访问
+        jsonObject.put("userId", 1024);
+        // 设置文件类型 根据自己的文件类型选择不同的类型 在适配内部可能会由一些优化效果 同时也可以实现文本数据和二进制数据的分类
+        jsonObject.put("type", Type.Binary);
+        // 返回处理结果
+        return adapter.upload(inputStream, jsonObject);
+    }
+}
+
+```
+
+适配器的 upload 函数返回的结果如下所示
+
+| 参数名称     | 参数类型   | 参数解释                           |
+|----------|--------|--------------------------------|
+| fileName | String | 被落盘的文件名称                       |
+| userId   | int    | 落盘文件所在的空间id                    |
+| type     | String | 落盘文件的类型                        |
+| res      | String | 落盘结果正常/错误信息                    |
+| url      | String | 落盘文件的读取 url 这个url 会根据协议前缀拼接字符串 |
+
+```json
+{
+  "fileName": "arc.png",
+  "userId": 1024,
+  "type": "Binary",
+  "res": "ok!!!!",
+  "url": "/DiskMirror/1024/Binary/arc.png"
+}
+```
+
+### 从适配器中读取数据
+
+在这里我们将演示如何从适配器中读取数据，并将读取的数据的 url 返回给您，当您从适配器中读取数据的时候，盘镜中的适配器将自动的根据您设置的各种参数将可以访问的 url 返回给您!
+
+```java
+package top.lingyuzhao.diskMirror.test;
+
+import com.alibaba.fastjson2.JSONObject;
+import top.lingyuzhao.diskMirror.conf.Config;
+import top.lingyuzhao.diskMirror.core.Adapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+import top.lingyuzhao.diskMirror.core.Type;
+
+import java.io.IOException;
+
+/**
+ * @author zhao
+ */
+public final class MAIN {
+    public static void main(String[] args) throws IOException {
+        final Config config = new Config();
+        config.put(Config.ROOT_DIR, "/DiskMirror");
+        config.put(Config.PROTOCOL_PREFIX, "");
+        final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(config);
+        // 使用适配器获取到文件url
+        final JSONObject read = read(adapter, 1024);
+        System.out.println(read);
+    }
+
+    private static JSONObject read(Adapter adapter, int userId) throws IOException {
+        // 获取到 1024 空间中的所有文件的url 首先准备参数
+        final JSONObject jsonObject = new JSONObject();
+        // 设置文件所属空间id
+        jsonObject.put("userId", userId);
+        // 设置文件类型 根据自己的文件类型选择不同的类型
+        jsonObject.put("type", Type.Binary);
+        return adapter.getUrls(jsonObject);
+    }
+}
+```
+
+在下面就是读取出来的 json 以及所有参数的解释
+
+```json
+{
+  "userId": 1024,
+  "type": "Binary",
+  "urls": [
+    {
+      "fileName": "arc.png",
+      "url": "/DiskMirror/1024/Binary//arc.png",
+      "size": 4237376
+    }
+  ],
+  "res": "ok!!!!"
+}
+```
+
+在这里您可以清晰查看到返回的 json 对象中的结构
+
+```
+{
+  "userId":文件空间的id,
+  "type":文件类型,
+  "urls":[
+    {
+      "fileName":"文件1的名字",
+      "url":"文件1的路径",
+      "size":文件1的大小
+    },
+    {
+      "fileName":"文件2的名字",
+      "url":"文件2的路径",
+      "size":文件2的大小
+    },
+    ......
+  ],
+  "res":"ok!!!!"
+}
+```
+
+### 从适配器中删除数据
+
+```java
+package top.lingyuzhao.diskMirror.test;
+
+import com.alibaba.fastjson2.JSONObject;
+import top.lingyuzhao.diskMirror.conf.Config;
+import top.lingyuzhao.diskMirror.core.Adapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+import top.lingyuzhao.diskMirror.core.Type;
+
+/**
+ * @author zhao
+ */
+public final class MAIN {
+    public static void main(String[] args) {
+        final Config config = new Config();
+        config.put(Config.ROOT_DIR, "/DiskMirror");
+        config.put(Config.PROTOCOL_PREFIX, "");
+        final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(config);
+        // 删除 1024 空间中的文件 arc.png
+        final JSONObject jsonObject = new JSONObject();
+        // 设置文件名字
+        jsonObject.put("fileName", "arc.png");
+        // 设置文件所属空间id
+        jsonObject.put("userId", 1024);
+        // 设置文件类型 根据自己的文件类型选择不同的类型
+        jsonObject.put("type", Type.Binary);
+        final JSONObject remove = adapter.remove(jsonObject);
+        System.out.println(remove);
+    }
+}
+```
+
+## 综合使用示例
 
 ### 本地文件系统 适配器使用示例
 
