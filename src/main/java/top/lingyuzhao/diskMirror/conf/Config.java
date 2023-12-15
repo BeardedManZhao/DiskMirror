@@ -51,12 +51,17 @@ public class Config extends JSONObject {
         super.put(OK_VALUE, "ok!!!!");
         super.put(RES_KEY, "res");
         super.put(PROTOCOL_PREFIX, "http://localhost:8080");
-        final String rootDir = (String) super.get(ROOT_DIR);
         // 默认的路径生成逻辑  由 <空间id，文件名称> 生成 文件路径
         super.put(GENERATION_RULES, (PathGeneration) jsonObject -> {
             final int userId = jsonObject.getIntValue("userId");
             final String type = jsonObject.get("type").toString();
             final String fileName = jsonObject.getString("fileName");
+            Object isRead = jsonObject.get("useAgreement");
+            if (isRead == null) {
+                isRead = false;
+            }
+            // 如果是读取 同时 具有前部协议 则 在这里去掉 路径前缀 使用 协议前缀替代 反之加上路径前缀
+            final String rootDir = (((boolean) isRead) && super.getString(PROTOCOL_PREFIX).length() != 0) ? "" : (String) super.get(ROOT_DIR);
             if (fileName != null) {
                 return rootDir + '/' + userId + '/' + type + '/' + fileName;
             } else {

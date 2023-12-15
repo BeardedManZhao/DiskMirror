@@ -19,7 +19,7 @@ url，在诸多场景中可以简化IO相关的实现操作，能够降低开发
     <dependency>
         <groupId>top.lingyuzhao.diskMirror</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.0.2</version>
+        <version>1.0.3</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -145,17 +145,19 @@ public final class MAIN {
 
 适配器的 upload 函数返回的结果如下所示
 
-| 参数名称     | 参数类型   | 参数解释                           |
-|----------|--------|--------------------------------|
-| fileName | String | 被落盘的文件名称                       |
-| userId   | int    | 落盘文件所在的空间id                    |
-| type     | String | 落盘文件的类型                        |
-| res      | String | 落盘结果正常/错误信息                    |
-| url      | String | 落盘文件的读取 url 这个url 会根据协议前缀拼接字符串 |
+| 参数名称         | 参数类型    | 参数解释                                                             |
+|--------------|---------|------------------------------------------------------------------|
+| fileName     | String  | 被落盘的文件名称                                                         |
+| useAgreement | boolean | 是否使用了协议前缀 如过此值不为 undefined/null 且 为 true 则代表使用了协议前缀 否则代表没有使用协议前缀 |
+| userId       | int     | 落盘文件所在的空间id                                                      |
+| type         | String  | 落盘文件的类型                                                          |
+| res          | String  | 落盘结果正常/错误信息                                                      |
+| url          | String  | 落盘文件的读取 url 这个url 会根据协议前缀拼接字符串                                   |
 
 ```json
 {
   "fileName": "arc.png",
+  "useAgreement": null,
   "userId": 1024,
   "type": "Binary",
   "res": "ok!!!!",
@@ -210,6 +212,7 @@ public final class MAIN {
 {
   "userId": 1024,
   "type": "Binary",
+  "useAgreement": null,
   "urls": [
     {
       "fileName": "arc.png",
@@ -227,6 +230,7 @@ public final class MAIN {
 {
   "userId":文件空间的id,
   "type":文件类型,
+  "useAgreement":是否使用了协议前缀 如过此值不为 undefined 且 为 true 则代表使用了协议前缀 否则代表没有使用协议前缀,
   "urls":[
     {
       "fileName":"文件1的名字",
@@ -312,18 +316,18 @@ public final class MAIN {
         // 准备一个文件数据流
         try (final FileInputStream fileInputStream = new FileInputStream("C:\\Users\\zhao\\Pictures\\arc.png")) {
             // 将文件保存到 1024 号空间
-            // 打印结果: {"fileName":"arc.png","userId":1024,"type":"Binary","res":"ok!!!!","url":"http://xxx.xxx/DiskMirror/1024/Binary/arc.png"}
+            // 打印结果: {"fileName":"arc.png","userId":1024,"type":"Binary","useAgreement":true,"res":"ok!!!!","url":"http://xxx.xxx/1024/Binary/arc.png"}
             save(adapter, fileInputStream, 1024);
         }
 
 
         // 读取 1024 号空间中的所有 url 由于刚刚保存文件的操作出现在这里 所以 1024 号空间应该是有刚才的文件的
-        // 打印结果: {"userId":1024,"type":"Binary","urls":[{"fileName":"arc.png","url":"http://xxx.xxx/DiskMirror/1024/Binary//arc.png","size":4237376}],"res":"ok!!!!"}
+        // 打印结果: {"userId":1024,"type":"Binary","useAgreement":true,"urls":[{"fileName":"arc.png","url":"http://xxx.xxx/DiskMirror/1024/Binary//arc.png","size":4237376}],"res":"ok!!!!"}
         read(adapter, 1024);
 
 
         // 读取 2048 号空间中的所有 url 这里并没有进行过保存 所以在这里的空间是没有数据的
-        // 打印结果: {"userId":2048,"type":"Binary","res":"空间 [/DiskMirror/2048/Binary/] 不可读!!!"}
+        // 打印结果: {"userId":2048,"type":"Binary","useAgreement":true,"res":"空间 [/DiskMirror/2048/Binary/] 不可读!!!"}
         read(adapter, 2048);
 
         // 删除 1024 空间中的文件 arc.png
@@ -335,11 +339,11 @@ public final class MAIN {
         // 设置文件类型 根据自己的文件类型选择不同的类型
         jsonObject.put("type", Type.Binary);
         final JSONObject remove = adapter.remove(jsonObject);
-        // 打印结果：{"res":"ok!!!!"}
+        // 打印结果：{"fileName":"arc.png","userId":1024,"type":"Binary","res":"ok!!!!"}
         System.out.println(remove);
 
         // 删除之后再次查看 1024 空间中的目录
-        // 打印结果：{"userId":1024,"type":"Binary","urls":[],"res":"ok!!!!"}
+        // 打印结果：{"userId":1024,"type":"Binary","useAgreement":true,"urls":[],"res":"ok!!!!"}
         read(adapter, 1024);
     }
 
@@ -412,18 +416,18 @@ public final class MAIN {
         // 准备一个文件数据流
         try (final FileInputStream fileInputStream = new FileInputStream("C:\\Users\\zhao\\Pictures\\arc.png")) {
             // 将文件保存到 1024 号空间
-            // 打印结果: {"fileName":"arc.png","userId":1024,"type":"Binary","res":"ok!!!!","url":"http://192.168.0.141:9870/webhdfs/v1/DiskMirror/1024/Binary/arc.png"}
+            // 打印结果: {"fileName":"arc.png","userId":1024,"type":"Binary","useAgreement":true,"res":"ok!!!!","url":"http://192.168.0.141:9870/webhdfs/v1/1024/Binary/arc.png"}
             save(adapter, fileInputStream, 1024);
         }
 
 
         // 读取 1024 号空间中的所有 url 由于刚刚保存文件的操作出现在这里 所以 1024 号空间应该是有刚才的文件的
-        // 打印结果: {"userId":1024,"type":"Binary","urls":[{"fileName":"arc.png","url":"http://192.168.0.141:9870/webhdfs/v1/DiskMirror/1024/Binary//arc.png","size":4237376}],"res":"ok!!!!"}
+        // 打印结果: {"userId":1024,"type":"Binary","useAgreement":true,"urls":[{"fileName":"arc.png","url":"http://192.168.0.141:9870/webhdfs/v1/DiskMirror/1024/Binary//arc.png","size":4237376}],"res":"ok!!!!"}
         read(adapter, 1024);
 
 
         // 读取 2048 号空间中的所有 url 这里并没有进行过保存 所以在这里的空间是没有数据的
-        // 打印结果: {"userId":2048,"type":"Binary","urls":[],"res":"ok!!!!"}
+        // 打印结果: {"userId":2048,"type":"Binary","useAgreement":true,"urls":[],"res":"ok!!!!"}
         read(adapter, 2048);
 
         // 删除 1024 空间中的文件 arc.png
@@ -435,11 +439,11 @@ public final class MAIN {
         // 设置文件类型 根据自己的文件类型选择不同的类型
         jsonObject.put("type", Type.Binary);
         final JSONObject remove = adapter.remove(jsonObject);
-        // 打印结果：{"res":"ok!!!!"}
+        // 打印结果：{"fileName":"arc.png","userId":1024,"type":"Binary","res":"ok!!!!"}
         System.out.println(remove);
 
         // 删除之后再次查看 1024 空间中的目录
-        // 打印结果：{"userId":1024,"type":"Binary","urls":[],"res":"ok!!!!"}
+        // 打印结果：{"userId":1024,"type":"Binary","useAgreement":true,"urls":[],"res":"ok!!!!"}
         read(adapter, 1024);
     }
 
@@ -475,5 +479,4 @@ public final class MAIN {
         System.out.println(upload.toString());
     }
 }
-
 ```

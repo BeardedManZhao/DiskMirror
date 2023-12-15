@@ -32,6 +32,7 @@ public abstract class FSAdapter implements Adapter {
      * 路径处理器 接收一个路径 输出结果对象
      *
      * @param path        路径对象
+     * @param path_res    能够直接与协议前缀拼接的路径
      * @param inJson      输入参数 json 对象
      * @param inputStream 文件数据流
      * @return {
@@ -42,7 +43,7 @@ public abstract class FSAdapter implements Adapter {
      * }
      * @throws IOException 操作异常
      */
-    protected abstract JSONObject pathProcessorUpload(String path, JSONObject inJson, InputStream inputStream) throws IOException;
+    protected abstract JSONObject pathProcessorUpload(String path, String path_res, JSONObject inJson, InputStream inputStream) throws IOException;
 
     /**
      * 路径处理器 接收一个路径 输出结果对象
@@ -103,10 +104,12 @@ public abstract class FSAdapter implements Adapter {
     public JSONObject upload(InputStream inputStream, JSONObject jsonObject) throws IOException {
         // 首先获取到 文件的路径
         final Config config = this.getConfig();
-        final String path = ((PathGeneration) config.get(Config.GENERATION_RULES)).function(
+        final PathGeneration pathGeneration = (PathGeneration) config.get(Config.GENERATION_RULES);
+        final String path = pathGeneration.function(
                 jsonObject
         );
-        return pathProcessorUpload(path, jsonObject, inputStream);
+        jsonObject.put("useAgreement", true);
+        return pathProcessorUpload(path, pathGeneration.function(jsonObject), jsonObject, inputStream);
     }
 
     /**
@@ -150,6 +153,7 @@ public abstract class FSAdapter implements Adapter {
         final String path = ((PathGeneration) config.get(Config.GENERATION_RULES)).function(
                 jsonObject
         );
+        jsonObject.put("useAgreement", true);
         return pathProcessorGetUrls(path, jsonObject);
     }
 

@@ -26,20 +26,8 @@ public final class LocalFSAdapter extends FSAdapter {
 
     }
 
-    /**
-     * 路径处理器 接收一个路径 输出结果对象
-     *
-     * @param path        路径对象
-     * @param inputStream 文件数据流
-     * @return {
-     * res:上传结果/错误,
-     * url:上传之后的 url,
-     * userId:文件所属用户id,
-     * type:文件类型
-     * }
-     */
     @Override
-    protected JSONObject pathProcessorUpload(String path, JSONObject jsonObject, InputStream inputStream) throws IOException {
+    protected JSONObject pathProcessorUpload(String path, String path_res, JSONObject jsonObject, InputStream inputStream) throws IOException {
         final File file = new File(path);
         final File parentFile = file.getParentFile();
         if (!parentFile.exists()) {
@@ -55,7 +43,7 @@ public final class LocalFSAdapter extends FSAdapter {
         }
         // 返回结果
         jsonObject.put(config.getString(Config.RES_KEY), config.getString(Config.OK_VALUE));
-        jsonObject.put("url", config.get(Config.PROTOCOL_PREFIX) + path);
+        jsonObject.put("url", config.get(Config.PROTOCOL_PREFIX) + path_res);
         return jsonObject;
     }
 

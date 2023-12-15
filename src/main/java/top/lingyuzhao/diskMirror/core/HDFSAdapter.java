@@ -33,22 +33,9 @@ public class HDFSAdapter extends FSAdapter {
         }
     }
 
-    /**
-     * 路径处理器 接收一个路径 输出结果对象
-     *
-     * @param path        路径对象
-     * @param jsonObject  输入参数 json 对象
-     * @param inputStream 文件数据流
-     * @return {
-     * res:上传结果/错误,
-     * url:上传之后的 url,
-     * userId:文件所属用户id,
-     * type:文件类型
-     * }
-     * @throws IOException 操作异常
-     */
+
     @Override
-    protected JSONObject pathProcessorUpload(String path, JSONObject jsonObject, InputStream inputStream) throws IOException {
+    protected JSONObject pathProcessorUpload(String path, String path_res, JSONObject jsonObject, InputStream inputStream) throws IOException {
         // 首先获取到 HDFS 中的数据流
         try (final FSDataOutputStream fsDataOutputStream = fileSystem.create(new Path(config.get(Config.FS_DEFAULT_FS) + path))) {
             // 输出数据
@@ -56,7 +43,7 @@ public class HDFSAdapter extends FSAdapter {
         }
         // 返回结果
         jsonObject.put(config.getString(Config.RES_KEY), config.getString(Config.OK_VALUE));
-        jsonObject.put("url", config.get(Config.PROTOCOL_PREFIX) + path);
+        jsonObject.put("url", config.get(Config.PROTOCOL_PREFIX) + path_res);
         return jsonObject;
     }
 
