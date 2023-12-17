@@ -6,11 +6,14 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import top.lingyuzhao.diskMirror.conf.Config;
 import zhao.utils.IOUtils;
+import zhao.utils.StrUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
 
 /**
+ * HDFS 文件系统适配器
+ *
  * @author zhao
  */
 public class HDFSAdapter extends FSAdapter {
@@ -37,7 +40,7 @@ public class HDFSAdapter extends FSAdapter {
     @Override
     protected JSONObject pathProcessorUpload(String path, String path_res, JSONObject jsonObject, InputStream inputStream) throws IOException {
         // 首先获取到 HDFS 中的数据流
-        try (final FSDataOutputStream fsDataOutputStream = fileSystem.create(new Path(config.get(Config.FS_DEFAULT_FS) + path))) {
+        try (final FSDataOutputStream fsDataOutputStream = fileSystem.create(new Path(config.get(Config.FS_DEFAULT_FS) + StrUtils.splitBy(path, '?', 2)[0]))) {
             // 输出数据
             IOUtils.copy(inputStream, fsDataOutputStream, true);
         }
@@ -47,20 +50,11 @@ public class HDFSAdapter extends FSAdapter {
         return jsonObject;
     }
 
-    /**
-     * 路径处理器 接收一个路径 输出结果对象
-     *
-     * @param path       路径对象
-     * @param jsonObject 文件输入的 json 对象
-     * @return {
-     * res : 结果
-     * userId:文件所属用户id,
-     * type:文件类型,
-     * urls:[{url:文件的url, size:文件的大小, name:文件的名字}]
-     * }
-     */
     @Override
-    protected JSONObject pathProcessorGetUrls(String path, JSONObject jsonObject) throws IOException {
+    protected JSONObject pathProcessorGetUrls(String path, String path_res, JSONObject jsonObject) throws IOException {
+        final String[] strings = StrUtils.splitBy(path, '?', 2);
+        path = strings[0];
+        path_res = StrUtils.splitBy(path_res, '?', 2)[0];
         final Path path1 = new Path(path);
         RemoteIterator<LocatedFileStatus> iterator = fileSystem.exists(path1) ? fileSystem.listFiles(path1, true) : null;
         final JSONArray urls = jsonObject.putArray("urls");
@@ -74,7 +68,8 @@ public class HDFSAdapter extends FSAdapter {
                     final Path path2 = subPath.getPath();
                     final String name = path2.getName();
                     jsonObject1.put("fileName", name);
-                    jsonObject1.put("url", string + path + '/' + name);
+                    jsonObject1.put("url", string + path_res + '/' + name + "?" + strings[1]);
+                    jsonObject1.put("lastModified", subPath.getModificationTime());
                     jsonObject1.put("size", subPath.getLen());
                 }
             }
@@ -83,18 +78,10 @@ public class HDFSAdapter extends FSAdapter {
         return jsonObject;
     }
 
-    /**
-     * 路径处理器 接收一个路径 输出结果对象
-     *
-     * @param path   路径对象
-     * @param inJson 文件输入的 json 对象
-     * @return {
-     * res : 结果
-     * }
-     */
     @Override
     protected JSONObject pathProcessorRemove(String path, JSONObject inJson) {
         try {
+            path = StrUtils.splitBy(path, '?', 2)[0];
             fileSystem.delete(new Path(path), true);
             inJson.put(config.getString(Config.RES_KEY), config.getString(Config.OK_VALUE));
         } catch (IOException e) {

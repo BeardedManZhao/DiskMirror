@@ -41,6 +41,11 @@ public class Config extends JSONObject {
     public final static String PROTOCOL_PREFIX = "protocol.prefix";
 
     /**
+     * 请求的url中的参数
+     */
+    public final static String PARAMS = "params";
+
+    /**
      * Constructs an empty <tt>HashMap</tt> with the default initial capacity
      * (16) and the default load factor (0.75).
      */
@@ -51,6 +56,7 @@ public class Config extends JSONObject {
         super.put(OK_VALUE, "ok!!!!");
         super.put(RES_KEY, "res");
         super.put(PROTOCOL_PREFIX, "http://localhost:8080");
+        super.putObject(PARAMS);
         // 默认的路径生成逻辑  由 <空间id，文件名称> 生成 文件路径
         super.put(GENERATION_RULES, (PathGeneration) jsonObject -> {
             final int userId = jsonObject.getIntValue("userId");
@@ -62,10 +68,13 @@ public class Config extends JSONObject {
             }
             // 如果是读取 同时 具有前部协议 则 在这里去掉 路径前缀 使用 协议前缀替代 反之加上路径前缀
             final String rootDir = (((boolean) isRead) && super.getString(PROTOCOL_PREFIX).length() != 0) ? "" : (String) super.get(ROOT_DIR);
+            // 生成参数
+            final StringBuilder stringBuilder = new StringBuilder();
+            super.getJSONObject(PARAMS).forEach((k, v) -> stringBuilder.append(k).append("=").append(v).append("&"));
             if (fileName != null) {
-                return rootDir + '/' + userId + '/' + type + '/' + fileName;
+                return rootDir + '/' + userId + '/' + type + '/' + fileName + (stringBuilder.length() == 0 ? "" : "?" + stringBuilder);
             } else {
-                return rootDir + '/' + userId + '/' + type + '/';
+                return rootDir + '/' + userId + '/' + type + '/' + (stringBuilder.length() == 0 ? "" : "?" + stringBuilder);
             }
         });
 

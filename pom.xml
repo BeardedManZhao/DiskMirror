@@ -5,7 +5,7 @@
 
     <groupId>io.github.BeardedManZhao</groupId>
     <artifactId>diskMirror</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.5</version>
     <packaging>jar</packaging>
     <name>diskMirror</name>
     <description>diskMirror-java</description>
@@ -57,10 +57,10 @@
 
     <!--    添加项目信息-->
     <scm>
-        <connection>https://github.com/BeardedManZhao/mathematical-expression.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com:BeardedManZhao/mathematical-expression.git
+        <connection>https://github.com/BeardedManZhao/DiskMirror.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com:BeardedManZhao/DiskMirror.git
         </developerConnection>
-        <url>https://github.com/BeardedManZhao/mathematical-expression</url>
+        <url>https://github.com/BeardedManZhao/DiskMirror.git</url>
     </scm>
 
     <profiles>

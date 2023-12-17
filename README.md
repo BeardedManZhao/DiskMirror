@@ -17,9 +17,9 @@ url，在诸多场景中可以简化IO相关的实现操作，能够降低开发
 
 <dependencies>
     <dependency>
-        <groupId>top.lingyuzhao.diskMirror</groupId>
+        <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.0.3</version>
+        <version>1.0.5</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -157,9 +157,9 @@ public final class MAIN {
 ```json
 {
   "fileName": "arc.png",
-  "useAgreement": null,
   "userId": 1024,
   "type": "Binary",
+  "useAgreement": false,
   "res": "ok!!!!",
   "url": "/DiskMirror/1024/Binary/arc.png"
 }
@@ -212,11 +212,12 @@ public final class MAIN {
 {
   "userId": 1024,
   "type": "Binary",
-  "useAgreement": null,
+  "useAgreement": false,
   "urls": [
     {
       "fileName": "arc.png",
       "url": "/DiskMirror/1024/Binary//arc.png",
+      "lastModified": 1702788910363,
       "size": 4237376
     }
   ],
@@ -235,11 +236,13 @@ public final class MAIN {
     {
       "fileName":"文件1的名字",
       "url":"文件1的路径",
+      "lastModified":文件1上一次修改的时间,
       "size":文件1的大小
     },
     {
       "fileName":"文件2的名字",
       "url":"文件2的路径",
+      "lastModified":文件1上一次修改的时间,
       "size":文件2的大小
     },
     ......
@@ -322,7 +325,7 @@ public final class MAIN {
 
 
         // 读取 1024 号空间中的所有 url 由于刚刚保存文件的操作出现在这里 所以 1024 号空间应该是有刚才的文件的
-        // 打印结果: {"userId":1024,"type":"Binary","useAgreement":true,"urls":[{"fileName":"arc.png","url":"http://xxx.xxx/DiskMirror/1024/Binary//arc.png","size":4237376}],"res":"ok!!!!"}
+        // 打印结果: {"userId":1024,"type":"Binary","useAgreement":true,"urls":[{"fileName":"arc.png","url":"http://xxx.xxx/1024/Binary//arc.png","lastModified":1702788910363,"size":4237376}],"res":"ok!!!!"}
         read(adapter, 1024);
 
 
@@ -405,24 +408,28 @@ public final class MAIN {
     public static void main(String[] args) throws IOException {
         // 实例化配置类
         final Config config = new Config();
-        // TODO 设置 路径的协议前缀 在这里指向的是 HDFS 文件系统访问地址
-        config.put(Config.PROTOCOL_PREFIX, "http://192.168.0.141:9870/webhdfs/v1");
+        // TODO 设置 路径的协议前缀 在这里指向的是 HDFS 文件系统 盘镜目录 访问地址
+        config.put(Config.PROTOCOL_PREFIX, "http://192.168.0.141:9870/webhdfs/v1/DiskMirror");
         // TODO 设置 HDFS 协议前缀 在这里指向的是 HDFS 文件系统访问地址 是 hdfs 开头
         config.put(Config.FS_DEFAULT_FS, "hdfs://192.168.0.141:8020");
+        // TODO 设置请求参数 HDFS 要求需要设置 OP 参数
+        final JSONObject params = config.putObject(Config.PARAMS);
+        params.put("op", "OPEN");
         // TODO 装载到适配器 在这里使用HDFS文件系统
         final Adapter adapter = DiskMirror.HDFSAdapter.getAdapter(config);
+
         // 获取到当前适配器所属的版本
         System.out.println("当前适配器版本：" + DiskMirror.HDFSAdapter.getVersion());
         // 准备一个文件数据流
         try (final FileInputStream fileInputStream = new FileInputStream("C:\\Users\\zhao\\Pictures\\arc.png")) {
             // 将文件保存到 1024 号空间
-            // 打印结果: {"fileName":"arc.png","userId":1024,"type":"Binary","useAgreement":true,"res":"ok!!!!","url":"http://192.168.0.141:9870/webhdfs/v1/1024/Binary/arc.png"}
+            // 打印结果: {"fileName":"arc.png","userId":1024,"type":"Binary","useAgreement":true,"res":"ok!!!!","url":"http://192.168.0.141:9870/webhdfs/v1/DiskMirror/1024/Binary/arc.png?op=OPEN&"}
             save(adapter, fileInputStream, 1024);
         }
 
 
         // 读取 1024 号空间中的所有 url 由于刚刚保存文件的操作出现在这里 所以 1024 号空间应该是有刚才的文件的
-        // 打印结果: {"userId":1024,"type":"Binary","useAgreement":true,"urls":[{"fileName":"arc.png","url":"http://192.168.0.141:9870/webhdfs/v1/DiskMirror/1024/Binary//arc.png","size":4237376}],"res":"ok!!!!"}
+        // 打印结果: {"userId":1024,"type":"Binary","useAgreement":true,"urls":[{"fileName":"arc.png","url":"http://192.168.0.141:9870/webhdfs/v1/DiskMirror/1024/Binary//arc.png?op=OPEN&","lastModified":1702788910363,"size":4237376}],"res":"ok!!!!"}
         read(adapter, 1024);
 
 
