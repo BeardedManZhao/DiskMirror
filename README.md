@@ -19,7 +19,7 @@ url，在诸多场景中可以简化IO相关的实现操作，能够降低开发
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.0.5</version>
+        <version>1.0.6</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -149,6 +149,7 @@ public final class MAIN {
 |--------------|---------|------------------------------------------------------------------|
 | fileName     | String  | 被落盘的文件名称                                                         |
 | useAgreement | boolean | 是否使用了协议前缀 如过此值不为 undefined/null 且 为 true 则代表使用了协议前缀 否则代表没有使用协议前缀 |
+| useSize      | long    | 当前用户空间的某个类型的文件总共使用量，按照字节为单位                                      |
 | userId       | int     | 落盘文件所在的空间id                                                      |
 | type         | String  | 落盘文件的类型                                                          |
 | res          | String  | 落盘结果正常/错误信息                                                      |
@@ -159,6 +160,7 @@ public final class MAIN {
   "fileName": "arc.png",
   "userId": 1024,
   "type": "Binary",
+  "useSize": 4237376,
   "useAgreement": false,
   "res": "ok!!!!",
   "url": "/DiskMirror/1024/Binary/arc.png"
@@ -212,12 +214,13 @@ public final class MAIN {
 {
   "userId": 1024,
   "type": "Binary",
+  "useSize": 4237376,
   "useAgreement": false,
   "urls": [
     {
       "fileName": "arc.png",
       "url": "/DiskMirror/1024/Binary//arc.png",
-      "lastModified": 1702788910363,
+      "lastModified": 1702895984184,
       "size": 4237376
     }
   ],
@@ -231,6 +234,7 @@ public final class MAIN {
 {
   "userId":文件空间的id,
   "type":文件类型,
+  "useSize":当前用户空间的某个类型的文件总共使用量，按照字节为单位 ,
   "useAgreement":是否使用了协议前缀 如过此值不为 undefined 且 为 true 则代表使用了协议前缀 否则代表没有使用协议前缀,
   "urls":[
     {
@@ -317,20 +321,25 @@ public final class MAIN {
         // 获取到当前适配器所属的版本
         System.out.println("当前适配器版本：" + DiskMirror.LocalFSAdapter.getVersion());
         // 准备一个文件数据流
-        try (final FileInputStream fileInputStream = new FileInputStream("C:\\Users\\zhao\\Pictures\\arc.png")) {
+        try (final FileInputStream fileInputStream = new FileInputStream("C:\\Users\\zhao\\Pictures\\headSculpture - 副本.jpg")) {
             // 将文件保存到 1024 号空间
-            // 打印结果: {"fileName":"arc.png","userId":1024,"type":"Binary","useAgreement":true,"res":"ok!!!!","url":"http://xxx.xxx/1024/Binary/arc.png"}
-            save(adapter, fileInputStream, 1024);
+            // 打印结果: {"fileName":"arc.png","userId":1024,"type":"Binary","useAgreement":true,"res":"ok!!!!","url":"http://xxx.xxx/1024/Binary/arc.png","useSize":311720}
+            save(adapter, fileInputStream, 1024, "arc.png");
+        }
+        // 准备一个文件数据流
+        try (final FileInputStream fileInputStream = new FileInputStream("C:\\Users\\zhao\\Pictures\\defimage2.svg.png")) {
+            // 再将一个新文件保存到 1024 号空间
+            // 打印结果: {"fileName":"defimage2.svg.png","userId":1024,"type":"Binary","useAgreement":true,"res":"ok!!!!","url":"http://xxx.xxx/1024/Binary/defimage2.svg.png","useSize":805689}
+            save(adapter, fileInputStream, 1024, "defimage2.svg.png");
         }
 
-
         // 读取 1024 号空间中的所有 url 由于刚刚保存文件的操作出现在这里 所以 1024 号空间应该是有刚才的文件的
-        // 打印结果: {"userId":1024,"type":"Binary","useAgreement":true,"urls":[{"fileName":"arc.png","url":"http://xxx.xxx/1024/Binary//arc.png","lastModified":1702788910363,"size":4237376}],"res":"ok!!!!"}
+        // 打印结果: {"userId":1024,"type":"Binary","useSize":805689,"useAgreement":true,"urls":[{"fileName":"arc.png","url":"http://xxx.xxx/1024/Binary//arc.png","lastModified":1702902167167,"size":311720},{"fileName":"defimage2.svg.png","url":"http://xxx.xxx/1024/Binary//defimage2.svg.png","lastModified":1702902167270,"size":493969}],"res":"ok!!!!"}
         read(adapter, 1024);
 
 
         // 读取 2048 号空间中的所有 url 这里并没有进行过保存 所以在这里的空间是没有数据的
-        // 打印结果: {"userId":2048,"type":"Binary","useAgreement":true,"res":"空间 [/DiskMirror/2048/Binary/] 不可读!!!"}
+        // 打印结果: {"userId":2048,"type":"Binary","useSize":0,"useAgreement":true,"res":"空间 [/DiskMirror/2048/Binary/] 不可读!!!"}
         read(adapter, 2048);
 
         // 删除 1024 空间中的文件 arc.png
@@ -342,11 +351,11 @@ public final class MAIN {
         // 设置文件类型 根据自己的文件类型选择不同的类型
         jsonObject.put("type", Type.Binary);
         final JSONObject remove = adapter.remove(jsonObject);
-        // 打印结果：{"fileName":"arc.png","userId":1024,"type":"Binary","res":"ok!!!!"}
+        // 打印结果：{"fileName":"arc.png","userId":1024,"type":"Binary","useSize":493969,"res":"ok!!!!"}
         System.out.println(remove);
 
         // 删除之后再次查看 1024 空间中的目录
-        // 打印结果：{"userId":1024,"type":"Binary","useAgreement":true,"urls":[],"res":"ok!!!!"}
+        // 打印结果：{"userId":1024,"type":"Binary","useSize":493969,"useAgreement":true,"urls":[{"fileName":"defimage2.svg.png","url":"http://xxx.xxx/1024/Binary//defimage2.svg.png","lastModified":1702902167270,"size":493969}],"res":"ok!!!!"}
         read(adapter, 1024);
     }
 
@@ -365,13 +374,15 @@ public final class MAIN {
     /**
      * @param adapter         需要使用的适配器对象
      * @param fileInputStream 需要使用的文件数据流
+     * @param userId          空间id
+     * @param fileName        文件名
      * @throws IOException 操作异常
      */
-    private static void save(Adapter adapter, FileInputStream fileInputStream, int userId) throws IOException {
+    private static void save(Adapter adapter, FileInputStream fileInputStream, int userId, String fileName) throws IOException {
         // 开始写数据 准备参数
         final JSONObject jsonObject = new JSONObject();
         // 设置文件名字
-        jsonObject.put("fileName", "arc.png");
+        jsonObject.put("fileName", fileName);
         // 设置文件所属空间id
         jsonObject.put("userId", userId);
         // 设置文件类型 根据自己的文件类型选择不同的类型
@@ -419,22 +430,27 @@ public final class MAIN {
         final Adapter adapter = DiskMirror.HDFSAdapter.getAdapter(config);
 
         // 获取到当前适配器所属的版本
-        System.out.println("当前适配器版本：" + DiskMirror.HDFSAdapter.getVersion());
+        System.out.println("当前适配器版本：" + DiskMirror.LocalFSAdapter.getVersion());
         // 准备一个文件数据流
-        try (final FileInputStream fileInputStream = new FileInputStream("C:\\Users\\zhao\\Pictures\\arc.png")) {
+        try (final FileInputStream fileInputStream = new FileInputStream("C:\\Users\\zhao\\Pictures\\headSculpture - 副本.jpg")) {
             // 将文件保存到 1024 号空间
-            // 打印结果: {"fileName":"arc.png","userId":1024,"type":"Binary","useAgreement":true,"res":"ok!!!!","url":"http://192.168.0.141:9870/webhdfs/v1/DiskMirror/1024/Binary/arc.png?op=OPEN&"}
-            save(adapter, fileInputStream, 1024);
+            // 打印结果: {"fileName":"arc.png","userId":1024,"type":"Binary","useAgreement":true,"res":"ok!!!!","url":"http://192.168.0.141:9870/webhdfs/v1/DiskMirror/1024/Binary/arc.png?op=OPEN&","useSize":311720}
+            save(adapter, fileInputStream, 1024, "arc.png");
+        }
+        // 准备一个文件数据流
+        try (final FileInputStream fileInputStream = new FileInputStream("C:\\Users\\zhao\\Pictures\\defimage2.svg.png")) {
+            // 再将一个新文件保存到 1024 号空间
+            // 打印结果: {"fileName":"defimage2.svg.png","userId":1024,"type":"Binary","useAgreement":true,"res":"ok!!!!","url":"http://192.168.0.141:9870/webhdfs/v1/DiskMirror/1024/Binary/defimage2.svg.png?op=OPEN&","useSize":805689}
+            save(adapter, fileInputStream, 1024, "defimage2.svg.png");
         }
 
-
         // 读取 1024 号空间中的所有 url 由于刚刚保存文件的操作出现在这里 所以 1024 号空间应该是有刚才的文件的
-        // 打印结果: {"userId":1024,"type":"Binary","useAgreement":true,"urls":[{"fileName":"arc.png","url":"http://192.168.0.141:9870/webhdfs/v1/DiskMirror/1024/Binary//arc.png?op=OPEN&","lastModified":1702788910363,"size":4237376}],"res":"ok!!!!"}
+        // 打印结果: {"userId":1024,"type":"Binary","useSize":805689,"useAgreement":true,"urls":[{"fileName":"arc.png","url":"http://192.168.0.141:9870/webhdfs/v1/DiskMirror/1024/Binary//arc.png?op=OPEN&","lastModified":1702902733377,"size":311720},{"fileName":"defimage2.svg.png","url":"http://192.168.0.141:9870/webhdfs/v1/DiskMirror/1024/Binary//defimage2.svg.png?op=OPEN&","lastModified":1702902733869,"size":493969}],"res":"ok!!!!"}
         read(adapter, 1024);
 
 
         // 读取 2048 号空间中的所有 url 这里并没有进行过保存 所以在这里的空间是没有数据的
-        // 打印结果: {"userId":2048,"type":"Binary","useAgreement":true,"urls":[],"res":"ok!!!!"}
+        // 打印结果: {"userId":2048,"type":"Binary","useSize":0,"useAgreement":true,"urls":[],"res":"ok!!!!"}
         read(adapter, 2048);
 
         // 删除 1024 空间中的文件 arc.png
@@ -446,11 +462,11 @@ public final class MAIN {
         // 设置文件类型 根据自己的文件类型选择不同的类型
         jsonObject.put("type", Type.Binary);
         final JSONObject remove = adapter.remove(jsonObject);
-        // 打印结果：{"fileName":"arc.png","userId":1024,"type":"Binary","res":"ok!!!!"}
+        // 打印结果：{"fileName":"arc.png","userId":1024,"type":"Binary","useSize":493969,"res":"ok!!!!"}
         System.out.println(remove);
 
         // 删除之后再次查看 1024 空间中的目录
-        // 打印结果：{"userId":1024,"type":"Binary","useAgreement":true,"urls":[],"res":"ok!!!!"}
+        // 打印结果：{"userId":1024,"type":"Binary","useSize":493969,"useAgreement":true,"urls":[{"fileName":"defimage2.svg.png","url":"http://192.168.0.141:9870/webhdfs/v1/DiskMirror/1024/Binary//defimage2.svg.png?op=OPEN&","lastModified":1702903280574,"size":493969}],"res":"ok!!!!"}
         read(adapter, 1024);
     }
 
@@ -469,13 +485,15 @@ public final class MAIN {
     /**
      * @param adapter         需要使用的适配器对象
      * @param fileInputStream 需要使用的文件数据流
+     * @param userId          空间id
+     * @param fileName        文件名
      * @throws IOException 操作异常
      */
-    private static void save(Adapter adapter, FileInputStream fileInputStream, int userId) throws IOException {
+    private static void save(Adapter adapter, FileInputStream fileInputStream, int userId, String fileName) throws IOException {
         // 开始写数据 准备参数
         final JSONObject jsonObject = new JSONObject();
         // 设置文件名字
-        jsonObject.put("fileName", "arc.png");
+        jsonObject.put("fileName", fileName);
         // 设置文件所属空间id
         jsonObject.put("userId", userId);
         // 设置文件类型 根据自己的文件类型选择不同的类型
@@ -486,6 +504,19 @@ public final class MAIN {
         System.out.println(upload.toString());
     }
 }
+```
+
+---- 
+
+### 更新记录
+
+- 2023-12-19 1.0.6 版本发布
+
+```
+1. 针对所有的操作返回值都增加了实时文件空间占用字节数"useSize"的结果
+2. 针对所有已存在的文件进行增删将会抛出错误，您可以不去进行文件是否存在的检测
+3. 针对稳定性进行升级，修复了部分bug
+4. 针对文件上传的接口增加了文件大小限制的配置项目，默认为 128Mb
 ```
 
 ----

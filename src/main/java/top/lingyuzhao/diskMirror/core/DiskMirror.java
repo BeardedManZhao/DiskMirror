@@ -38,7 +38,7 @@ public enum DiskMirror {
     /**
      * 当前盘镜的版本
      */
-    public final static String VERSION = "1.0.5";
+    public final static String VERSION = "1.0.6";
 
 
     /**

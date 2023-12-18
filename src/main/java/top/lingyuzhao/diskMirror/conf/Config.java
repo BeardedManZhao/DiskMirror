@@ -44,6 +44,10 @@ public class Config extends JSONObject {
      * 请求的url中的参数
      */
     public final static String PARAMS = "params";
+    /**
+     * 用户 盘镜 空间配额，每个用户只能使用固定容量的盘镜配额空间！ 这里是以字节为单位的数值 默认值为 128MB
+     */
+    public final static String USER_DISK_MIRROR_SPACE_QUOTA = "user.disk.mirror.space.quota";
 
     /**
      * Constructs an empty <tt>HashMap</tt> with the default initial capacity
@@ -56,6 +60,7 @@ public class Config extends JSONObject {
         super.put(OK_VALUE, "ok!!!!");
         super.put(RES_KEY, "res");
         super.put(PROTOCOL_PREFIX, "http://localhost:8080");
+        super.put(USER_DISK_MIRROR_SPACE_QUOTA, 128 << 10 << 10);
         super.putObject(PARAMS);
         // 默认的路径生成逻辑  由 <空间id，文件名称> 生成 文件路径
         super.put(GENERATION_RULES, (PathGeneration) jsonObject -> {

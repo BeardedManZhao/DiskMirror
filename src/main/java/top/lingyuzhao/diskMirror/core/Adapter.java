@@ -45,8 +45,9 @@ public interface Adapter {
      *                   type        文件类型
      *                   }
      * @return {res: 删除结果}
+     * @throws IOException 操作异常
      */
-    JSONObject remove(JSONObject jsonObject);
+    JSONObject remove(JSONObject jsonObject) throws IOException;
 
     /**
      * 将一个用户所有的 url 获取到
@@ -67,6 +68,18 @@ public interface Adapter {
      * @throws IOException 操作异常
      */
     JSONObject getUrls(JSONObject jsonObject) throws IOException;
+
+    /**
+     * 获取用户使用空间大小
+     *
+     * @param jsonObject {
+     *                   userId      空间id,
+     *                   type        文件类型,
+     *                   }
+     * @return 空间已使用的大小
+     * @throws IOException 操作异常
+     */
+    long getUseSize(JSONObject jsonObject) throws IOException;
 
     /**
      * 关闭适配器
