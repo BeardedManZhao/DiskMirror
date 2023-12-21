@@ -119,6 +119,7 @@ public class HDFSAdapter extends FSAdapter {
      */
     @Override
     protected JSONObject pathProcessorReName(String path, JSONObject inJson) throws IOException {
+        path = StrUtils.splitBy(path, '?', 2)[0];
         Path oldPath = new Path(path + inJson.getString("fileName"));  //旧的路径
         Path newPath = new Path(path + inJson.getString("newName"));  //新的路径
         if (fileSystem.rename(oldPath, newPath)) {

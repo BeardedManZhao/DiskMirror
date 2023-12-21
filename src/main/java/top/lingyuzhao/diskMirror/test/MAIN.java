@@ -13,12 +13,17 @@ import java.io.IOException;
  */
 public final class MAIN {
     public static void main(String[] args) throws IOException {
-        // 实例化盘镜配置类 配置类中包含很多的配置项目 对于本地文件系统来说 可以按照下面的方式来进行配置实例化
+        // 实例化配置类
         final Config config = new Config();
-        // 配置根目录 也是能够被盘镜 管理的目录，所有的管理操作只会在这个目录中生效，默认是/DiskMirror!
-        config.put(Config.ROOT_DIR, "/DiskMirror");
-        // 获取到本地文件系统适配器
-        final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(config);
+        // TODO 设置 路径的协议前缀 在这里指向的是 HDFS 文件系统 盘镜目录 访问地址
+        config.put(Config.PROTOCOL_PREFIX, "http://192.168.0.141:9870/webhdfs/v1/DiskMirror");
+        // TODO 设置 HDFS 协议前缀 在这里指向的是 HDFS 文件系统访问地址 是 hdfs 开头
+        config.put(Config.FS_DEFAULT_FS, "hdfs://192.168.0.141:8020");
+        // TODO 设置请求参数 HDFS 要求需要设置 OP 参数
+        final JSONObject params = config.putObject(Config.PARAMS);
+        params.put("op", "OPEN");
+        // TODO 装载到适配器 在这里使用HDFS文件系统
+        final Adapter adapter = DiskMirror.HDFSAdapter.getAdapter(config);
         // 开始查询 1024 空间目录
         System.out.println(read(adapter, 1024));
         // 对目录中的文件 《defimage2.svg.png》 重命名为 test.png
