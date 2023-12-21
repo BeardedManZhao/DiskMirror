@@ -10,6 +10,7 @@ import java.io.InputStream;
  * 适配器对象
  */
 public interface Adapter {
+
     /**
      * 获取到适配器配置类对象
      *
