@@ -44,6 +44,7 @@ public class Config extends JSONObject {
      * 请求的url中的参数
      */
     public final static String PARAMS = "params";
+
     /**
      * 用户 盘镜 空间配额，每个用户只能使用固定容量的盘镜配额空间！ 这里是以字节为单位的数值 默认值为 128MB
      */

@@ -74,12 +74,27 @@ public abstract class FSAdapter implements Adapter {
      * @return {
      * res : 结果
      * userId:文件所属用户id,
-     * type:文件类型,
-     * urls:[{url:文件的url, size:文件的大小, name:文件的名字}]
+     * type:文件类型
      * }
      * @throws IOException 操作异常
      */
     protected abstract JSONObject pathProcessorRemove(String path, JSONObject inJson) throws IOException;
+
+    /**
+     * 路径处理器 接收一个路径 输出结果对象，这里不强制在返回的地方设置 useSize，会自动获取数据量，当然 如果您希望从自己的算法中获取 useSize 您可以进行设置
+     *
+     * @param path   重命名操作的作用目录
+     * @param inJson 文件输入的 json 对象
+     * @return {
+     * res : 结果
+     * userId:文件所属用户id,
+     * type:文件类型,
+     * fileName:旧的文件名字
+     * newName:新的文件名字
+     * }
+     * @throws IOException 操作异常
+     */
+    protected abstract JSONObject pathProcessorReName(String path, JSONObject inJson) throws IOException;
 
     /**
      * 路径处理器 接收一个路径 输出路径中的资源占用量
@@ -165,6 +180,34 @@ public abstract class FSAdapter implements Adapter {
                 jsonObject
         );
         return this.pathProcessorRemove(path, jsonObject);
+    }
+
+    /**
+     * 将一个文件进行重命名操作
+     *
+     * @param jsonObject {
+     *                   fileName  文件名称,
+     *                   newName  文件重命名之后的名称,
+     *                   userId      空间id
+     *                   type        文件类型
+     *                   }
+     * @return {res: 删除结果}
+     * @throws IOException 操作异常
+     */
+    @Override
+    public JSONObject reName(JSONObject jsonObject) throws IOException {
+        // 获取到路径
+        final Config config = this.getConfig();
+        // 移除文件名字 用来生成父目录
+        final Object fileName = jsonObject.remove("fileName");
+        // 这里就是父目录
+        final String path = ((PathGeneration) config.get(Config.GENERATION_RULES)).function(
+                jsonObject
+        );
+        // 重新添加文件名字
+        jsonObject.put("fileName", fileName);
+        jsonObject.put("useSize", getUseSize(jsonObject));
+        return this.pathProcessorReName(path, jsonObject);
     }
 
     /**

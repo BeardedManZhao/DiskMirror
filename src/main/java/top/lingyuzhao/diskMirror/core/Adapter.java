@@ -50,6 +50,20 @@ public interface Adapter {
     JSONObject remove(JSONObject jsonObject) throws IOException;
 
     /**
+     * 将一个文件进行重命名操作
+     *
+     * @param jsonObject {
+     *                   fileName  文件名称,
+     *                   newName  文件重命名之后的名称,
+     *                   userId      空间id
+     *                   type        文件类型
+     *                   }
+     * @return {res: 删除结果}
+     * @throws IOException 操作异常
+     */
+    JSONObject reName(JSONObject jsonObject) throws IOException;
+
+    /**
      * 将一个用户所有的 url 获取到
      *
      * @param jsonObject {

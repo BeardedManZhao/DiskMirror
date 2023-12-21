@@ -96,6 +96,36 @@ public final class LocalFSAdapter extends FSAdapter {
     }
 
     /**
+     * 路径处理器 接收一个路径 输出结果对象，这里不强制在返回的地方设置 useSize，会自动获取数据量，当然 如果您希望从自己的算法中获取 useSize 您可以进行设置
+     *
+     * @param path   路径对象
+     * @param inJson 文件输入的 json 对象
+     * @return {
+     * res : 结果
+     * userId:文件所属用户id,
+     * type:文件类型,
+     * fileName:旧的文件名字
+     * newName:新的文件名字
+     * }
+     * @throws IOException 操作异常
+     */
+    @Override
+    protected JSONObject pathProcessorReName(String path, JSONObject inJson) throws IOException {
+        final String fileName = inJson.getString("fileName");
+        final File file = new File(path + fileName);
+        if (!file.exists()) {
+            inJson.put(config.getString(Config.RES_KEY), "重命名失败，文件《" + fileName + "》不存在!");
+        } else {
+            if (file.renameTo(new File(path + inJson.getString("newName")))) {
+                inJson.put(config.getString(Config.RES_KEY), config.getString(Config.OK_VALUE));
+            } else {
+                inJson.put(config.getString(Config.RES_KEY), "重命名失败，请稍后再试!!!");
+            }
+        }
+        return inJson;
+    }
+
+    /**
      * 路径处理器 接收一个路径 输出路径中的资源占用量
      *
      * @param path   路径对象 不包含文件名称
