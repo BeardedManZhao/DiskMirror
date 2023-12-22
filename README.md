@@ -19,7 +19,7 @@ url，在诸多场景中可以简化IO相关的实现操作，能够降低开发
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.0.6</version>
+        <version>1.0.7</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -577,7 +577,7 @@ public final class MAIN {
 
 ### 更新记录
 
-- 2023-12-21 1.0.7 版本正在开发 ***【还未发布】***
+- 2023-12-22 1.0.7 版本发布
 
 ```
 1. 能够通过适配器对于文件系统中的文件进行重命名操作
