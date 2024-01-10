@@ -34,6 +34,17 @@ public abstract class FSAdapter implements Adapter {
     }
 
     /**
+     * 设置指定空间的最大使用量
+     *
+     * @param spaceId 指定空间的 id
+     * @param maxSize 指定空间的最大使用量
+     */
+    @Override
+    public void setSpaceMaxSize(String spaceId, long maxSize) {
+        this.config.setSpaceMaxSize(spaceId, maxSize);
+    }
+
+    /**
      * 路径处理器 接收一个路径 输出结果对象，这里不强制在返回的地方设置 useSize，会自动获取数据量，当然 如果您希望从自己的算法中获取 useSize 您可以进行设置
      *
      * @param path        路径对象
@@ -129,6 +140,7 @@ public abstract class FSAdapter implements Adapter {
      * res:上传结果/错误,
      * url:上传之后的 url,
      * userId:文件所属用户id,
+     * maxSize: 当前空间的最大使用量,
      * type:文件类型
      * }
      */
@@ -146,7 +158,7 @@ public abstract class FSAdapter implements Adapter {
         final Integer userId = jsonObject.getInteger("userId");
         final String type = jsonObject.getString("type");
         final long l = this.addUseSize(userId, type, inputSize);
-        final long maxSize = config.getLong(Config.USER_DISK_MIRROR_SPACE_QUOTA);
+        final long maxSize = config.getSpaceMaxSize(userId.toString());
         jsonObject.put("useAgreement", config.getString(Config.PROTOCOL_PREFIX).length() > 0);
         if (l > maxSize) {
             jsonObject.put("useSize", this.diffUseSize(userId, type, inputSize));
@@ -155,6 +167,7 @@ public abstract class FSAdapter implements Adapter {
         try {
             final JSONObject jsonObject1 = pathProcessorUpload(path, pathGeneration.function(jsonObject), jsonObject, inputStream);
             jsonObject1.put("useSize", l);
+            jsonObject1.put("maxSize", maxSize);
             return jsonObject1;
         } catch (IOException | RuntimeException e) {
             jsonObject.put("useSize", this.diffUseSize(userId, type, inputSize));
@@ -170,7 +183,7 @@ public abstract class FSAdapter implements Adapter {
      *                   userId      空间id
      *                   type        文件类型
      *                   }
-     * @return {res: 删除结果}
+     * @return {res: 删除结果,maxSize: 当前空间的最大使用量,}
      */
     @Override
     public JSONObject remove(JSONObject jsonObject) throws IOException {
@@ -179,6 +192,7 @@ public abstract class FSAdapter implements Adapter {
         final String path = ((PathGeneration) config.get(Config.GENERATION_RULES)).function(
                 jsonObject
         );
+        jsonObject.put("maxSize", config.getSpaceMaxSize(jsonObject.getString("userId")));
         return this.pathProcessorRemove(path, jsonObject);
     }
 
@@ -191,7 +205,14 @@ public abstract class FSAdapter implements Adapter {
      *                   userId      空间id
      *                   type        文件类型
      *                   }
-     * @return {res: 删除结果}
+     * @return {
+     * res : 结果
+     * userId:文件所属用户id,
+     * type:文件类型,
+     * fileName:旧的文件名字,
+     * maxSize: 当前空间的最大使用量,
+     * newName:新的文件名字
+     * }
      * @throws IOException 操作异常
      */
     @Override
@@ -207,6 +228,7 @@ public abstract class FSAdapter implements Adapter {
         // 重新添加文件名字
         jsonObject.put("fileName", fileName);
         jsonObject.put("useSize", getUseSize(jsonObject));
+        jsonObject.put("maxSize", config.getSpaceMaxSize(jsonObject.getString("userId")));
         return this.pathProcessorReName(path, jsonObject);
     }
 
@@ -221,6 +243,7 @@ public abstract class FSAdapter implements Adapter {
      * res : 结果
      * userId:文件所属用户id,
      * type:文件类型,
+     * maxSize: 当前空间的最大使用量,
      * urls:[{url:文件的url, size:文件的大小, name:文件的名字}]
      * }
      */
@@ -234,6 +257,7 @@ public abstract class FSAdapter implements Adapter {
         );
         jsonObject.put("useSize", getUseSize(jsonObject));
         jsonObject.put("useAgreement", config.getString(Config.PROTOCOL_PREFIX).length() > 0);
+        jsonObject.put("maxSize", config.getSpaceMaxSize(jsonObject.getString("userId")));
         return pathProcessorGetUrls(path, pathGeneration.function(jsonObject), jsonObject);
     }
 

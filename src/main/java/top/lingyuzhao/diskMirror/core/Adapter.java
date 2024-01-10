@@ -19,6 +19,14 @@ public interface Adapter {
     Config getConfig();
 
     /**
+     * 设置指定空间的最大使用量
+     *
+     * @param spaceId 指定空间的 id
+     * @param maxSize 指定空间的最大使用量
+     */
+    void setSpaceMaxSize(String spaceId, long maxSize);
+
+    /**
      * 将一个文件上传
      *
      * @param inputStream 文件数据流

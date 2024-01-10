@@ -51,6 +51,11 @@ public class Config extends JSONObject {
     public final static String USER_DISK_MIRROR_SPACE_QUOTA = "user.disk.mirror.space.quota";
 
     /**
+     * 用户 盘镜 空间配合映射表，通过此处的映射操作可以获取到指定用户的空间的使用量最大值。
+     */
+    private final static JSONObject SPACE_SIZE = new JSONObject();
+
+    /**
      * Constructs an empty <tt>HashMap</tt> with the default initial capacity
      * (16) and the default load factor (0.75).
      */
@@ -83,7 +88,25 @@ public class Config extends JSONObject {
                 return rootDir + '/' + userId + '/' + type + '/' + (stringBuilder.length() == 0 ? "" : "?" + stringBuilder);
             }
         });
-
     }
 
+    /**
+     * 获取到指定空间的最大使用量
+     *
+     * @param spaceId 指定空间的 id
+     * @return 指定空间的最大使用量 字节数
+     */
+    public long getSpaceMaxSize(String spaceId) {
+        return SPACE_SIZE.getLongValue(spaceId, this.getLongValue(USER_DISK_MIRROR_SPACE_QUOTA));
+    }
+
+    /**
+     * 设置指定空间的最大使用量
+     *
+     * @param spaceId 指定空间的 id
+     * @param maxSize 指定空间的最大使用量
+     */
+    public void setSpaceMaxSize(String spaceId, long maxSize) {
+        SPACE_SIZE.put(spaceId, maxSize);
+    }
 }
