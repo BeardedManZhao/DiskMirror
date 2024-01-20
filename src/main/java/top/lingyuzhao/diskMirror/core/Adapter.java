@@ -27,6 +27,14 @@ public interface Adapter {
     void setSpaceMaxSize(String spaceId, long maxSize);
 
     /**
+     * 递归删除一个目录 并将删除的字节数值返回
+     *
+     * @param path 需要被删除的文件目录
+     * @throws IOException 删除操作出现异常
+     */
+    long rDelete(String path) throws IOException;
+
+    /**
      * 将一个文件上传
      *
      * @param inputStream 文件数据流

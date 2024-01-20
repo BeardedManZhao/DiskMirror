@@ -615,6 +615,104 @@ public final class MAIN {
 
 ### 更新记录
 
+- 2024-01-xx 1.0.9 版本正在开发
+
+```
++-------------------------------------------------------------------------------------------+
+1. 针对所有的操作，支持了文件夹，例如您可以获取到指定文件夹中的所有文件，下面是一个获取带有目录的空间 url 的json
+    public static void main(String[] args) throws IOException {
+        // 准备适配器对象
+        final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(new Config());
+        // 准备参数
+        final JSONObject jsonObject = new JSONObject();
+        // 设置文件所属空间id
+        jsonObject.put("userId", 1024);
+        // 设置文件类型 根据自己的文件类型选择不同的类型
+        jsonObject.put("type", Type.Binary);
+        System.out.println(adapter.getUrls(jsonObject));
+    }
+"""
+这里是打印出来的结果
+{
+  "userId": 1024,
+  "type": "Binary",
+  "useSize": 787141,
+  "useAgreement": true,
+  "maxSize": 134217728,
+  "urls": [
+    {
+      "fileName": "fsdownload",
+      "url": "http://localhost:8080/1024/Binary//fsdownload",
+      "lastModified": 1705762229601,
+      "size": 0,
+      "type": "Binary",
+      "isDir": true,
+      "urls": [
+        {
+          "fileName": "myFile.png",
+          "url": "http://localhost:8080/1024/Binary//fsdownload/myFile.png",
+          "lastModified": 1705762229664,
+          "size": 293172,
+          "type": "Binary",
+          "isDir": false
+        }
+      ]
+    },
+    {
+      "fileName": "test.png",
+      "url": "http://localhost:8080/1024/Binary//test.png",
+      "lastModified": 1702903450767,
+      "size": 493969,
+      "type": "Binary",
+      "isDir": false
+    }
+  ],
+  "res": "ok!!!!"
+}
+"""
+
++-------------------------------------------------------------------------------------------+
+
+2. 针对所有的删除操作 同样支持删除文件夹 值得一提的是 API 与旧版本使用方法一致
+    public static void main(String[] args) throws IOException {
+        // 准备适配器对象
+        final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(new Config());
+        // 准备参数
+        final JSONObject jsonObject = new JSONObject();
+        // 设置文件所属空间id
+        jsonObject.put("userId", 1024);
+        // 设置文件类型 根据自己的文件类型选择不同的类型
+        jsonObject.put("type", Type.Binary);
+        // 设置需要被删除的文件夹名字
+        jsonObject.put("fileName", "fsdownload");
+        // 删除这个文件夹
+        final JSONObject result = adapter.remove(jsonObject);
+        System.out.println(result);
+    }
+
++-------------------------------------------------------------------------------------------+
+3. 针对所有的上传操作 也支持文件夹，API 使用方法与就版本一致
+    public static void main(String[] args) throws IOException {
+        // 准备适配器对象
+        final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(new Config());
+        // 准备文件数据流
+        final InputStream inputStream = new FileInputStream("C:\\Users\\zhao\\Pictures\\图片1.png");
+        // 准备参数
+        final JSONObject jsonObject = new JSONObject();
+        // 设置文件所属空间id
+        jsonObject.put("userId", 1024);
+        // 设置文件类型 根据自己的文件类型选择不同的类型
+        jsonObject.put("type", Type.Binary);
+        // 设置需要被上传的文件名字 如果我们希望上传到 fsdownload 目录中 可以像下面一样写
+        jsonObject.put("fileName", "fsdownload/myFile.png");
+        // 删除这个文件夹
+        final JSONObject result = adapter.upload(inputStream, jsonObject);
+        System.out.println(result);
+        // 关闭数据流
+        inputStream.close();
+    }
+```
+
 - 2024-01-04 1.0.8 版本发布
 
 ```

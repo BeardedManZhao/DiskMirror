@@ -54,16 +54,16 @@ public class HDFSAdapter extends FSAdapter {
         return jsonObject;
     }
 
-    @Override
-    protected JSONObject pathProcessorGetUrls(String path, String path_res, JSONObject jsonObject) throws IOException {
+    protected JSONObject pathProcessorGetUrls(String path, String path_res, JSONObject jsonObject, boolean addPre) throws IOException {
         final String[] strings = StrUtils.splitBy(path, '?', 2);
         path = strings[0];
+        final String res_key = config.getString(Config.RES_KEY);
         path_res = StrUtils.splitBy(path_res, '?', 2)[0];
         final Path path1 = new Path(path);
         RemoteIterator<LocatedFileStatus> iterator = fileSystem.exists(path1) ? fileSystem.listFiles(path1, true) : null;
         final JSONArray urls = jsonObject.putArray("urls");
         // 将所有的子文件添加到数组中
-        final String string = config.getString(Config.PROTOCOL_PREFIX);
+        final String string = addPre ? config.getString(Config.PROTOCOL_PREFIX) : "";
         if (iterator != null) {
             while (iterator.hasNext()) {
                 LocatedFileStatus subPath = iterator.next();
@@ -71,16 +71,33 @@ public class HDFSAdapter extends FSAdapter {
                     final JSONObject jsonObject1 = urls.addObject();
                     final Path path2 = subPath.getPath();
                     final String name = path2.getName();
+                    final String filePath = path_res + '/' + name + "?" + strings[1];
+                    final String filePath_pre = string + filePath;
                     jsonObject1.put("fileName", name);
-                    jsonObject1.put("url", string + path_res + '/' + name + "?" + strings[1]);
+                    jsonObject1.put("url", filePath_pre);
                     jsonObject1.put("lastModified", subPath.getModificationTime());
                     jsonObject1.put("size", subPath.getLen());
+                    jsonObject1.put("type", jsonObject.get("type"));
+                    // 查看当前的是否是一个目录 如果是目录就继续获取到子目录
+                    if (subPath.isDirectory()) {
+                        jsonObject1.put("isDir", true);
+                        jsonObject1.putAll(this.pathProcessorGetUrls(filePath, filePath_pre, jsonObject1.clone(), false));
+                        jsonObject1.remove("useSize");
+                        jsonObject1.remove(res_key);
+                    } else {
+                        jsonObject1.put("isDir", false);
+                    }
                 }
             }
         }
         jsonObject.put("useSize", this.getUseSize(jsonObject));
-        jsonObject.put(config.getString(Config.RES_KEY), config.getString(Config.OK_VALUE));
+        jsonObject.put(res_key, config.getString(Config.OK_VALUE));
         return jsonObject;
+    }
+
+    @Override
+    protected JSONObject pathProcessorGetUrls(String path, String path_res, JSONObject jsonObject) throws IOException {
+        return this.pathProcessorGetUrls(path, path_res, jsonObject, true);
     }
 
     @Override
@@ -92,9 +109,7 @@ public class HDFSAdapter extends FSAdapter {
                 // 如果不存在就代表不需要删除
                 inJson.put(config.getString(Config.RES_KEY), "删除失败!!!文件不存在!");
             }
-            final long len = fileSystem.getFileStatus(path1).getLen();
-            fileSystem.delete(path1, true);
-            inJson.put("useSize", this.diffUseSize(inJson.getIntValue("userId"), inJson.getString("type"), len));
+            inJson.put("useSize", this.diffUseSize(inJson.getIntValue("userId"), inJson.getString("type"), rDelete(path1)));
             inJson.put(config.getString(Config.RES_KEY), config.getString(Config.OK_VALUE));
         } catch (IOException e) {
             inJson.put(config.getString(Config.RES_KEY), "删除失败:" + e);
@@ -149,10 +164,40 @@ public class HDFSAdapter extends FSAdapter {
                 LocatedFileStatus subPath = iterator.next();
                 if (subPath.isFile()) {
                     useSize += subPath.getLen();
+                    continue;
                 }
+                // 如果是个目录就递归
+                useSize += this.pathProcessorUseSize(strings[0] + '/' + subPath.getPath().getName(), inJson);
             }
         }
         return useSize;
+    }
+
+    /**
+     * 递归删除一个目录 并将删除的字节数值返回
+     *
+     * @param path 需要被删除的文件目录
+     * @throws IOException 删除操作出现异常
+     */
+    @Override
+    public long rDelete(String path) throws IOException {
+        final Path path1 = new Path(path);
+        return rDelete(path1);
+    }
+
+    /**
+     * 递归删除一个目录 并将删除的字节数值返回
+     *
+     * @param path 需要被删除的文件目录
+     * @throws IOException 删除操作出现异常
+     */
+    private long rDelete(Path path) throws IOException {
+        final FsStatus status = fileSystem.getStatus(path);
+        final long used = status.getUsed();
+        if (fileSystem.delete(path, true)) {
+            return used;
+        }
+        return 0;
     }
 
     /**

@@ -6,6 +6,10 @@ import top.lingyuzhao.diskMirror.conf.Config;
 import zhao.utils.IOUtils;
 
 import java.io.*;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 
 /**
@@ -50,29 +54,47 @@ public final class LocalFSAdapter extends FSAdapter {
         return jsonObject;
     }
 
-    @Override
-    protected JSONObject pathProcessorGetUrls(String path, String path_res, JSONObject jsonObject) throws IOException {
+    private JSONObject pathProcessorGetUrls(File path, String path_res, JSONObject jsonObject, Type type, boolean addPre) throws IOException {
         // 开始进行文件获取
-        final File[] files = new File(path).listFiles();
+        final File[] files = path.listFiles();
         if (files == null) {
             jsonObject.put("res", "空间 [" + path + "] 不可读!!!");
             return jsonObject;
         }
         // 获取到协议前缀
         final Config config = this.getConfig();
-        final String string = config.getString(Config.PROTOCOL_PREFIX);
+        final String string = addPre ? config.getString(Config.PROTOCOL_PREFIX) : "";
         final JSONArray urls = jsonObject.putArray("urls");
+        final String res_key = config.getString(Config.RES_KEY);
+        // 获取到文件所在空间类型
         for (File file : files) {
             final JSONObject jsonObject1 = urls.addObject();
             final String name = file.getName();
+            final String filePath = path_res + '/' + name;
+            final String filePath_pre = string + filePath;
             jsonObject1.put("fileName", name);
-            jsonObject1.put("url", string + path_res + '/' + name);
+            jsonObject1.put("url", filePath_pre);
             jsonObject1.put("lastModified", file.lastModified());
             jsonObject1.put("size", file.length());
+            jsonObject1.put("type", type);
+            // 查看当前的是否是一个目录 如果是目录就继续获取到字目录
+            if (file.isDirectory()) {
+                jsonObject1.put("isDir", true);
+                jsonObject1.putAll(this.pathProcessorGetUrls(file, filePath_pre, jsonObject1.clone(), type, false));
+                jsonObject1.remove("useSize");
+                jsonObject1.remove(res_key);
+            } else {
+                jsonObject1.put("isDir", false);
+            }
         }
         jsonObject.put("useSize", this.getUseSize(jsonObject));
-        jsonObject.put(config.getString(Config.RES_KEY), config.getString(Config.OK_VALUE));
+        jsonObject.put(res_key, config.getString(Config.OK_VALUE));
         return jsonObject;
+    }
+
+    @Override
+    protected JSONObject pathProcessorGetUrls(String path, String path_res, JSONObject jsonObject) throws IOException {
+        return pathProcessorGetUrls(new File(path), path_res, jsonObject, jsonObject.getObject("type", Type.class), true);
     }
 
     @Override
@@ -82,6 +104,12 @@ public final class LocalFSAdapter extends FSAdapter {
         final File file = new File(path);
         if (!file.exists()) {
             jsonObject.put(config.getString(Config.RES_KEY), "删除失败!!!文件不存在!");
+            return jsonObject;
+        }
+        if (file.isDirectory()) {
+            // 如果是文件夹就使用文件夹的删除方法
+            jsonObject.put("useSize", this.diffUseSize(jsonObject.getIntValue("userId"), jsonObject.getString("type"), rDelete(path)));
+            jsonObject.put(config.getString(Config.RES_KEY), config.getString(Config.OK_VALUE));
             return jsonObject;
         }
         final long length = file.length();
@@ -134,14 +162,66 @@ public final class LocalFSAdapter extends FSAdapter {
      */
     @Override
     protected long pathProcessorUseSize(String path, JSONObject inJson) {
+        return pathProcessorUseSize(new File(path));
+    }
+
+    /**
+     * 计算出路径中的资源占用量
+     *
+     * @param path 文件路径
+     * @return 指定路径中所有文件的占用大小
+     */
+    private long pathProcessorUseSize(File path) {
         long res = 0;
-        final File[] files = new File(path).listFiles();
+        final File[] files = path.listFiles();
         if (files == null) {
             return res;
         }
         for (File file : files) {
+            // 判断是否是一个文件夹
+            if (file.isDirectory()) {
+                // 是文件夹就计算文件夹内部的值
+                res += pathProcessorUseSize(file);
+                continue;
+            }
             res += file.length();
         }
         return res;
+    }
+
+    /**
+     * 递归删除一个目录 并将删除的字节数值返回
+     *
+     * @param path 需要被删除的文件目录
+     * @throws IOException 删除操作出现异常
+     */
+    @Override
+    public long rDelete(String path) throws IOException {
+        // 判断路径是否存在
+        Path dir = Paths.get(path);
+        if (!Files.exists(dir)) {
+            throw new IOException("Directory does not exist.");
+        }
+        // 判断路径是否为目录
+        if (!Files.isDirectory(dir)) {
+            throw new IOException("Path is not a directory.");
+        }
+        // 递归删除目录及其内容
+        long bytesDeleted = 0;
+        try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(dir)) {
+            for (Path file : directoryStream) {
+                if (Files.isDirectory(file)) {
+                    bytesDeleted += rDelete(file.toString());
+                } else {
+                    bytesDeleted += Files.size(file);
+                    Files.delete(file);
+                }
+            }
+        } finally {
+            // 最后删除目录本身
+            bytesDeleted += Files.size(dir);
+            Files.delete(dir);
+        }
+        return bytesDeleted;
     }
 }

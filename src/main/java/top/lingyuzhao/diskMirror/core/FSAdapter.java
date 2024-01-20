@@ -67,12 +67,42 @@ public abstract class FSAdapter implements Adapter {
      * @param path     路径对象
      * @param path_res 能够直接与协议前缀拼接的路径
      * @param inJson   文件输入的 json 对象
-     * @return {
-     * res : 结果
-     * userId:文件所属用户id,
-     * type:文件类型,
-     * urls:[{url:文件的url, size:文件的大小, name:文件的名字}]
+     * @return 获取到的结果，在这里有一个示例 ```{
+     * "userId": 1024,
+     * "type": "Binary",
+     * "useSize": 787141,
+     * "useAgreement": true,
+     * "maxSize": 134217728,
+     * "urls": [
+     * {
+     * "fileName": "fsdownload",
+     * "url": "http://localhost:8080/1024/Binary//fsdownload",
+     * "lastModified": 1705762229601,
+     * "size": 0,
+     * "type": "Binary",
+     * "isDir": true,
+     * "urls": [
+     * {
+     * "fileName": "myFile.png",
+     * "url": "http://localhost:8080/1024/Binary//fsdownload/myFile.png",
+     * "lastModified": 1705762229664,
+     * "size": 293172,
+     * "type": "Binary",
+     * "isDir": false
      * }
+     * ]
+     * },
+     * {
+     * "fileName": "test.png",
+     * "url": "http://localhost:8080/1024/Binary//test.png",
+     * "lastModified": 1702903450767,
+     * "size": 493969,
+     * "type": "Binary",
+     * "isDir": false
+     * }
+     * ],
+     * "res": "ok!!!!"
+     * }```
      * @throws IOException 操作异常
      */
     protected abstract JSONObject pathProcessorGetUrls(String path, String path_res, JSONObject inJson) throws IOException;
