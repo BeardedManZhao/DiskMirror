@@ -5,8 +5,8 @@ import com.alibaba.fastjson2.JSONObject;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import top.lingyuzhao.diskMirror.conf.Config;
-import zhao.utils.IOUtils;
-import zhao.utils.StrUtils;
+import top.lingyuzhao.utils.IOUtils;
+import top.lingyuzhao.utils.StrUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -140,7 +140,7 @@ public class HDFSAdapter extends FSAdapter {
         if (fileSystem.rename(oldPath, newPath)) {
             inJson.put(config.getString(Config.RES_KEY), config.getString(Config.OK_VALUE));
         } else {
-            inJson.put(config.getString(Config.RES_KEY), "重命名失败，请稍后再试!!!");
+            inJson.put(config.getString(Config.RES_KEY), "重命名失败，请稍后再试!!!（可能是您重命名之后的文件路径的父目录不存在）");
         }
         return inJson;
     }

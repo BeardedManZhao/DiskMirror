@@ -5,7 +5,9 @@ import top.lingyuzhao.diskMirror.utils.PathGeneration;
 
 
 /**
- * 配置类
+ * 盘镜配置类，用于存储配置信息，此配置类是通过JSON对象实现的，因此可以使用JSON对象的API进行操作。
+ *
+ *The disk mirror configuration class is used to store configuration information. This configuration class is implemented through JSON objects, so it can be operated using the API of JSON objects.
  *
  * @author zhao
  */

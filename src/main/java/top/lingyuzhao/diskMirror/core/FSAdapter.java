@@ -9,7 +9,9 @@ import java.io.InputStream;
 import java.util.HashMap;
 
 /**
- * 文件系统适配器
+ * 文件系统适配器接口
+ *
+ * File system adapter interface
  *
  * @author zhao
  */

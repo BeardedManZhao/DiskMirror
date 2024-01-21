@@ -19,7 +19,7 @@ url，在诸多场景中可以简化IO相关的实现操作，能够降低开发
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.0.9</version>
+        <version>1.1.0</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -27,10 +27,11 @@ url，在诸多场景中可以简化IO相关的实现操作，能够降低开发
         <version>2.0.25</version>
         <!--        <scope>provided</scope>-->
     </dependency>
+    <!-- 从 disk Mirror 1.1.0 版本开始 请确保 zhao-utils 的版本 >= 1.0.20240121 -->
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>zhao-utils</artifactId>
-        <version>1.0.20231112</version>
+        <version>1.0.20240121</version>
         <!--        <scope>provided</scope>-->
     </dependency>
     <!-- 如果需要对接 HDFS 才导入 如果不需要就不导入此依赖 -->
@@ -651,6 +652,13 @@ public final class MAIN {
 ---- 
 
 ### 更新记录
+
+- 2023-01-21 1.1.0 版本发布【稳定版本】
+```
+1. 修正依赖组件重复的问题，需要注意的是，您的在这里的 zhao-utils 依赖应在 1.0.20240121 及 以上版本!!! 新版本的工具类修正了一些 bug
+2. 针对 重命名失败 的错误信息进行详细的解答。
+```
+----
 
 - 2024-01-21 1.0.9 版本发布
 

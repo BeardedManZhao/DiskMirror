@@ -5,7 +5,7 @@
 
     <groupId>io.github.BeardedManZhao</groupId>
     <artifactId>diskMirror</artifactId>
-    <version>1.0.9</version>
+    <version>1.1.0</version>
     <packaging>jar</packaging>
     <name>diskMirror</name>
     <description>diskMirror-java</description>
@@ -21,13 +21,13 @@
             <groupId>com.alibaba.fastjson2</groupId>
             <artifactId>fastjson2</artifactId>
             <version>2.0.25</version>
-            <!--            <scope>provided</scope>-->
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.github.BeardedManZhao</groupId>
             <artifactId>zhao-utils</artifactId>
-            <version>1.0.20231112</version>
-            <!--            <scope>provided</scope>-->
+            <version>1.0.20240121</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
