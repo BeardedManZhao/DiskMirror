@@ -56,37 +56,37 @@ public class HDFSAdapter extends FSAdapter {
 
     protected JSONObject pathProcessorGetUrls(String path, String path_res, JSONObject jsonObject, boolean addPre) throws IOException {
         final String[] strings = StrUtils.splitBy(path, '?', 2);
-        path = strings[0];
+        path = strings.length > 0 ? strings[0] : path;
+        final String param_path = strings.length > 1 ? strings[1] : "";
         final String res_key = config.getString(Config.RES_KEY);
         path_res = StrUtils.splitBy(path_res, '?', 2)[0];
         final Path path1 = new Path(path);
-        RemoteIterator<LocatedFileStatus> iterator = fileSystem.exists(path1) ? fileSystem.listFiles(path1, true) : null;
+        RemoteIterator<FileStatus> iterator = fileSystem.exists(path1) ? fileSystem.listStatusIterator(path1) : null;
         final JSONArray urls = jsonObject.putArray("urls");
         // 将所有的子文件添加到数组中
         final String string = addPre ? config.getString(Config.PROTOCOL_PREFIX) : "";
         if (iterator != null) {
             while (iterator.hasNext()) {
-                LocatedFileStatus subPath = iterator.next();
+                FileStatus subPath = iterator.next();
+                final JSONObject jsonObject1 = urls.addObject();
+                final Path path2 = subPath.getPath();
+                final String name = path2.getName();
+                final String filePath_HDFS = path + '/' + name;
+                final String filePath = path_res + '/' + name + "?" + param_path;
+                final String filePath_pre = string + filePath;
+                jsonObject1.put("fileName", name);
+                jsonObject1.put("url", filePath_pre);
+                jsonObject1.put("lastModified", subPath.getModificationTime());
+                jsonObject1.put("size", subPath.getLen());
+                jsonObject1.put("type", jsonObject.get("type"));
                 if (subPath.isFile()) {
-                    final JSONObject jsonObject1 = urls.addObject();
-                    final Path path2 = subPath.getPath();
-                    final String name = path2.getName();
-                    final String filePath = path_res + '/' + name + "?" + strings[1];
-                    final String filePath_pre = string + filePath;
-                    jsonObject1.put("fileName", name);
-                    jsonObject1.put("url", filePath_pre);
-                    jsonObject1.put("lastModified", subPath.getModificationTime());
-                    jsonObject1.put("size", subPath.getLen());
-                    jsonObject1.put("type", jsonObject.get("type"));
-                    // 查看当前的是否是一个目录 如果是目录就继续获取到子目录
-                    if (subPath.isDirectory()) {
-                        jsonObject1.put("isDir", true);
-                        jsonObject1.putAll(this.pathProcessorGetUrls(filePath, filePath_pre, jsonObject1.clone(), false));
-                        jsonObject1.remove("useSize");
-                        jsonObject1.remove(res_key);
-                    } else {
-                        jsonObject1.put("isDir", false);
-                    }
+                    jsonObject1.put("isDir", false);
+                } else {
+                    // 如果是目录就继续获取到子目录
+                    jsonObject1.put("isDir", true);
+                    jsonObject1.putAll(this.pathProcessorGetUrls(filePath_HDFS, filePath_pre, jsonObject1.clone(), false));
+                    jsonObject1.remove("useSize");
+                    jsonObject1.remove(res_key);
                 }
             }
         }
@@ -155,7 +155,7 @@ public class HDFSAdapter extends FSAdapter {
     @Override
     protected long pathProcessorUseSize(String path, JSONObject inJson) throws IOException {
         final String[] strings = StrUtils.splitBy(path, '?', 2);
-        path = strings[0];
+        path = strings.length > 0 ? strings[0] : path;
         final Path path1 = new Path(path);
         RemoteIterator<LocatedFileStatus> iterator = fileSystem.exists(path1) ? fileSystem.listFiles(path1, true) : null;
         long useSize = 0;
@@ -167,7 +167,7 @@ public class HDFSAdapter extends FSAdapter {
                     continue;
                 }
                 // 如果是个目录就递归
-                useSize += this.pathProcessorUseSize(strings[0] + '/' + subPath.getPath().getName(), inJson);
+                useSize += this.pathProcessorUseSize(path + '/' + subPath.getPath().getName(), inJson);
             }
         }
         return useSize;

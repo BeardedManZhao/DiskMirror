@@ -30,6 +30,7 @@ public interface Adapter {
      * 递归删除一个目录 并将删除的字节数值返回
      *
      * @param path 需要被删除的文件目录
+     * @return 被删除的所有文件所展示用的空间字节数
      * @throws IOException 删除操作出现异常
      */
     long rDelete(String path) throws IOException;

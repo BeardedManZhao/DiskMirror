@@ -19,7 +19,7 @@ url，在诸多场景中可以简化IO相关的实现操作，能够降低开发
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.0.8</version>
+        <version>1.0.9</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -33,6 +33,7 @@ url，在诸多场景中可以简化IO相关的实现操作，能够降低开发
         <version>1.0.20231112</version>
         <!--        <scope>provided</scope>-->
     </dependency>
+    <!-- 如果需要对接 HDFS 才导入 如果不需要就不导入此依赖 -->
     <dependency>
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-client</artifactId>
@@ -214,14 +215,35 @@ public final class MAIN {
 {
   "userId": 1024,
   "type": "Binary",
-  "useSize": 4237376,
+  "useSize": 787141,
   "useAgreement": false,
+  "maxSize": 134217728,
   "urls": [
     {
-      "fileName": "arc.png",
-      "url": "/DiskMirror/1024/Binary//arc.png",
-      "lastModified": 1702895984184,
-      "size": 4237376
+      "fileName": "fsdownload",
+      "url": "/DiskMirror/1024/Binary//fsdownload",
+      "lastModified": 1705762229601,
+      "size": 0,
+      "type": "Binary",
+      "isDir": true,
+      "urls": [
+        {
+          "fileName": "myFile.png",
+          "url": "/DiskMirror/1024/Binary//fsdownload/myFile.png",
+          "lastModified": 1705762229664,
+          "size": 293172,
+          "type": "Binary",
+          "isDir": false
+        }
+      ]
+    },
+    {
+      "fileName": "test.png",
+      "url": "/DiskMirror/1024/Binary//test.png",
+      "lastModified": 1702903450767,
+      "size": 493969,
+      "type": "Binary",
+      "isDir": false
     }
   ],
   "res": "ok!!!!"
@@ -236,22 +258,37 @@ public final class MAIN {
   "type":文件类型,
   "useSize":当前用户空间的某个类型的文件总共使用量，按照字节为单位 ,
   "useAgreement":是否使用了协议前缀 如过此值不为 undefined 且 为 true 则代表使用了协议前缀 否则代表没有使用协议前缀,
-  "urls":[
+  "maxSize": 当前用户空间的最大使用量,
+  "urls": [
     {
-      "fileName":"文件1的名字",
-      "url":"文件1的路径",
-      "lastModified":文件1上一次修改的时间,
-      "size":文件1的大小
+      "fileName":"目录1的名字",
+      "url":"目录1的路径",
+      "lastModified":目录1上一次修改的时间,
+      "size":目录1的大小
+      "type": 目录1所属空间类型,
+      "isDir": 如果是 true 代表是目录 反之是文件,
+      "urls": [
+        {
+          "fileName":"文件1的名字",
+          "url":"文件1的路径",
+          "lastModified":文件1上一次修改的时间,
+          "size":文件1的大小
+          "type": 文件1所属空间类型,
+          "isDir": 如果是 true 代表是目录 反之是文件,
+        }
+      ]
     },
     {
       "fileName":"文件2的名字",
       "url":"文件2的路径",
-      "lastModified":文件1上一次修改的时间,
+      "lastModified":文件2上一次修改的时间,
       "size":文件2的大小
+      "type": 文件2所属空间类型,
+      "isDir": 如果是 true 代表是目录 反之是文件,
     },
     ......
   ],
-  "res":"ok!!!!"
+  "res": "ok!!!!"
 }
 ```
 
@@ -615,7 +652,7 @@ public final class MAIN {
 
 ### 更新记录
 
-- 2024-01-xx 1.0.9 版本正在开发
+- 2024-01-21 1.0.9 版本发布
 
 ```
 +-------------------------------------------------------------------------------------------+

@@ -257,7 +257,7 @@ public abstract class FSAdapter implements Adapter {
         );
         // 重新添加文件名字
         jsonObject.put("fileName", fileName);
-        jsonObject.put("useSize", getUseSize(jsonObject));
+        jsonObject.put("useSize", getUseSize(jsonObject.clone()));
         jsonObject.put("maxSize", config.getSpaceMaxSize(jsonObject.getString("userId")));
         return this.pathProcessorReName(path, jsonObject);
     }

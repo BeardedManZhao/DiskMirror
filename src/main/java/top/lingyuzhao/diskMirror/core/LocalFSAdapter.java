@@ -139,6 +139,7 @@ public final class LocalFSAdapter extends FSAdapter {
      */
     @Override
     protected JSONObject pathProcessorReName(String path, JSONObject inJson) throws IOException {
+        System.out.println(inJson);
         final String fileName = inJson.getString("fileName");
         final File file = new File(path + fileName);
         if (!file.exists()) {
