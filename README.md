@@ -394,6 +394,45 @@ public final class MAIN {
 进程已结束,退出代码0
 ```
 
+## 进阶使用示例
+
+### 密码设置
+
+当我们将这个适配器部署到如 web后端服务器 这类服务器后，任何人都可以以任何http协议将 json 请求发送到服务器，从而获取到文件的 url 或者未经过允许访问您的服务器，这是不安全的，所以需要对 diskMirror
+进行安全密钥设置。
+
+```java
+package top.lingyuzhao.diskMirror.test;
+
+import com.alibaba.fastjson2.JSONObject;
+import top.lingyuzhao.diskMirror.conf.Config;
+import top.lingyuzhao.diskMirror.core.Adapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+import top.lingyuzhao.diskMirror.core.Type;
+
+import java.io.IOException;
+
+public final class MAIN {
+    public static void main(String[] args) throws IOException {
+        final Config config = new Config();
+        config.setSecureKey("123123");
+        // 查看密钥的值 结果是 1450572480 这个是根据设置的 key 计算来的
+        System.out.println(config.getSecureKey());
+        // 构建适配器
+        final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(config);
+        // 查看文件目录
+        final JSONObject jsonObject = new JSONObject();
+        jsonObject.put("userId", 1024);
+        jsonObject.put("type", Type.Binary);
+        // 这里就是密钥设置了 在这里的密钥是 1020000000 与上面的密钥不一致 所以会被拒接访问
+        jsonObject.put(Config.SECURE_KEY, 1020000000);
+        // 在这里可以尝试一下是否会被拒绝访问
+        final JSONObject urls = adapter.getUrls(jsonObject);
+        System.out.println(urls);
+    }
+}
+```
+
 ## 综合使用示例
 
 ### 本地文件系统 适配器使用示例
@@ -654,10 +693,13 @@ public final class MAIN {
 ### 更新记录
 
 - 2023-01-21 1.1.0 版本发布【稳定版本】
+
 ```
 1. 修正依赖组件重复的问题，需要注意的是，您的在这里的 zhao-utils 依赖应在 1.0.20240121 及 以上版本!!! 新版本的工具类修正了一些 bug
 2. 针对 重命名失败 的错误信息进行详细的解答。
+3. 提供了密钥的生成设置，设置密钥之后 将必须要使用密钥访问，这增加了安全性!
 ```
+
 ----
 
 - 2024-01-21 1.0.9 版本发布

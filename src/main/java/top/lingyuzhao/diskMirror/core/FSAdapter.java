@@ -10,7 +10,7 @@ import java.util.HashMap;
 
 /**
  * 文件系统适配器接口
- *
+ * <p>
  * File system adapter interface
  *
  * @author zhao
@@ -167,6 +167,7 @@ public abstract class FSAdapter implements Adapter {
      *                    fileName  文件名称
      *                    userId      空间id
      *                    type        文件类型
+     *                    secure.key  加密密钥
      *                    }
      * @return {
      * res:上传结果/错误,
@@ -180,6 +181,7 @@ public abstract class FSAdapter implements Adapter {
     public JSONObject upload(InputStream inputStream, JSONObject jsonObject) throws IOException {
         // 首先获取到 文件的路径
         final Config config = this.getConfig();
+        Adapter.checkJsonObj(config, jsonObject);
         final PathGeneration pathGeneration = (PathGeneration) config.get(Config.GENERATION_RULES);
         final String path = pathGeneration.function(
                 jsonObject
@@ -214,6 +216,7 @@ public abstract class FSAdapter implements Adapter {
      *                   fileName  文件名称
      *                   userId      空间id
      *                   type        文件类型
+     *                   secure.key  加密密钥
      *                   }
      * @return {res: 删除结果,maxSize: 当前空间的最大使用量,}
      */
@@ -221,6 +224,7 @@ public abstract class FSAdapter implements Adapter {
     public JSONObject remove(JSONObject jsonObject) throws IOException {
         // 获取到路径
         final Config config = this.getConfig();
+        Adapter.checkJsonObj(config, jsonObject);
         final String path = ((PathGeneration) config.get(Config.GENERATION_RULES)).function(
                 jsonObject
         );
@@ -234,8 +238,9 @@ public abstract class FSAdapter implements Adapter {
      * @param jsonObject {
      *                   fileName  文件名称,
      *                   newName  文件重命名之后的名称,
-     *                   userId      空间id
-     *                   type        文件类型
+     *                   userId      空间id,
+     *                   type        文件类型,
+     *                   secure.key  加密密钥
      *                   }
      * @return {
      * res : 结果
@@ -251,6 +256,7 @@ public abstract class FSAdapter implements Adapter {
     public JSONObject reName(JSONObject jsonObject) throws IOException {
         // 获取到路径
         final Config config = this.getConfig();
+        Adapter.checkJsonObj(config, jsonObject);
         // 移除文件名字 用来生成父目录
         final Object fileName = jsonObject.remove("fileName");
         // 这里就是父目录
@@ -270,6 +276,7 @@ public abstract class FSAdapter implements Adapter {
      * @param jsonObject {
      *                   userId      空间id,
      *                   type        文件类型,
+     *                   secure.key  加密密钥
      *                   }
      * @return {
      * res : 结果
@@ -283,6 +290,7 @@ public abstract class FSAdapter implements Adapter {
     public JSONObject getUrls(JSONObject jsonObject) throws IOException {
         // 获取到路径
         final Config config = this.getConfig();
+        Adapter.checkJsonObj(config, jsonObject);
         final PathGeneration pathGeneration = (PathGeneration) config.get(Config.GENERATION_RULES);
         final String path = pathGeneration.function(
                 jsonObject

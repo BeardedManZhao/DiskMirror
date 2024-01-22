@@ -4,15 +4,16 @@ import top.lingyuzhao.diskMirror.conf.Config;
 
 /**
  * 盘镜 门户类 在这里您可以非常方便获取到您需要的适配器
- *
+ * <p>
  * Here, you can easily obtain the adapter you need for the Panjing Portal class
+ *
  * @author zhao lingyu
  */
 public enum DiskMirror {
 
     /**
      * 本地文件系统适配器
-     *
+     * <p>
      * Local file system adapter
      */
     LocalFSAdapter {
@@ -30,7 +31,7 @@ public enum DiskMirror {
 
     /**
      * HDFS 分布式文件系统适配器，通过此适配器您可以对接到 HDFS 中。
-     *
+     * <p>
      * HDFS distributed file system adapter, through which you can connect to HDFS.
      */
     HDFSAdapter {
@@ -48,7 +49,7 @@ public enum DiskMirror {
 
     /**
      * 当前盘镜库的版本
-     *
+     * <p>
      * The current version of the disk mirror library
      */
     public final static String VERSION = "1.1.0";
@@ -83,12 +84,12 @@ public enum DiskMirror {
 
     /**
      * 通过配置类，创建出对应的适配器对象
-     *
+     * <p>
      * Create the corresponding adapter object by configuring the class
      *
      * @param config 配置类
      * @return 适配器对象 能够用于管理磁盘文件
-     *
+     * <p>
      * The adapter object can be used to manage disk files
      */
     public abstract Adapter getAdapter(Config config);
