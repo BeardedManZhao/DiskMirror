@@ -5,7 +5,9 @@ import top.lingyuzhao.diskMirror.utils.PathGeneration;
 
 
 /**
- * 配置类
+ * 盘镜配置类，用于存储配置信息，此配置类是通过JSON对象实现的，因此可以使用JSON对象的API进行操作。
+ * <p>
+ * The disk mirror configuration class is used to store configuration information. This configuration class is implemented through JSON objects, so it can be operated using the API of JSON objects.
  *
  * @author zhao
  */
@@ -51,6 +53,12 @@ public class Config extends JSONObject {
     public final static String USER_DISK_MIRROR_SPACE_QUOTA = "user.disk.mirror.space.quota";
 
     /**
+     * 盘镜服务中的安全密钥配置，此密钥对应的如果是字符串，则会转换为 hash 值 如果是数值 则会被直接做为密钥
+     * 设置了密钥之后，则在访问盘镜服务时，需要在请求的数据包中添加（secure.key, xxx）
+     */
+    public final static String SECURE_KEY = "secure.key";
+
+    /**
      * 用户 盘镜 空间配合映射表，通过此处的映射操作可以获取到指定用户的空间的使用量最大值。
      */
     private final static JSONObject SPACE_SIZE = new JSONObject();
@@ -68,6 +76,7 @@ public class Config extends JSONObject {
         super.put(PROTOCOL_PREFIX, "http://localhost:8080");
         super.put(USER_DISK_MIRROR_SPACE_QUOTA, 128 << 10 << 10);
         super.putObject(PARAMS);
+        super.put(SECURE_KEY, 0);
         // 默认的路径生成逻辑  由 <空间id，文件名称> 生成 文件路径
         super.put(GENERATION_RULES, (PathGeneration) jsonObject -> {
             final int userId = jsonObject.getIntValue("userId");
@@ -108,5 +117,30 @@ public class Config extends JSONObject {
      */
     public void setSpaceMaxSize(String spaceId, long maxSize) {
         SPACE_SIZE.put(spaceId, maxSize);
+    }
+
+    /**
+     * @return 获取到安全密钥 您可以在这里查询到密钥对应的数值，因为 setSecureKey 函数中的形参如果是字符串，则会转换为 hash 值 如果是数值 则会被直接做为密钥，所以需要这个函数获取到最终的密钥结果，这个密钥结果需要被提供给函数。
+     * <p>
+     * To obtain the security key, you can search for the corresponding numerical value here. If the formal parameter in the setSecureKey function is a string, it will be converted to a hash value. If it is a numerical value, it will be directly used as the key. Therefore, this function needs to obtain the final key result, which needs to be provided to the function
+     */
+    public int getSecureKey() {
+        return (int) this.get(SECURE_KEY);
+    }
+
+    /**
+     * 设置安全密钥
+     *
+     * @param k 密钥 可以是字符传 也可以是数值
+     */
+    public void setSecureKey(Object k) {
+        if (k instanceof String) {
+            k = k.hashCode();
+        }
+        if (k instanceof Integer) {
+            this.put(SECURE_KEY, k);
+        } else {
+            throw new UnsupportedOperationException("您在 setSecureKey 设置密钥的时候，参数只能是字符串或数值。\nWhen setting the key in setSecureKey, the parameters can only be strings or numerical values.\nerror type = " + k.getClass().getName());
+        }
     }
 }

@@ -3,7 +3,7 @@ package top.lingyuzhao.diskMirror.core;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.conf.Config;
-import zhao.utils.IOUtils;
+import top.lingyuzhao.utils.IOUtils;
 
 import java.io.*;
 import java.nio.file.DirectoryStream;
@@ -148,7 +148,7 @@ public final class LocalFSAdapter extends FSAdapter {
             if (file.renameTo(new File(path + inJson.getString("newName")))) {
                 inJson.put(config.getString(Config.RES_KEY), config.getString(Config.OK_VALUE));
             } else {
-                inJson.put(config.getString(Config.RES_KEY), "重命名失败，请稍后再试!!!");
+                inJson.put(config.getString(Config.RES_KEY), "重命名失败，请稍后再试!!!（可能是您重命名之后的文件路径的父目录不存在）");
             }
         }
         return inJson;

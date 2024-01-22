@@ -7,9 +7,22 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * 适配器对象
+ * 适配器对象的接口
  */
 public interface Adapter {
+
+    /**
+     * 检查函数 此函数会处于所有服务函数的第一行
+     *
+     * @param config     需要使用的适配器的配置类对象
+     * @param jsonObject 需要被检查的 json 对象
+     */
+    static void checkJsonObj(Config config, JSONObject jsonObject) {
+        final int orDefault = jsonObject == null ? 0 : (int) jsonObject.getOrDefault(Config.SECURE_KEY, 0);
+        if (config.getSecureKey() != orDefault) {
+            throw new UnsupportedOperationException("您提供的密钥错误，diskMirror 拒绝了您的访问\nThe key you provided is incorrect, and diskMirror has denied your access\nerror key = " + orDefault);
+        }
+    }
 
     /**
      * 获取到适配器配置类对象
@@ -42,7 +55,8 @@ public interface Adapter {
      * @param jsonObject  {
      *                    fileName  文件名称
      *                    userId      空间id
-     *                    type        文件类型
+     *                    type        文件类型,
+     *                    secure.key  加密密钥
      *                    }
      * @return {
      * res:上传结果,
@@ -60,7 +74,8 @@ public interface Adapter {
      * @param jsonObject {
      *                   fileName  文件名称
      *                   userId      空间id
-     *                   type        文件类型
+     *                   type        文件类型,
+     *                   secure.key  加密密钥
      *                   }
      * @return {res: 删除结果}
      * @throws IOException 操作异常
@@ -74,7 +89,8 @@ public interface Adapter {
      *                   fileName  文件名称,
      *                   newName  文件重命名之后的名称,
      *                   userId      空间id
-     *                   type        文件类型
+     *                   type        文件类型,
+     *                   secure.key  加密密钥
      *                   }
      * @return {res: 删除结果}
      * @throws IOException 操作异常
@@ -87,6 +103,7 @@ public interface Adapter {
      * @param jsonObject {
      *                   userId      空间id,
      *                   type        文件类型,
+     *                   secure.key  加密密钥
      *                   }
      * @return {
      * userId:文件所属用户id,
@@ -107,6 +124,7 @@ public interface Adapter {
      * @param jsonObject {
      *                   userId      空间id,
      *                   type        文件类型,
+     *                   secure.key  加密密钥
      *                   }
      * @return 空间已使用的大小
      * @throws IOException 操作异常
