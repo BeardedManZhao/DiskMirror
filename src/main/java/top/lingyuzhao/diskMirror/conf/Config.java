@@ -43,7 +43,7 @@ public class Config extends JSONObject {
     public final static String PROTOCOL_PREFIX = "protocol.prefix";
 
     /**
-     * 请求的url中的参数
+     * 请求的url中的参数, 当读取请求时，如果您有一些参数的需求，可以通过此配置设置一个 json 对象，如：{"op":"OPEN"}
      */
     public final static String PARAMS = "params";
 
@@ -78,25 +78,61 @@ public class Config extends JSONObject {
         super.putObject(PARAMS);
         super.put(SECURE_KEY, 0);
         // 默认的路径生成逻辑  由 <空间id，文件名称> 生成 文件路径
-        super.put(GENERATION_RULES, (PathGeneration) jsonObject -> {
+        super.put(GENERATION_RULES, getPathGeneration(this));
+    }
+
+    /**
+     * 通过配置类的注解构造一个配置对象
+     *
+     * @param config 配置注解对象
+     */
+    public Config(DiskMirrorConfig config) {
+        super();
+        super.put(ROOT_DIR, config.rootDir());
+        super.put(FS_DEFAULT_FS, config.fsDefaultFS());
+        super.put(OK_VALUE, config.okValue());
+        super.put(RES_KEY, config.resKey());
+        super.put(PROTOCOL_PREFIX, config.protocolPrefix());
+        super.put(USER_DISK_MIRROR_SPACE_QUOTA, config.userDiskMirrorSpaceQuota());
+        super.put(PARAMS, JSONObject.parse(config.params()));
+        super.put(SECURE_KEY, config.secureKey());
+        // 默认的路径生成逻辑  由 <空间id，文件名称> 生成 文件路径
+        super.put(GENERATION_RULES, getPathGeneration(this));
+    }
+
+    /**
+     * 获取路径生成逻辑实现函数
+     *
+     * @param config 需要用于的配置类
+     * @return 路径生成逻辑实现函数
+     */
+    protected static PathGeneration getPathGeneration(Config config) {
+        return jsonObject -> {
             final int userId = jsonObject.getIntValue("userId");
             final String type = jsonObject.get("type").toString();
             final String fileName = jsonObject.getString("fileName");
-            Object isRead = jsonObject.get("useAgreement");
-            if (isRead == null) {
-                isRead = false;
-            }
+            final String fn = fileName != null ? fileName : "";
+            boolean isRead = (boolean) jsonObject.getOrDefault("useAgreement", false);
             // 如果是读取 同时 具有前部协议 则 在这里去掉 路径前缀 使用 协议前缀替代 反之加上路径前缀
-            final String rootDir = (((boolean) isRead) && super.getString(PROTOCOL_PREFIX).length() != 0) ? "" : (String) super.get(ROOT_DIR);
+            final String rootDir = (isRead && config.getString(PROTOCOL_PREFIX).length() != 0) ? "" : (String) config.get(ROOT_DIR);
             // 生成参数
             final StringBuilder stringBuilder = new StringBuilder();
-            super.getJSONObject(PARAMS).forEach((k, v) -> stringBuilder.append(k).append("=").append(v).append("&"));
-            if (fileName != null) {
-                return rootDir + '/' + userId + '/' + type + '/' + fileName + (stringBuilder.length() == 0 ? "" : "?" + stringBuilder);
-            } else {
-                return rootDir + '/' + userId + '/' + type + '/' + (stringBuilder.length() == 0 ? "" : "?" + stringBuilder);
+            if (isRead) {
+                config.getJSONObject(PARAMS).forEach((k, v) -> stringBuilder.append(k).append("=").append(v).append("&"));
             }
-        });
+            // 生成参数字符串
+            final String s = stringBuilder.length() == 0 ? "" : "?" + stringBuilder;
+            // 开始构建[空间路径（无协议）, 空间路径（有协议）, 文件路径（无协议）, 文件路径（有协议）]
+            final String
+                    s1 = rootDir + '/' + userId + '/' + type + '/',
+                    s2 = (String) config.get(ROOT_DIR) + '/' + userId + '/' + type + '/';
+            return new String[]{
+                    s2 + s,
+                    s1 + s,
+                    s2 + fn + s,
+                    s1 + fn + s
+            };
+        };
     }
 
     /**

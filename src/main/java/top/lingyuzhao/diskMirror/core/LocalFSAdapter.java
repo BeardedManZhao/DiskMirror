@@ -13,7 +13,7 @@ import java.nio.file.Paths;
 
 
 /**
- * 本地文件系统适配器
+ * 本地文件系统适配器，支持对于本地文件系统的管理控制
  *
  * @author zhao
  */
@@ -87,7 +87,7 @@ public final class LocalFSAdapter extends FSAdapter {
                 jsonObject1.put("isDir", false);
             }
         }
-        jsonObject.put("useSize", this.getUseSize(jsonObject));
+        jsonObject.put("useSize", this.getUseSize(jsonObject, path.getPath()));
         jsonObject.put(res_key, config.getString(Config.OK_VALUE));
         return jsonObject;
     }
@@ -95,6 +95,20 @@ public final class LocalFSAdapter extends FSAdapter {
     @Override
     protected JSONObject pathProcessorGetUrls(String path, String path_res, JSONObject jsonObject) throws IOException {
         return pathProcessorGetUrls(new File(path), path_res, jsonObject, jsonObject.getObject("type", Type.class), true);
+    }
+
+    /**
+     * 路径处理器 接收一个路径 输出结果对象
+     *
+     * @param path   路径对象
+     * @param inJson 文件输入的 json 对象
+     * @return {"res": 创建结果}
+     * @throws IOException 操作异常
+     */
+    @Override
+    protected JSONObject pathProcessorMkdirs(String path, JSONObject inJson) throws IOException {
+        inJson.put(config.getString(Config.RES_KEY), new File(path).mkdirs() ? config.getString(Config.OK_VALUE) : "文件目录创建失败，可能文件目录已经存在了!!!");
+        return inJson;
     }
 
     @Override

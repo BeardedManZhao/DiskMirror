@@ -110,6 +110,16 @@ public abstract class FSAdapter implements Adapter {
     protected abstract JSONObject pathProcessorGetUrls(String path, String path_res, JSONObject inJson) throws IOException;
 
     /**
+     * 路径处理器 接收一个路径 输出结果对象
+     *
+     * @param path   路径对象
+     * @param inJson 文件输入的 json 对象
+     * @return {"res": 创建结果}
+     * @throws IOException 操作异常
+     */
+    protected abstract JSONObject pathProcessorMkdirs(String path, JSONObject inJson) throws IOException;
+
+    /**
      * 路径处理器 接收一个路径 输出结果对象  需要注意的是 您需要在这里设置返回的 useSize
      *
      * @param path   路径对象
@@ -183,7 +193,7 @@ public abstract class FSAdapter implements Adapter {
         final Config config = this.getConfig();
         Adapter.checkJsonObj(config, jsonObject);
         final PathGeneration pathGeneration = (PathGeneration) config.get(Config.GENERATION_RULES);
-        final String path = pathGeneration.function(
+        final String[] path = pathGeneration.function(
                 jsonObject
         );
         // 首先获取到使用的空间占用
@@ -199,7 +209,7 @@ public abstract class FSAdapter implements Adapter {
             throw new IOException("id为 " + userId + " 的 " + type + " 空间不足，因为上传《" + jsonObject.getString("fileName") + "》之后的字节数【" + l + "】 > 最大字节数【" + maxSize + "】");
         }
         try {
-            final JSONObject jsonObject1 = pathProcessorUpload(path, pathGeneration.function(jsonObject), jsonObject, inputStream);
+            final JSONObject jsonObject1 = pathProcessorUpload(path[2], path[3], jsonObject, inputStream);
             jsonObject1.put("useSize", l);
             jsonObject1.put("maxSize", maxSize);
             return jsonObject1;
@@ -225,11 +235,11 @@ public abstract class FSAdapter implements Adapter {
         // 获取到路径
         final Config config = this.getConfig();
         Adapter.checkJsonObj(config, jsonObject);
-        final String path = ((PathGeneration) config.get(Config.GENERATION_RULES)).function(
+        final String[] path = ((PathGeneration) config.get(Config.GENERATION_RULES)).function(
                 jsonObject
         );
         jsonObject.put("maxSize", config.getSpaceMaxSize(jsonObject.getString("userId")));
-        return this.pathProcessorRemove(path, jsonObject);
+        return this.pathProcessorRemove(path[2], jsonObject);
     }
 
     /**
@@ -257,17 +267,13 @@ public abstract class FSAdapter implements Adapter {
         // 获取到路径
         final Config config = this.getConfig();
         Adapter.checkJsonObj(config, jsonObject);
-        // 移除文件名字 用来生成父目录
-        final Object fileName = jsonObject.remove("fileName");
-        // 这里就是父目录
-        final String path = ((PathGeneration) config.get(Config.GENERATION_RULES)).function(
+        // 这里就是父目录和子目录
+        final String[] path = ((PathGeneration) config.get(Config.GENERATION_RULES)).function(
                 jsonObject
         );
-        // 重新添加文件名字
-        jsonObject.put("fileName", fileName);
-        jsonObject.put("useSize", getUseSize(jsonObject.clone()));
+        jsonObject.put("useSize", getUseSize(jsonObject, path[0]));
         jsonObject.put("maxSize", config.getSpaceMaxSize(jsonObject.getString("userId")));
-        return this.pathProcessorReName(path, jsonObject);
+        return this.pathProcessorReName(path[0], jsonObject);
     }
 
     /**
@@ -292,14 +298,65 @@ public abstract class FSAdapter implements Adapter {
         final Config config = this.getConfig();
         Adapter.checkJsonObj(config, jsonObject);
         final PathGeneration pathGeneration = (PathGeneration) config.get(Config.GENERATION_RULES);
-        final String path = pathGeneration.function(
+        final String[] path = pathGeneration.function(
                 jsonObject
         );
-        jsonObject.put("useSize", getUseSize(jsonObject));
+        jsonObject.put("useSize", getUseSize(jsonObject, path[0]));
         jsonObject.put("useAgreement", config.getString(Config.PROTOCOL_PREFIX).length() > 0);
         jsonObject.put("maxSize", config.getSpaceMaxSize(jsonObject.getString("userId")));
-        return pathProcessorGetUrls(path, pathGeneration.function(jsonObject), jsonObject);
+        return pathProcessorGetUrls(path[0], path[1], jsonObject);
     }
+
+    /**
+     * 通过盘镜在指定的用户文件空间中创建一个文件夹
+     *
+     * @param jsonObject {
+     *                   fileName     文件目录名称
+     *                   userId      空间id
+     *                   type        文件类型,
+     *                   secure.key  加密密钥
+     *                   }
+     * @return {res: 操作结果}
+     * @throws IOException 创建过程出现错误则返回此异常对象
+     */
+    @Override
+    public JSONObject mkdirs(JSONObject jsonObject) throws IOException {
+        // 获取到路径
+        final Config config = this.getConfig();
+        Adapter.checkJsonObj(config, jsonObject);
+        final PathGeneration pathGeneration = (PathGeneration) config.get(Config.GENERATION_RULES);
+        final String[] path = pathGeneration.function(
+                jsonObject
+        );
+        // 直接开始创建
+        jsonObject.put("useSize", this.getUseSize(jsonObject, path[0]));
+        return pathProcessorMkdirs(path[2], jsonObject);
+    }
+
+    /**
+     * 获取用户使用空间大小
+     *
+     * @param jsonObject {
+     *                   userId      空间id,
+     *                   type        文件类型,
+     *                   }
+     * @param path       需要被统计的空间的路径，需要注意这里不能包含任何的子文件
+     * @return 空间已使用的大小
+     */
+    @Override
+    public long getUseSize(JSONObject jsonObject, String path) throws IOException {
+        final Integer userId = jsonObject.getInteger("userId");
+        final String key = userId + jsonObject.getString("type");
+        if (HASH_MAP.containsKey(key)) {
+            // 代表有值了 直接返回 Map 中的值
+            return HASH_MAP.get(key);
+        }
+        // 计算占用空间
+        final long l = this.pathProcessorUseSize(path, jsonObject);
+        HASH_MAP.put(key, l);
+        return l;
+    }
+
 
     /**
      * 获取用户使用空间大小
@@ -312,23 +369,10 @@ public abstract class FSAdapter implements Adapter {
      */
     @Override
     public long getUseSize(JSONObject jsonObject) throws IOException {
-        final Integer userId = jsonObject.getInteger("userId");
-        final String key = userId + jsonObject.getString("type");
-        if (HASH_MAP.containsKey(key)) {
-            // 代表有值了 直接返回 Map 中的值
-            return HASH_MAP.get(key);
-        }
         // 如果需要计算就先在这里判断是否包含文件名字 如果包含就去除文件名字
-        jsonObject.remove("fileName");
-        // 计算路径
-        final PathGeneration pathGeneration = (PathGeneration) config.get(Config.GENERATION_RULES);
-        final String path = pathGeneration.function(
+        return getUseSize(jsonObject, ((PathGeneration) config.get(Config.GENERATION_RULES)).function(
                 jsonObject
-        );
-        // 计算占用空间
-        final long l = this.pathProcessorUseSize(path, jsonObject);
-        HASH_MAP.put(key, l);
-        return l;
+        )[0]);
     }
 
     /**

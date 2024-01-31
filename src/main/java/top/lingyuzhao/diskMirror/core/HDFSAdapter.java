@@ -40,7 +40,7 @@ public class HDFSAdapter extends FSAdapter {
     @Override
     protected JSONObject pathProcessorUpload(String path, String path_res, JSONObject jsonObject, InputStream inputStream) throws IOException {
         // 首先获取到 HDFS 中的数据流
-        final Path path1 = new Path(config.get(Config.FS_DEFAULT_FS) + StrUtils.splitBy(path, '?', 2)[0]);
+        final Path path1 = new Path(config.get(Config.FS_DEFAULT_FS) + path);
         if (fileSystem.exists(path1)) {
             throw new IOException("文件《" + jsonObject.getString("fileName") + "》已经存在!");
         }
@@ -90,7 +90,7 @@ public class HDFSAdapter extends FSAdapter {
                 }
             }
         }
-        jsonObject.put("useSize", this.getUseSize(jsonObject));
+        jsonObject.put("useSize", this.getUseSize(jsonObject, path));
         jsonObject.put(res_key, config.getString(Config.OK_VALUE));
         return jsonObject;
     }
@@ -100,10 +100,23 @@ public class HDFSAdapter extends FSAdapter {
         return this.pathProcessorGetUrls(path, path_res, jsonObject, true);
     }
 
+    /**
+     * 路径处理器 接收一个路径 输出结果对象
+     *
+     * @param path   路径对象
+     * @param inJson 文件输入的 json 对象
+     * @return {"res": 创建结果}
+     * @throws IOException 操作异常
+     */
+    @Override
+    protected JSONObject pathProcessorMkdirs(String path, JSONObject inJson) throws IOException {
+        inJson.put(config.getString(Config.RES_KEY), fileSystem.mkdirs(new Path(path)) ? config.getString(Config.OK_VALUE) : "创建失败，可能文件目录已经存在，或者无法连接到 HDFS 服务器");
+        return inJson;
+    }
+
     @Override
     protected JSONObject pathProcessorRemove(String path, JSONObject inJson) {
         try {
-            path = StrUtils.splitBy(path, '?', 2)[0];
             final Path path1 = new Path(path);
             if (!fileSystem.exists(path1)) {
                 // 如果不存在就代表不需要删除
@@ -134,7 +147,6 @@ public class HDFSAdapter extends FSAdapter {
      */
     @Override
     protected JSONObject pathProcessorReName(String path, JSONObject inJson) throws IOException {
-        path = StrUtils.splitBy(path, '?', 2)[0];
         Path oldPath = new Path(path + inJson.getString("fileName"));  //旧的路径
         Path newPath = new Path(path + inJson.getString("newName"));  //新的路径
         if (fileSystem.rename(oldPath, newPath)) {
@@ -154,8 +166,6 @@ public class HDFSAdapter extends FSAdapter {
      */
     @Override
     protected long pathProcessorUseSize(String path, JSONObject inJson) throws IOException {
-        final String[] strings = StrUtils.splitBy(path, '?', 2);
-        path = strings.length > 0 ? strings[0] : path;
         final Path path1 = new Path(path);
         RemoteIterator<LocatedFileStatus> iterator = fileSystem.exists(path1) ? fileSystem.listFiles(path1, true) : null;
         long useSize = 0;
@@ -192,8 +202,8 @@ public class HDFSAdapter extends FSAdapter {
      * @throws IOException 删除操作出现异常
      */
     private long rDelete(Path path) throws IOException {
-        final FsStatus status = fileSystem.getStatus(path);
-        final long used = status.getUsed();
+        final ContentSummary contentSummary = fileSystem.getContentSummary(path);
+        final long used = contentSummary.getLength();
         if (fileSystem.delete(path, true)) {
             return used;
         }
