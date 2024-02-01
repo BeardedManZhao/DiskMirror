@@ -40,7 +40,7 @@ public class HDFSAdapter extends FSAdapter {
     @Override
     protected JSONObject pathProcessorUpload(String path, String path_res, JSONObject jsonObject, InputStream inputStream) throws IOException {
         // 首先获取到 HDFS 中的数据流
-        final Path path1 = new Path(config.get(Config.FS_DEFAULT_FS) + StrUtils.splitBy(path, '?', 2)[0]);
+        final Path path1 = new Path(config.get(Config.FS_DEFAULT_FS) + path);
         if (fileSystem.exists(path1)) {
             throw new IOException("文件《" + jsonObject.getString("fileName") + "》已经存在!");
         }
@@ -50,21 +50,25 @@ public class HDFSAdapter extends FSAdapter {
         }
         // 返回结果
         jsonObject.put(config.getString(Config.RES_KEY), config.getString(Config.OK_VALUE));
-        jsonObject.put("url", config.get(Config.PROTOCOL_PREFIX) + path_res);
+        jsonObject.put("url", path_res);
         return jsonObject;
     }
 
-    protected JSONObject pathProcessorGetUrls(String path, String path_res, JSONObject jsonObject, boolean addPre) throws IOException {
+    @Override
+    protected JSONObject pathProcessorGetUrls(String path, String path_res, JSONObject jsonObject) throws IOException {
         final String[] strings = StrUtils.splitBy(path, '?', 2);
         path = strings.length > 0 ? strings[0] : path;
-        final String param_path = strings.length > 1 ? strings[1] : "";
-        final String res_key = config.getString(Config.RES_KEY);
         path_res = StrUtils.splitBy(path_res, '?', 2)[0];
+        return pathProcessorGetUrls(path, path_res, jsonObject, strings.length > 1 ? strings[1] : "");
+    }
+
+
+    protected JSONObject pathProcessorGetUrls(String path, String path_res, JSONObject jsonObject, String paramStr) throws IOException {
+        final String res_key = config.getString(Config.RES_KEY);
         final Path path1 = new Path(path);
         RemoteIterator<FileStatus> iterator = fileSystem.exists(path1) ? fileSystem.listStatusIterator(path1) : null;
         final JSONArray urls = jsonObject.putArray("urls");
         // 将所有的子文件添加到数组中
-        final String string = addPre ? config.getString(Config.PROTOCOL_PREFIX) : "";
         if (iterator != null) {
             while (iterator.hasNext()) {
                 FileStatus subPath = iterator.next();
@@ -72,10 +76,10 @@ public class HDFSAdapter extends FSAdapter {
                 final Path path2 = subPath.getPath();
                 final String name = path2.getName();
                 final String filePath_HDFS = path + '/' + name;
-                final String filePath = path_res + '/' + name + "?" + param_path;
-                final String filePath_pre = string + filePath;
+                final String fnNoParam = path_res + '/' + name;
+                final String filePath = fnNoParam + "?" + paramStr;
                 jsonObject1.put("fileName", name);
-                jsonObject1.put("url", filePath_pre);
+                jsonObject1.put("url", filePath);
                 jsonObject1.put("lastModified", subPath.getModificationTime());
                 jsonObject1.put("size", subPath.getLen());
                 jsonObject1.put("type", jsonObject.get("type"));
@@ -84,26 +88,34 @@ public class HDFSAdapter extends FSAdapter {
                 } else {
                     // 如果是目录就继续获取到子目录
                     jsonObject1.put("isDir", true);
-                    jsonObject1.putAll(this.pathProcessorGetUrls(filePath_HDFS, filePath_pre, jsonObject1.clone(), false));
+                    jsonObject1.putAll(this.pathProcessorGetUrls(filePath_HDFS, fnNoParam, jsonObject1.clone(), paramStr));
                     jsonObject1.remove("useSize");
                     jsonObject1.remove(res_key);
                 }
             }
         }
-        jsonObject.put("useSize", this.getUseSize(jsonObject));
+        jsonObject.put("useSize", this.getUseSize(jsonObject, path));
         jsonObject.put(res_key, config.getString(Config.OK_VALUE));
         return jsonObject;
     }
 
+    /**
+     * 路径处理器 接收一个路径 输出结果对象
+     *
+     * @param path   路径对象
+     * @param inJson 文件输入的 json 对象
+     * @return {"res": 创建结果}
+     * @throws IOException 操作异常
+     */
     @Override
-    protected JSONObject pathProcessorGetUrls(String path, String path_res, JSONObject jsonObject) throws IOException {
-        return this.pathProcessorGetUrls(path, path_res, jsonObject, true);
+    protected JSONObject pathProcessorMkdirs(String path, JSONObject inJson) throws IOException {
+        inJson.put(config.getString(Config.RES_KEY), fileSystem.mkdirs(new Path(path)) ? config.getString(Config.OK_VALUE) : "创建失败，可能文件目录已经存在，或者无法连接到 HDFS 服务器");
+        return inJson;
     }
 
     @Override
     protected JSONObject pathProcessorRemove(String path, JSONObject inJson) {
         try {
-            path = StrUtils.splitBy(path, '?', 2)[0];
             final Path path1 = new Path(path);
             if (!fileSystem.exists(path1)) {
                 // 如果不存在就代表不需要删除
@@ -134,7 +146,6 @@ public class HDFSAdapter extends FSAdapter {
      */
     @Override
     protected JSONObject pathProcessorReName(String path, JSONObject inJson) throws IOException {
-        path = StrUtils.splitBy(path, '?', 2)[0];
         Path oldPath = new Path(path + inJson.getString("fileName"));  //旧的路径
         Path newPath = new Path(path + inJson.getString("newName"));  //新的路径
         if (fileSystem.rename(oldPath, newPath)) {
@@ -154,8 +165,6 @@ public class HDFSAdapter extends FSAdapter {
      */
     @Override
     protected long pathProcessorUseSize(String path, JSONObject inJson) throws IOException {
-        final String[] strings = StrUtils.splitBy(path, '?', 2);
-        path = strings.length > 0 ? strings[0] : path;
         final Path path1 = new Path(path);
         RemoteIterator<LocatedFileStatus> iterator = fileSystem.exists(path1) ? fileSystem.listFiles(path1, true) : null;
         long useSize = 0;
@@ -192,8 +201,8 @@ public class HDFSAdapter extends FSAdapter {
      * @throws IOException 删除操作出现异常
      */
     private long rDelete(Path path) throws IOException {
-        final FsStatus status = fileSystem.getStatus(path);
-        final long used = status.getUsed();
+        final ContentSummary contentSummary = fileSystem.getContentSummary(path);
+        final long used = contentSummary.getLength();
         if (fileSystem.delete(path, true)) {
             return used;
         }

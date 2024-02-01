@@ -19,7 +19,7 @@ url，在诸多场景中可以简化IO相关的实现操作，能够降低开发
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.1.0</version>
+        <version>1.1.1</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -52,6 +52,8 @@ url，在诸多场景中可以简化IO相关的实现操作，能够降低开发
 
 适配器就是在 盘镜 中进行数据的传输的通道，而如果想要使用 盘镜，就需要实例化适配器，下面我们将演示如何实例化本地文件系统的适配器。
 
+#### 使用配置类实例化盘镜
+
 ```java
 package top.lingyuzhao.diskMirror.test;
 
@@ -78,6 +80,37 @@ public final class MAIN {
     }
 }
 
+```
+
+#### 使用配置注解实例化盘镜
+
+从 1.1.1 版本开始 支持通过配置注解来实例化一个盘镜适配器对象，相对于使用配置类来进行实例化而言，这样更简洁。
+
+```java
+package top.lingyuzhao.diskMirror.test;
+
+import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
+import top.lingyuzhao.diskMirror.core.Adapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+
+/**
+ * @author zhao
+ */
+@DiskMirrorConfig(
+        // 配置根目录 也是能够被盘镜 管理的目录，所有的管理操作只会在这个目录中生效，默认是/DiskMirror!
+        rootDir = "/DiskMirrorDir",
+        // 配置所有的 url 中的协议前缀，这会影响 getUrls 的结果， 如果您只是在本地文件系统中获取这些数据 就是文件系统的协议前缀，也就是什么都不加
+        // 如果您要在 hdfs 文件系统中获取这些数据 这就是 hdfs 的协议前缀
+        // 如果您要在 web JS 或者通过 url 中获取这些数据 这就是 web 的 http 协议前缀
+        // 在这里我们给定空字符串就是代表使用本地文件系统
+        protocolPrefix = ""
+)
+public final class MAIN {
+    public static void main(String[] args) {
+        // 开始构建盘镜 由于我们在这里使用的是本地文件系统 所以我们使用 DiskMirror.LocalFSAdapter.getAdapter(被注解的类对象) 来实例化 本地文件系统适配器
+        final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(MAIN.class);
+    }
+}
 ```
 
 ### 向适配器中写入数据
@@ -394,6 +427,45 @@ public final class MAIN {
 进程已结束,退出代码0
 ```
 
+### 通过适配器创建一个文件目录
+
+从 diskMirror 1.1.1 版本开始 针对文件目录的创建功能开始被支持，1.0.0 版本之后，diskMirror 能够实现路径的功能，提高了灵活性，而在最新的 1.1.1 版本中，可以显式的创建一个文件目录。
+
+```java
+package top.lingyuzhao.diskMirror.test;
+
+import com.alibaba.fastjson2.JSONObject;
+import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
+import top.lingyuzhao.diskMirror.core.Adapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+import top.lingyuzhao.diskMirror.core.Type;
+
+import java.io.IOException;
+
+/**
+ * @author zhao
+ */
+@DiskMirrorConfig()
+public final class MAIN {
+    public static void main(String[] args) throws IOException {
+        // 获取到本地文件系统适配器
+        final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(MAIN.class);
+        // 准备参数
+        final JSONObject jsonObject = new JSONObject();
+        jsonObject.put("userId", 1024);
+        jsonObject.put("type", Type.Binary);
+        // 设置要创建的目录
+        jsonObject.put("fileName", "MyDir");
+        // 直接创建
+        // {"userId":1024,"type":"Binary","fileName":"MyDir","useSize":0,"res":"ok!!!!"}
+        System.out.println(adapter.mkdirs(jsonObject));
+        // 查看文件系统结构 这里由于只需要 userId type 而恰巧在上面我们设置好了 所以直接将上面的json 输入
+        // {"userId":1024,"type":"Binary","fileName":"MyDir","useSize":0,"res":"ok!!!!","useAgreement":true,"maxSize":134217728,"urls":[{"fileName":"MyDir","url":"http://localhost:8080/1024/Binary//MyDir","lastModified":1706779978911,"size":0,"type":"Binary","isDir":true,"urls":[]}]}
+        System.out.println(adapter.getUrls(jsonObject));
+    }
+}
+```
+
 ## 进阶使用示例
 
 ### 密码设置
@@ -444,6 +516,7 @@ package top.lingyuzhao.diskMirror.test;
 
 import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.conf.Config;
+import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
 import top.lingyuzhao.diskMirror.core.Adapter;
 import top.lingyuzhao.diskMirror.core.DiskMirror;
 import top.lingyuzhao.diskMirror.core.Type;
@@ -454,36 +527,40 @@ import java.io.IOException;
 /**
  * @author zhao
  */
+@DiskMirrorConfig(
+        protocolPrefix = "https://xxx.xxx"
+)
 public final class MAIN {
     public static void main(String[] args) throws IOException {
-        // 实例化配置类
-        final Config config = new Config();
+        // 由于我们在 MAIN 类中使用了配置注解，因此不再需要实例化配置类了
+        // final Config config = new Config();
         // 设置 路径的协议前缀 默认是 http://localhost:8080
-        config.put(Config.PROTOCOL_PREFIX, "http://xxx.xxx");
-        // 装载到适配器 在这里使用本地文件系统
-        final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(config);
+        // config.put(Config.PROTOCOL_PREFIX, "https://xxx.xxx");
+
+        // 获取到适配器 在这里使用本地文件系统 在这里是通过注解实现的配置
+        final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(MAIN.class);
         // 获取到当前适配器所属的版本
         System.out.println("当前适配器版本：" + DiskMirror.LocalFSAdapter.getVersion());
         // 准备一个文件数据流
         try (final FileInputStream fileInputStream = new FileInputStream("C:\\Users\\zhao\\Pictures\\headSculpture - 副本.jpg")) {
             // 将文件保存到 1024 号空间
-            // 打印结果: {"fileName":"arc.png","userId":1024,"type":"Binary","useAgreement":true,"res":"ok!!!!","url":"http://xxx.xxx/1024/Binary/arc.png","useSize":311720}
+            // 打印结果：{"fileName":"arc.png","userId":1024,"type":"Binary","useAgreement":true,"res":"ok!!!!","url":"https://xxx.xxx/1024/Binary/arc.png","useSize":311720,"maxSize":134217728}
             save(adapter, fileInputStream, 1024, "arc.png");
         }
         // 准备一个文件数据流
         try (final FileInputStream fileInputStream = new FileInputStream("C:\\Users\\zhao\\Pictures\\defimage2.svg.png")) {
             // 再将一个新文件保存到 1024 号空间
-            // 打印结果: {"fileName":"defimage2.svg.png","userId":1024,"type":"Binary","useAgreement":true,"res":"ok!!!!","url":"http://xxx.xxx/1024/Binary/defimage2.svg.png","useSize":805689}
+            // 打印结果：{"fileName":"defimage2.svg.png","userId":1024,"type":"Binary","useAgreement":true,"res":"ok!!!!","url":"https://xxx.xxx/1024/Binary/defimage2.svg.png","useSize":805689,"maxSize":134217728}
             save(adapter, fileInputStream, 1024, "defimage2.svg.png");
         }
 
         // 读取 1024 号空间中的所有 url 由于刚刚保存文件的操作出现在这里 所以 1024 号空间应该是有刚才的文件的
-        // 打印结果: {"userId":1024,"type":"Binary","useSize":805689,"useAgreement":true,"urls":[{"fileName":"arc.png","url":"http://xxx.xxx/1024/Binary//arc.png","lastModified":1702902167167,"size":311720},{"fileName":"defimage2.svg.png","url":"http://xxx.xxx/1024/Binary//defimage2.svg.png","lastModified":1702902167270,"size":493969}],"res":"ok!!!!"}
+        // 打印结果：{"userId":1024,"type":"Binary","useSize":805689,"useAgreement":true,"maxSize":134217728,"urls":[{"fileName":"arc.png","url":"https://xxx.xxx/1024/Binary//arc.png","lastModified":1706775810959,"size":311720,"type":"Binary","isDir":false},{"fileName":"defimage2.svg.png","url":"https://xxx.xxx/1024/Binary//defimage2.svg.png","lastModified":1706775811064,"size":493969,"type":"Binary","isDir":false}],"res":"ok!!!!"}
         read(adapter, 1024);
 
 
         // 读取 2048 号空间中的所有 url 这里并没有进行过保存 所以在这里的空间是没有数据的
-        // 打印结果: {"userId":2048,"type":"Binary","useSize":0,"useAgreement":true,"res":"空间 [/DiskMirror/2048/Binary/] 不可读!!!"}
+        // 打印结果：{"userId":2048,"type":"Binary","useSize":0,"useAgreement":true,"maxSize":134217728,"res":"空间 [\\DiskMirror\\2048\\Binary] 不可读!!!"}
         read(adapter, 2048);
 
         // 删除 1024 空间中的文件 arc.png
@@ -495,11 +572,11 @@ public final class MAIN {
         // 设置文件类型 根据自己的文件类型选择不同的类型
         jsonObject.put("type", Type.Binary);
         final JSONObject remove = adapter.remove(jsonObject);
-        // 打印结果：{"fileName":"arc.png","userId":1024,"type":"Binary","useSize":493969,"res":"ok!!!!"}
+        // 打印结果：{"fileName":"arc.png","userId":1024,"type":"Binary","maxSize":134217728,"useSize":493969,"res":"ok!!!!"}
         System.out.println(remove);
 
         // 删除之后再次查看 1024 空间中的目录
-        // 打印结果：{"userId":1024,"type":"Binary","useSize":493969,"useAgreement":true,"urls":[{"fileName":"defimage2.svg.png","url":"http://xxx.xxx/1024/Binary//defimage2.svg.png","lastModified":1702902167270,"size":493969}],"res":"ok!!!!"}
+        // 打印结果：{"userId":1024,"type":"Binary","useSize":493969,"useAgreement":true,"maxSize":134217728,"urls":[{"fileName":"defimage2.svg.png","url":"https://xxx.xxx/1024/Binary//defimage2.svg.png","lastModified":1706775811064,"size":493969,"type":"Binary","isDir":false}],"res":"ok!!!!"}
         read(adapter, 1024);
     }
 
@@ -548,7 +625,7 @@ public final class MAIN {
 package top.lingyuzhao.diskMirror.test;
 
 import com.alibaba.fastjson2.JSONObject;
-import top.lingyuzhao.diskMirror.conf.Config;
+import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
 import top.lingyuzhao.diskMirror.core.Adapter;
 import top.lingyuzhao.diskMirror.core.DiskMirror;
 import top.lingyuzhao.diskMirror.core.Type;
@@ -559,42 +636,41 @@ import java.io.IOException;
 /**
  * @author zhao
  */
+@DiskMirrorConfig(
+        //  TODO 设置 路径的协议前缀 在这里指向的是 HDFS 文件系统 盘镜目录 访问地址
+        protocolPrefix = "http://192.168.0.141:9870/webhdfs/v1/DiskMirror",
+        // TODO 设置 HDFS 服务器地址 在这里指向的是 HDFS 文件系统访问地址 是 hdfs 开头
+        fsDefaultFS = "hdfs://192.168.0.141:8020",
+        // TODO 设置请求参数 HDFS 要求需要设置 OP 参数 在读取返回 url 的时候会使用这个参数进行拼接
+        params = "{\"op\": \"OPEN\"}"
+)
 public final class MAIN {
     public static void main(String[] args) throws IOException {
-        // 实例化配置类
-        final Config config = new Config();
-        // TODO 设置 路径的协议前缀 在这里指向的是 HDFS 文件系统 盘镜目录 访问地址
-        config.put(Config.PROTOCOL_PREFIX, "http://192.168.0.141:9870/webhdfs/v1/DiskMirror");
-        // TODO 设置 HDFS 协议前缀 在这里指向的是 HDFS 文件系统访问地址 是 hdfs 开头
-        config.put(Config.FS_DEFAULT_FS, "hdfs://192.168.0.141:8020");
-        // TODO 设置请求参数 HDFS 要求需要设置 OP 参数
-        final JSONObject params = config.putObject(Config.PARAMS);
-        params.put("op", "OPEN");
-        // TODO 装载到适配器 在这里使用HDFS文件系统
-        final Adapter adapter = DiskMirror.HDFSAdapter.getAdapter(config);
+        // TODO 获取到适配器 在这里使用HDFS文件系统
+        final Adapter adapter = DiskMirror.HDFSAdapter.getAdapter(MAIN.class);
 
         // 获取到当前适配器所属的版本
         System.out.println("当前适配器版本：" + DiskMirror.LocalFSAdapter.getVersion());
         // 准备一个文件数据流
         try (final FileInputStream fileInputStream = new FileInputStream("C:\\Users\\zhao\\Pictures\\headSculpture - 副本.jpg")) {
             // 将文件保存到 1024 号空间
-            // 打印结果: {"fileName":"arc.png","userId":1024,"type":"Binary","useAgreement":true,"res":"ok!!!!","url":"http://192.168.0.141:9870/webhdfs/v1/DiskMirror/1024/Binary/arc.png?op=OPEN&","useSize":311720}
+            // 打印结果：{"fileName":"arc.png","userId":1024,"type":"Binary","useAgreement":true,"res":"ok!!!!","url":"http://192.168.0.141:9870/webhdfs/v1/DiskMirror/1024/Binary/arc.png?op=OPEN&","useSize":311720,"maxSize":134217728}
             save(adapter, fileInputStream, 1024, "arc.png");
         }
         // 准备一个文件数据流
         try (final FileInputStream fileInputStream = new FileInputStream("C:\\Users\\zhao\\Pictures\\defimage2.svg.png")) {
             // 再将一个新文件保存到 1024 号空间
-            // 打印结果: {"fileName":"defimage2.svg.png","userId":1024,"type":"Binary","useAgreement":true,"res":"ok!!!!","url":"http://192.168.0.141:9870/webhdfs/v1/DiskMirror/1024/Binary/defimage2.svg.png?op=OPEN&","useSize":805689}
+            // 打印结果：{"fileName":"defimage2.svg.png","userId":1024,"type":"Binary","useAgreement":true,"res":"ok!!!!","url":"http://192.168.0.141:9870/webhdfs/v1/DiskMirror/1024/Binary/defimage2.svg.png?op=OPEN&","useSize":805689,"maxSize":134217728}
             save(adapter, fileInputStream, 1024, "defimage2.svg.png");
         }
 
         // 读取 1024 号空间中的所有 url 由于刚刚保存文件的操作出现在这里 所以 1024 号空间应该是有刚才的文件的
-        // 打印结果: {"userId":1024,"type":"Binary","useSize":805689,"useAgreement":true,"urls":[{"fileName":"arc.png","url":"http://192.168.0.141:9870/webhdfs/v1/DiskMirror/1024/Binary//arc.png?op=OPEN&","lastModified":1702902733377,"size":311720},{"fileName":"defimage2.svg.png","url":"http://192.168.0.141:9870/webhdfs/v1/DiskMirror/1024/Binary//defimage2.svg.png?op=OPEN&","lastModified":1702902733869,"size":493969}],"res":"ok!!!!"}
+        // 打印结果：{"userId":1024,"type":"Binary","useSize":805689,"useAgreement":true,"maxSize":134217728,"urls":[{"fileName":"arc.png","url":"http://192.168.0.141:9870/webhdfs/v1/DiskMirror/1024/Binary//arc.png?op=OPEN&","lastModified":1706778315852,"size":311720,"type":"Binary","isDir":false},{"fileName":"defimage2.svg.png","url":"http://192.168.0.141:9870/webhdfs/v1/DiskMirror/1024/Binary//defimage2.svg.png?op=OPEN&","lastModified":1706778315938,"size":493969,"type":"Binary","isDir":false}],"res":"ok!!!!"}
         read(adapter, 1024);
 
 
         // 读取 2048 号空间中的所有 url 这里并没有进行过保存 所以在这里的空间是没有数据的
-        // 打印结果: {"userId":2048,"type":"Binary","useSize":0,"useAgreement":true,"urls":[],"res":"ok!!!!"}
+        // 打印结果: {"userId":2048,"type":"Binary","useSize":0,"useAgreement":true,"maxSize":134217728,"urls":[],"res":"ok!!!!"}
         read(adapter, 2048);
 
         // 删除 1024 空间中的文件 arc.png
@@ -606,11 +682,11 @@ public final class MAIN {
         // 设置文件类型 根据自己的文件类型选择不同的类型
         jsonObject.put("type", Type.Binary);
         final JSONObject remove = adapter.remove(jsonObject);
-        // 打印结果：{"fileName":"arc.png","userId":1024,"type":"Binary","useSize":493969,"res":"ok!!!!"}
+        // 打印结果：{"fileName":"arc.png","userId":1024,"type":"Binary","maxSize":134217728,"useSize":493969,"res":"ok!!!!"}
         System.out.println(remove);
 
         // 删除之后再次查看 1024 空间中的目录
-        // 打印结果：{"userId":1024,"type":"Binary","useSize":493969,"useAgreement":true,"urls":[{"fileName":"defimage2.svg.png","url":"http://192.168.0.141:9870/webhdfs/v1/DiskMirror/1024/Binary//defimage2.svg.png?op=OPEN&","lastModified":1702903280574,"size":493969}],"res":"ok!!!!"}
+        // 打印结果：{"userId":1024,"type":"Binary","useSize":493969,"useAgreement":true,"maxSize":134217728,"urls":[{"fileName":"defimage2.svg.png","url":"http://192.168.0.141:9870/webhdfs/v1/DiskMirror/1024/Binary//defimage2.svg.png?op=OPEN&","lastModified":1706778315938,"size":493969,"type":"Binary","isDir":false}],"res":"ok!!!!"}
         read(adapter, 1024);
     }
 
@@ -691,6 +767,48 @@ public final class MAIN {
 ---- 
 
 ### 更新记录
+
+- 2023-02-01 1.1.1 版本发布
+
+```
+1. 修复 HDFS 文件系统中删除函数返回结果中的 文件系统使用情况数值错误的问题。
+2. 支持使用注解进行配置，且支持创建文件目录，下面是一个使用 注解配置获取适配器，并在 HDFS 文件系统中创建一个文件目录的需求
+3. 针对路径生成逻辑进行优化，减少了不必要的计算
+"""
+package top.lingyuzhao.diskMirror.test;
+
+import com.alibaba.fastjson2.JSONObject;
+import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
+import top.lingyuzhao.diskMirror.core.Adapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+import top.lingyuzhao.diskMirror.core.Type;
+
+import java.io.IOException;
+
+@DiskMirrorConfig(
+        // TODO 设置 HDFS 协议前缀 在这里指向的是 HDFS 文件系统访问地址 是 hdfs 开头
+        fsDefaultFS = "hdfs://192.168.0.141:8020",
+        // TODO 设置 路径的协议前缀 在这里指向的是 HDFS 文件系统 盘镜目录 访问地址
+        protocolPrefix = "http://192.168.0.141:9870/webhdfs/v1/DiskMirror",
+        // TODO 设置请求参数 HDFS 要求需要设置 OP 参数（此参数只会在读取的时候生效）
+        params = "{\"op\":\"OPEN\"}"
+)
+public final class MAIN {
+    public static void main(String[] args) throws IOException {
+        // TODO 装载到适配器 在这里使用HDFS文件系统
+        final Adapter adapter = DiskMirror.HDFSAdapter.getAdapter(MAIN.class);
+        System.out.println(DiskMirror.LocalFSAdapter.getVersion());
+        final JSONObject jsonObject = new JSONObject();
+        jsonObject.put("fileName", "MyLevel1/myDir");
+        jsonObject.put("userId", 1024);
+        jsonObject.put("type", Type.Binary);
+        final JSONObject mkdirs = adapter.mkdirs(jsonObject);
+        System.out.println(mkdirs);
+    }
+}
+"""
+
+```
 
 - 2023-01-21 1.1.0 版本发布【稳定版本】
 

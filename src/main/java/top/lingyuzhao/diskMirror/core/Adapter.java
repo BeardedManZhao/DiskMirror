@@ -7,7 +7,9 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * 适配器对象的接口
+ * 适配器对象的接口，通过此类可以实现操作对应的文件系统设备，同时也是通过此类的实例来管理文件系统设备
+ * <p>
+ * The interface of the adapter object, through which operations can be carried out on corresponding file system devices, and instances of this class can also be used to manage file system devices
  */
 public interface Adapter {
 
@@ -119,6 +121,20 @@ public interface Adapter {
     JSONObject getUrls(JSONObject jsonObject) throws IOException;
 
     /**
+     * 通过盘镜在指定的用户文件空间中创建一个文件夹
+     *
+     * @param jsonObject {
+     *                   dirName     文件目录名称
+     *                   userId      空间id
+     *                   type        文件类型,
+     *                   secure.key  加密密钥
+     *                   }
+     * @return {res: 操作结果}
+     * @throws IOException 创建过程出现错误则返回此异常对象
+     */
+    JSONObject mkdirs(JSONObject jsonObject) throws IOException;
+
+    /**
      * 获取用户使用空间大小
      *
      * @param jsonObject {
@@ -130,6 +146,20 @@ public interface Adapter {
      * @throws IOException 操作异常
      */
     long getUseSize(JSONObject jsonObject) throws IOException;
+
+    /**
+     * 获取用户使用空间大小
+     *
+     * @param jsonObject {
+     *                   userId      空间id,
+     *                   type        文件类型,
+     *                   secure.key  加密密钥
+     *                   }
+     * @param path       可以直接用于路径统计的路径
+     * @return 空间已使用的大小
+     * @throws IOException 操作异常
+     */
+    long getUseSize(JSONObject jsonObject, String path) throws IOException;
 
     /**
      * 关闭适配器

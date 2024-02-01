@@ -1,6 +1,7 @@
 package top.lingyuzhao.diskMirror.core;
 
 import top.lingyuzhao.diskMirror.conf.Config;
+import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
 
 /**
  * 盘镜 门户类 在这里您可以非常方便获取到您需要的适配器
@@ -52,7 +53,7 @@ public enum DiskMirror {
      * <p>
      * The current version of the disk mirror library
      */
-    public final static String VERSION = "1.1.0";
+    public final static String VERSION = "1.1.1";
 
     /**
      * 获取到当前 盘镜 的版本 以及 适配器的名称
@@ -79,7 +80,7 @@ public enum DiskMirror {
                 "KWWo   ;WWkKWXl.  dWWd.  .WWXl   0WWd.     ;WWK7     7WWX7      XWWd; ,WWN3    \n" +
                 "KWWo    lWWWNo,   dWWd.  .WWXl   0WWd.     ;WWK7      oWWX3,.,7XWWk3  ,WWN3    \n" +
                 "kXXo     dXXd:    oXXb.  .KX0l   xXXb.     'KXO7       .o0XNNNXKkl'   .KXKl    \n" +
-                this + ":" + VERSION;
+                this;
     }
 
     /**
@@ -93,5 +94,28 @@ public enum DiskMirror {
      * The adapter object can be used to manage disk files
      */
     public abstract Adapter getAdapter(Config config);
+
+    /**
+     * 通过配置类，创建出对应的适配器对象
+     * <p>
+     * Create the corresponding adapter object by configuring the class
+     *
+     * @param configClass 被 DiskMirrorConfig 注解的类对象
+     * @return 适配器对象 能够用于管理磁盘文件
+     * <p>
+     * The adapter object can be used to manage disk files
+     */
+    public Adapter getAdapter(Class<?> configClass) {
+        final DiskMirrorConfig annotation = configClass.getAnnotation(DiskMirrorConfig.class);
+        if (annotation != null) {
+            return getAdapter(new Config(annotation));
+        }
+        throw new UnsupportedOperationException(configClass.getTypeName() + " Not find annotation: @DiskMirrorConfig");
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + ":" + VERSION;
+    }
 
 }

@@ -13,7 +13,7 @@ import java.nio.file.Paths;
 
 
 /**
- * 本地文件系统适配器
+ * 本地文件系统适配器，支持对于本地文件系统的管理控制
  *
  * @author zhao
  */
@@ -50,11 +50,11 @@ public final class LocalFSAdapter extends FSAdapter {
         }
         // 返回结果
         jsonObject.put(config.getString(Config.RES_KEY), config.getString(Config.OK_VALUE));
-        jsonObject.put("url", config.get(Config.PROTOCOL_PREFIX) + path_res);
+        jsonObject.put("url", path_res);
         return jsonObject;
     }
 
-    private JSONObject pathProcessorGetUrls(File path, String path_res, JSONObject jsonObject, Type type, boolean addPre) throws IOException {
+    private JSONObject pathProcessorGetUrls(File path, String path_res, JSONObject jsonObject, Type type) throws IOException {
         // 开始进行文件获取
         final File[] files = path.listFiles();
         if (files == null) {
@@ -63,7 +63,6 @@ public final class LocalFSAdapter extends FSAdapter {
         }
         // 获取到协议前缀
         final Config config = this.getConfig();
-        final String string = addPre ? config.getString(Config.PROTOCOL_PREFIX) : "";
         final JSONArray urls = jsonObject.putArray("urls");
         final String res_key = config.getString(Config.RES_KEY);
         // 获取到文件所在空间类型
@@ -71,30 +70,43 @@ public final class LocalFSAdapter extends FSAdapter {
             final JSONObject jsonObject1 = urls.addObject();
             final String name = file.getName();
             final String filePath = path_res + '/' + name;
-            final String filePath_pre = string + filePath;
             jsonObject1.put("fileName", name);
-            jsonObject1.put("url", filePath_pre);
+            jsonObject1.put("url", filePath);
             jsonObject1.put("lastModified", file.lastModified());
             jsonObject1.put("size", file.length());
             jsonObject1.put("type", type);
             // 查看当前的是否是一个目录 如果是目录就继续获取到字目录
             if (file.isDirectory()) {
                 jsonObject1.put("isDir", true);
-                jsonObject1.putAll(this.pathProcessorGetUrls(file, filePath_pre, jsonObject1.clone(), type, false));
+                jsonObject1.putAll(this.pathProcessorGetUrls(file, filePath, jsonObject1.clone(), type));
                 jsonObject1.remove("useSize");
                 jsonObject1.remove(res_key);
             } else {
                 jsonObject1.put("isDir", false);
             }
         }
-        jsonObject.put("useSize", this.getUseSize(jsonObject));
+        jsonObject.put("useSize", this.getUseSize(jsonObject, path.getPath()));
         jsonObject.put(res_key, config.getString(Config.OK_VALUE));
         return jsonObject;
     }
 
     @Override
     protected JSONObject pathProcessorGetUrls(String path, String path_res, JSONObject jsonObject) throws IOException {
-        return pathProcessorGetUrls(new File(path), path_res, jsonObject, jsonObject.getObject("type", Type.class), true);
+        return pathProcessorGetUrls(new File(path), path_res, jsonObject, jsonObject.getObject("type", Type.class));
+    }
+
+    /**
+     * 路径处理器 接收一个路径 输出结果对象
+     *
+     * @param path   路径对象
+     * @param inJson 文件输入的 json 对象
+     * @return {"res": 创建结果}
+     * @throws IOException 操作异常
+     */
+    @Override
+    protected JSONObject pathProcessorMkdirs(String path, JSONObject inJson) throws IOException {
+        inJson.put(config.getString(Config.RES_KEY), new File(path).mkdirs() ? config.getString(Config.OK_VALUE) : "文件目录创建失败，可能文件目录已经存在了!!!");
+        return inJson;
     }
 
     @Override
