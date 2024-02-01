@@ -80,7 +80,7 @@ public enum DiskMirror {
                 "KWWo   ;WWkKWXl.  dWWd.  .WWXl   0WWd.     ;WWK7     7WWX7      XWWd; ,WWN3    \n" +
                 "KWWo    lWWWNo,   dWWd.  .WWXl   0WWd.     ;WWK7      oWWX3,.,7XWWk3  ,WWN3    \n" +
                 "kXXo     dXXd:    oXXb.  .KX0l   xXXb.     'KXO7       .o0XNNNXKkl'   .KXKl    \n" +
-                this + ":" + VERSION;
+                this;
     }
 
     /**
@@ -111,6 +111,11 @@ public enum DiskMirror {
             return getAdapter(new Config(annotation));
         }
         throw new UnsupportedOperationException(configClass.getTypeName() + " Not find annotation: @DiskMirrorConfig");
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + ":" + VERSION;
     }
 
 }

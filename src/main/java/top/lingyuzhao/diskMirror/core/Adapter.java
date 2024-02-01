@@ -7,7 +7,9 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * 适配器对象的接口
+ * 适配器对象的接口，通过此类可以实现操作对应的文件系统设备，同时也是通过此类的实例来管理文件系统设备
+ * <p>
+ * The interface of the adapter object, through which operations can be carried out on corresponding file system devices, and instances of this class can also be used to manage file system devices
  */
 public interface Adapter {
 

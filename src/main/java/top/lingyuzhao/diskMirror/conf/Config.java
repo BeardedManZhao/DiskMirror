@@ -112,9 +112,10 @@ public class Config extends JSONObject {
             final String type = jsonObject.get("type").toString();
             final String fileName = jsonObject.getString("fileName");
             final String fn = fileName != null ? fileName : "";
-            boolean isRead = (boolean) jsonObject.getOrDefault("useAgreement", false);
-            // 如果是读取 同时 具有前部协议 则 在这里去掉 路径前缀 使用 协议前缀替代 反之加上路径前缀
-            final String rootDir = (isRead && config.getString(PROTOCOL_PREFIX).length() != 0) ? "" : (String) config.get(ROOT_DIR);
+            boolean isRead = (boolean) jsonObject.getOrDefault("useAgreement", true);
+            // 如果连接需要读取 同时 具有前部协议 则 在这里去掉 路径前缀 使用 协议前缀替代 反之加上路径前缀
+            final String protocol = config.getString(PROTOCOL_PREFIX);
+            final String rootDir = (String) config.get(ROOT_DIR);
             // 生成参数
             final StringBuilder stringBuilder = new StringBuilder();
             if (isRead) {
@@ -124,13 +125,13 @@ public class Config extends JSONObject {
             final String s = stringBuilder.length() == 0 ? "" : "?" + stringBuilder;
             // 开始构建[空间路径（无协议）, 空间路径（有协议）, 文件路径（无协议）, 文件路径（有协议）]
             final String
-                    s1 = rootDir + '/' + userId + '/' + type + '/',
-                    s2 = (String) config.get(ROOT_DIR) + '/' + userId + '/' + type + '/';
+                    s1 = protocol + '/' + userId + '/' + type + '/',
+                    s2 = rootDir + '/' + userId + '/' + type + '/';
             return new String[]{
                     s2 + s,
                     s1 + s,
-                    s2 + fn + s,
-                    s1 + fn + s
+                    s2 + fn,
+                    s1 + fn + s,
             };
         };
     }
