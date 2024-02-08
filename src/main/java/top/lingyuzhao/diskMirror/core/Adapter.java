@@ -165,4 +165,9 @@ public interface Adapter {
      * 关闭适配器
      */
     void close();
+
+    /**
+     * @return 当前适配器对应的版本号
+     */
+    String version();
 }
