@@ -19,7 +19,7 @@ url，在诸多场景中可以简化IO相关的实现操作，能够降低开发
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.1.1</version>
+        <version>1.1.2</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -40,6 +40,19 @@ url，在诸多场景中可以简化IO相关的实现操作，能够降低开发
         <artifactId>hadoop-client</artifactId>
         <version>3.3.2</version>
         <!--        <scope>provided</scope>-->
+    </dependency>
+    <!-- 如果您要使用 DiskMirrorHttpAdapter 请添加 httpClient 核心库 反之不需要 -->
+    <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpclient</artifactId>
+        <version>4.5.14</version>
+<!--        <scope>provided</scope>-->
+    </dependency>
+    <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpmime</artifactId>
+        <version>4.5.14</version>
+<!--        <scope>provided</scope>-->
     </dependency>
 </dependencies>
 ```
@@ -768,13 +781,106 @@ public final class MAIN {
 
 ### 更新记录
 
-- 2023-02-01 1.1.1 版本发布
+#### 2023-02-08 1.1.2 版本发布
+
+1. 新增diskMirror 盘镜 后端服务器的适配器，通过该适配器您可以直接远程操作 diskMirror
+   的后端服务，有关后端服务器版本的说明请查阅 [diskMirror 后端服务器版本](https://github.com/BeardedManZhao/DiskMirrorBackEnd.git)
+
+```java
+package top.lingyuzhao.diskMirror.test;
+
+import com.alibaba.fastjson2.JSONObject;
+import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
+import top.lingyuzhao.diskMirror.core.Adapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+import top.lingyuzhao.diskMirror.core.Type;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+
+/**
+ * @author zhao
+ */
+@DiskMirrorConfig(
+        // TODO 设置 DiskMirror 远程 后端 服务器地址 这个是需要搭建的哦!!!
+        // 具体的后端服务器搭建 可以阅读：https://github.com/BeardedManZhao/DiskMirrorBackEnd.git
+        fsDefaultFS = "http://192.168.1.15:8778/DiskMirrorBackEnd"
+)
+public final class MAIN {
+    public static void main(String[] args) throws IOException {
+        // 获取到 远程 diskMirror 适配器
+        final Adapter adapter = DiskMirror.DiskMirrorHttpAdapter.getAdapter(MAIN.class);
+        // 获取到 远程服务器版本
+        System.out.println(adapter.version());
+        // 获取到用户空间 1 的文件系统结构
+        show(adapter, 1);
+
+        // 上传一个文件到 1 空间
+        final JSONObject jsonObject = new JSONObject();
+        jsonObject.put("userId", 1);
+        jsonObject.put("type", Type.Binary);
+        jsonObject.put("secure.key", 9999);
+        jsonObject.put("fileName", "test.jpg");
+        final FileInputStream fileInputStream = new FileInputStream("C:\\Users\\zhao\\Downloads\\无标题.jpg");
+        final JSONObject upload = adapter.upload(fileInputStream, jsonObject);
+        System.out.println(upload);
+
+        // 再次读取
+        show(adapter, 1);
+    }
+
+    public static void show(Adapter adapter, int userId) throws IOException {
+        final JSONObject jsonObject = new JSONObject();
+        jsonObject.put("userId", userId);
+        jsonObject.put("type", Type.Binary);
+        // 您也可以设置密钥 用于让服务器确认你的身份
+        jsonObject.put("secure.key", 9999);
+        System.out.println(adapter.getUrls(jsonObject));
+    }
+}
+```
+
+下面就是运行结果
 
 ```
+top.lingyuzhao.diskMirror.core.DiskMirrorHttpAdapter@2d7275fc:V1.1.2
+ ↓↓↓ 
+remote → ↘↘
+             'WWWKXXXXNWWNk,     ,kkd7               KWWb,                     
+             ;WWN3.....,lNWWk.                       KWWb,                     
+             ;WWNl        XWWk.  :XXk,   oKNNWNKo    KWWb,   dXXO:             
+             ;WWNl        3WWX7  7WWO7  0WWo:,:O0d,  KWWb, lNWKb:              
+             ;WWNl        :WWNl  7WWO7  0WWO,.       KWWbbXWKb:.               
+             ;WWNl        kWW03  7WWO7   lXWWWN0o.   KWWNWWW0;                 
+             ;WWNl       lWWNo,  7WWO7     .,7dWWN;  KWWOolWWN7                
+             'WWNo,..,'oXWWKo'   7WWO7 .lb:    XWNl. KWWb, .KWWk.              
+             ;WWWWWWWWWNKOo:.    7WWO7  oNWX0KWWKb:  KWWb,   bWWX'             
+              ,'''''''',,.        ,'',    ,;777;,.    '''.    .''',            
+KWWNWK,        ,WWNWWd.   ;33:                                                 
+KWWbWWO.       XWXkWWd.   ...    ...  .,,   ...  ,,.      .,,,,        ...  .,,
+KWWodWWd      OWNlOWWd.  .WWN7   KWW3OWNWl.:WWOlNWNO:  3KWWXXNWWXo.   ,WWX3XWNK
+KWWo.OWWo    oWWb;xWWd.  .WWXl   0WWXkl',, ;WWNKb:,,, XWWkl,..,oWWN'  ,WWNKd7,,
+KWWo  XWN7  ;WWx3 dWWd.  .WWXl   0WWO3     ;WWWl,    bWW03      OWWk, ,WWWo'   
+KWWo  ,NWK',NW0l  dWWd.  .WWXl   0WWd,     ;WWX3     kWWO:      dWMO: ,WWNl    
+KWWo   ;WWkKWXl.  dWWd.  .WWXl   0WWd.     ;WWK7     7WWX7      XWWd; ,WWN3    
+KWWo    lWWWNo,   dWWd.  .WWXl   0WWd.     ;WWK7      oWWX3,.,7XWWk3  ,WWN3    
+kXXo     dXXd:    oXXb.  .KX0l   xXXb.     'KXO7       .o0XNNNXKkl'   .KXKl    
+LocalFSAdapter:1.1.1
+{"userId":1,"type":"Binary","secure.key":9999,"useSize":199408,"useAgreement":true,"maxSize":134217728,"res":"空间 [D:\\DiskMirror\\data\\1\\Binary] 不可读!!!"}
+{"userId":1,"type":"Binary","secure.key":9999,"fileName":"test.jpg","useAgreement":true,"res":"ok!!!!","url":"https://192.168.1.15:8778/DiskMirrorBackEnd/data/1/Binary/test.jpg","useSize":398816,"maxSize":134217728}
+{"userId":1,"type":"Binary","secure.key":9999,"useSize":398816,"useAgreement":true,"maxSize":134217728,"urls":[{"fileName":"test.jpg","url":"https://192.168.1.15:8778/DiskMirrorBackEnd/data/1/Binary//test.jpg","lastModified":1707392017513,"size":199408,"type":"Binary","isDir":false}],"res":"ok!!!!"}
+
+进程已结束,退出代码0
+```
+
+#### 2023-02-01 1.1.1 版本发布
+
 1. 修复 HDFS 文件系统中删除函数返回结果中的 文件系统使用情况数值错误的问题。
 2. 支持使用注解进行配置，且支持创建文件目录，下面是一个使用 注解配置获取适配器，并在 HDFS 文件系统中创建一个文件目录的需求
 3. 针对路径生成逻辑进行优化，减少了不必要的计算
-"""
+
+```java
+
 package top.lingyuzhao.diskMirror.test;
 
 import com.alibaba.fastjson2.JSONObject;
@@ -806,39 +912,38 @@ public final class MAIN {
         System.out.println(mkdirs);
     }
 }
-"""
-
 ```
 
-- 2023-01-21 1.1.0 版本发布【稳定版本】
+#### 2023-01-21 1.1.0 版本发布【稳定版本】
 
-```
 1. 修正依赖组件重复的问题，需要注意的是，您的在这里的 zhao-utils 依赖应在 1.0.20240121 及 以上版本!!! 新版本的工具类修正了一些 bug
 2. 针对 重命名失败 的错误信息进行详细的解答。
 3. 提供了密钥的生成设置，设置密钥之后 将必须要使用密钥访问，这增加了安全性!
-```
 
 ----
 
-- 2024-01-21 1.0.9 版本发布
+#### 2024-01-21 1.0.9 版本发布
+
+1. 针对所有的操作，支持了文件夹，例如您可以获取到指定文件夹中的所有文件，下面是一个获取带有目录的空间 url 的json
 
 ```
-+-------------------------------------------------------------------------------------------+
-1. 针对所有的操作，支持了文件夹，例如您可以获取到指定文件夹中的所有文件，下面是一个获取带有目录的空间 url 的json
-    public static void main(String[] args) throws IOException {
-        // 准备适配器对象
-        final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(new Config());
-        // 准备参数
-        final JSONObject jsonObject = new JSONObject();
-        // 设置文件所属空间id
-        jsonObject.put("userId", 1024);
-        // 设置文件类型 根据自己的文件类型选择不同的类型
-        jsonObject.put("type", Type.Binary);
-        System.out.println(adapter.getUrls(jsonObject));
-    }
-"""
-这里是打印出来的结果
-{
+   public static void main(String[] args) throws IOException {
+   // 准备适配器对象
+   final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(new Config());
+   // 准备参数
+   final JSONObject jsonObject = new JSONObject();
+   // 设置文件所属空间id
+   jsonObject.put("userId", 1024);
+   // 设置文件类型 根据自己的文件类型选择不同的类型
+   jsonObject.put("type", Type.Binary);
+   System.out.println(adapter.getUrls(jsonObject));
+   }
+```
+
+下面是打印出来的结果
+
+```json
+ {
   "userId": 1024,
   "type": "Binary",
   "useSize": 787141,
@@ -874,12 +979,12 @@ public final class MAIN {
   ],
   "res": "ok!!!!"
 }
-"""
-
-+-------------------------------------------------------------------------------------------+
+```
 
 2. 针对所有的删除操作 同样支持删除文件夹 值得一提的是 API 与旧版本使用方法一致
-    public static void main(String[] args) throws IOException {
+
+```
+   public static void main(String[] args) throws IOException {
         // 准备适配器对象
         final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(new Config());
         // 准备参数
@@ -893,11 +998,13 @@ public final class MAIN {
         // 删除这个文件夹
         final JSONObject result = adapter.remove(jsonObject);
         System.out.println(result);
-    }
+   }
+```
 
-+-------------------------------------------------------------------------------------------+
 3. 针对所有的上传操作 也支持文件夹，API 使用方法与就版本一致
-    public static void main(String[] args) throws IOException {
+
+```
+   public static void main(String[] args) throws IOException {
         // 准备适配器对象
         final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(new Config());
         // 准备文件数据流
@@ -915,31 +1022,25 @@ public final class MAIN {
         System.out.println(result);
         // 关闭数据流
         inputStream.close();
-    }
+   }
 ```
 
-- 2024-01-04 1.0.8 版本发布
+#### 2024-01-04 1.0.8 版本发布
 
-```
 1. 针对所有的操作，返回的json中包含了 maxSize 参数，代表的就是当前操作的空间的最大容量
-```
 
-- 2023-12-22 1.0.7 版本发布
+#### 2023-12-22 1.0.7 版本发布
 
-```
 1. 能够通过适配器对于文件系统中的文件进行重命名操作
-```
 
 ----
 
-- 2023-12-19 1.0.6 版本发布
+#### 2023-12-19 1.0.6 版本发布
 
-```
 1. 针对所有的操作返回值都增加了实时文件空间占用字节数"useSize"的结果
 2. 针对所有已存在的文件进行增删将会抛出错误，您可以不去进行文件是否存在的检测
 3. 针对稳定性进行升级，修复了部分bug
 4. 针对文件上传的接口增加了文件大小限制的配置项目，默认为 128Mb
-```
 
 ----
 

@@ -434,4 +434,14 @@ public abstract class FSAdapter implements Adapter {
     public void close() {
 
     }
+
+    /**
+     * @return 当前适配器对应的 toString 以及 版本号
+     * <p>
+     * The toString and version number corresponding to the current adapter
+     */
+    @Override
+    public String version() {
+        return this + ":V" + DiskMirror.VERSION;
+    }
 }

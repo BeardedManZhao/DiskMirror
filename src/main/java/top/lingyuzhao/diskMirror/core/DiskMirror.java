@@ -46,6 +46,47 @@ public enum DiskMirror {
         public Adapter getAdapter(Config config) {
             return new HDFSAdapter(config);
         }
+    },
+
+    /**
+     * DiskMirror 后端服务器 适配器 您可以直接通过此适配器操作一个远程的 diskMirror 后端服务器。
+     * <p>
+     * The DiskMirror backend server adapter allows you to directly operate a remote diskMirror backend server through this adapter.
+     */
+    DiskMirrorHttpAdapter {
+        /**
+         * 通过配置类，创建出对应的适配器对象
+         * <p>
+         * Create the corresponding adapter object by configuring the class
+         *
+         * @param config 配置类
+         * @return 适配器对象 能够用于管理磁盘文件
+         * <p>
+         * The adapter object can be used to manage disk files
+         */
+        @Override
+        public Adapter getAdapter(Config config) {
+            return this.getAdapter(config, "FsCrud", null);
+        }
+
+        /**
+         * 通过配置类，创建出对应的适配器对象
+         * <p>
+         * Create the corresponding adapter object by configuring the class
+         * @param config 配置类
+         * @param controller 远程服务器中 用于处理diskMirror 的控制器名称
+         *
+         *                   The name of the controller used to handle diskMirror in the remote server
+         * @param httpClient 如果您已经创建了一个 http 客户端，您可以传入此客户端对象。如果没有可以直接设置未 null
+         *
+         *                   If you have already created an HTTP client, you can pass in this client object. If not, you can directly set non null
+         * @return 适配器对象 能够用于管理磁盘文件
+         * <p>
+         * The adapter object can be used to manage disk files
+         */
+        public Adapter getAdapter(Config config, String controller, Object httpClient) {
+            return new DiskMirrorHttpAdapter(config, controller, httpClient);
+        }
     };
 
     /**
@@ -53,7 +94,7 @@ public enum DiskMirror {
      * <p>
      * The current version of the disk mirror library
      */
-    public final static String VERSION = "1.1.1";
+    public final static String VERSION = "1.1.2";
 
     /**
      * 获取到当前 盘镜 的版本 以及 适配器的名称
