@@ -19,7 +19,7 @@ url，在诸多场景中可以简化IO相关的实现操作，能够降低开发
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.1.2</version>
+        <version>1.1.3</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -46,13 +46,13 @@ url，在诸多场景中可以简化IO相关的实现操作，能够降低开发
         <groupId>org.apache.httpcomponents</groupId>
         <artifactId>httpclient</artifactId>
         <version>4.5.14</version>
-<!--        <scope>provided</scope>-->
+        <!--        <scope>provided</scope>-->
     </dependency>
     <dependency>
         <groupId>org.apache.httpcomponents</groupId>
         <artifactId>httpmime</artifactId>
         <version>4.5.14</version>
-<!--        <scope>provided</scope>-->
+        <!--        <scope>provided</scope>-->
     </dependency>
 </dependencies>
 ```
@@ -780,6 +780,10 @@ public final class MAIN {
 ---- 
 
 ### 更新记录
+
+#### 2023-02-xx 1.1.3 版本开发中...
+
+1. 针对 JSONObject 需要设置 fileName 但是没有设置此参数的场景，提供了默认的文件名字。
 
 #### 2023-02-08 1.1.2 版本发布
 

@@ -111,7 +111,7 @@ public class Config extends JSONObject {
             final int userId = jsonObject.getIntValue("userId");
             final String type = jsonObject.get("type").toString();
             final String fileName = jsonObject.getString("fileName");
-            final String fn = fileName != null ? fileName : "";
+            final String fn = fileName != null ? fileName : "未命名_" + System.currentTimeMillis();
             boolean isRead = (boolean) jsonObject.getOrDefault("useAgreement", true);
             // 如果连接需要读取 同时 具有前部协议 则 在这里去掉 路径前缀 使用 协议前缀替代 反之加上路径前缀
             final String protocol = config.getString(PROTOCOL_PREFIX);
