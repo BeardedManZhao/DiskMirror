@@ -19,7 +19,7 @@ url，在诸多场景中可以简化IO相关的实现操作，能够降低开发
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.1.3</version>
+        <version>1.1.2</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -781,11 +781,7 @@ public final class MAIN {
 
 ### 更新记录
 
-#### 2023-02-xx 1.1.3 版本开发中...
-
-1. 针对 JSONObject 需要设置 fileName 但是没有设置此参数的场景，提供了默认的文件名字。
-
-#### 2023-02-08 1.1.2 版本发布
+#### 2024-02-08 1.1.2 版本发布
 
 1. 新增diskMirror 盘镜 后端服务器的适配器，通过该适配器您可以直接远程操作 diskMirror
    的后端服务，有关后端服务器版本的说明请查阅 [diskMirror 后端服务器版本](https://github.com/BeardedManZhao/DiskMirrorBackEnd.git)
@@ -1033,13 +1029,13 @@ public final class MAIN {
 
 1. 针对所有的操作，返回的json中包含了 maxSize 参数，代表的就是当前操作的空间的最大容量
 
-#### 2024-12-22 1.0.7 版本发布
+#### 2023-12-22 1.0.7 版本发布
 
 1. 能够通过适配器对于文件系统中的文件进行重命名操作
 
 ----
 
-#### 2024-12-19 1.0.6 版本发布
+#### 2023-12-19 1.0.6 版本发布
 
 1. 针对所有的操作返回值都增加了实时文件空间占用字节数"useSize"的结果
 2. 针对所有已存在的文件进行增删将会抛出错误，您可以不去进行文件是否存在的检测
@@ -1048,5 +1044,6 @@ public final class MAIN {
 
 ----
 
+- diskMirror starter SpringBoot：https://github.com/BeardedManZhao/diskMirror-spring-boot-starter.git
 - diskMirror 后端服务器版本：https://github.com/BeardedManZhao/DiskMirrorBackEnd.git
 - diskMirror Java API 版本：https://github.com/BeardedManZhao/DiskMirror.git
