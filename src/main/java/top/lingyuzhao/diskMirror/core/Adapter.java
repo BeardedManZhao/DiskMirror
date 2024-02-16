@@ -20,7 +20,10 @@ public interface Adapter {
      * @param jsonObject 需要被检查的 json 对象
      */
     static void checkJsonObj(Config config, JSONObject jsonObject) {
-        final int orDefault = jsonObject == null ? 0 : (int) jsonObject.getOrDefault(Config.SECURE_KEY, 0);
+        if (jsonObject == null) {
+            throw new UnsupportedOperationException("您提供的 json 对象为空，diskMirror 拒绝了您的访问\nThe json object you provided is empty, and diskMirror has denied your access\nerror json = null");
+        }
+        final int orDefault = (int) jsonObject.getOrDefault(Config.SECURE_KEY, 0);
         if (config.getSecureKey() != orDefault) {
             throw new UnsupportedOperationException("您提供的密钥错误，diskMirror 拒绝了您的访问\nThe key you provided is incorrect, and diskMirror has denied your access\nerror key = " + orDefault);
         }
@@ -68,6 +71,25 @@ public interface Adapter {
      * @throws IOException 操作异常
      */
     JSONObject writer(String data, String fileName, int userId, String type, int secureKey) throws IOException;
+
+
+    /**
+     * 将一个字符串写到文件中，并将文件保存
+     *
+     * @param bytes     需要被写入的二进制数据
+     * @param fileName  文件名称
+     * @param userId    空间id
+     * @param type      文件类型,
+     * @param secureKey 需要使用的加密密钥
+     * @return {
+     * res:上传结果,
+     * url:上传之后的 url,
+     * userId:文件所属用户id,
+     * type:文件类型
+     * }
+     * @throws IOException 操作异常
+     */
+    JSONObject writer(byte[] bytes, String fileName, int userId, String type, int secureKey) throws IOException;
 
     /**
      * 将一个文件上传

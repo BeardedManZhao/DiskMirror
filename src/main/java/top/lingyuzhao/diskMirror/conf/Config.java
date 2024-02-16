@@ -107,6 +107,7 @@ public class Config extends JSONObject {
         super.put(USER_DISK_MIRROR_SPACE_QUOTA, config.userDiskMirrorSpaceQuota());
         super.put(PARAMS, JSONObject.parse(config.params()));
         super.put(SECURE_KEY, config.secureKey());
+        super.put(CHAR_SET, config.charSet());
         // 默认的路径生成逻辑  由 <空间id，文件名称> 生成 文件路径
         super.put(GENERATION_RULES, getPathGeneration(this));
     }

@@ -225,21 +225,24 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
      */
     @Override
     public JSONObject upload(InputStream inputStream, JSONObject jsonObject) throws IOException {
-        if (jsonObject != null && jsonObject.containsKey("fileName"))
+        if (jsonObject != null && jsonObject.containsKey("fileName")) {
             // 开始上传
             this.httpPost.setURI(this.upload);
-        this.httpPost.setEntity(
-                MultipartEntityBuilder.create()
-                        .addTextBody("params", jsonObject.toString())
-                        .addBinaryBody("file", inputStream)
-                        .setContentType(ContentType.MULTIPART_FORM_DATA)
-                        .build()
-        );
-        final HttpEntity entity = httpClient.execute(this.httpPost).getEntity();
-        final String string = EntityUtils.toString(entity);
-        IOUtils.close(inputStream);
-        EntityUtils.consume(entity);
-        return JSONObject.parseObject(string);
+            this.httpPost.setEntity(
+                    MultipartEntityBuilder.create()
+                            .addTextBody("params", jsonObject.toString())
+                            .addBinaryBody("file", inputStream)
+                            .setContentType(ContentType.MULTIPART_FORM_DATA)
+                            .build()
+            );
+            final HttpEntity entity = httpClient.execute(this.httpPost).getEntity();
+            final String string = EntityUtils.toString(entity);
+            IOUtils.close(inputStream);
+            EntityUtils.consume(entity);
+            return JSONObject.parseObject(string);
+        } else {
+            throw new UnsupportedOperationException("您的参数中没有包含 fileName 或者 参数为 空，因此无法将您的请求交由后端服务器处理！\nYour parameter does not include fileName or is empty, so your request cannot be handed over to the backend server for processing!\nerror params => " + jsonObject);
+        }
     }
 
     /**

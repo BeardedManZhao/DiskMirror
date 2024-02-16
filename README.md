@@ -847,6 +847,74 @@ public final class MAIN {
 }
 ```
 
+3. 针对实例化盘镜时 依赖丢失的错误进行了详细的解答和处理，并给出了依赖的 xml 配置。
+
+```java
+package top.lingyuzhao.diskMirror.test;
+
+import com.alibaba.fastjson2.JSONObject;
+import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
+import top.lingyuzhao.diskMirror.core.Adapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+
+import java.io.IOException;
+
+/**
+ * @author zhao
+ */
+@DiskMirrorConfig()
+public final class MAIN {
+    public static void main(String[] args) throws IOException {
+        // 在 没有引入 httpclient 的情况下直接获取到 DiskMirrorHttpAdapter 会直接报错 并在错误信息中告知错误
+        final Adapter adapter = DiskMirror.DiskMirrorHttpAdapter.getAdapter(MAIN.class);
+        final JSONObject text = adapter.upload(null, null);
+        /*
+        下面是报错信息
+Exception in thread "main" java.lang.UnsupportedOperationException: 不支持您进行【DiskMirrorHttpAdapter】适配器的实例化操作，因为您的项目中缺少必须的依赖，下面是依赖信息
+You are not supported to instantiate the [DiskMirrorHttpAdapter] adapter because your project lacks the necessary dependencies. Here is the dependency information
+        <dependency>
+            <groupId>com.alibaba.fastjson2</groupId>
+            <artifactId>fastjson2</artifactId>
+            <version>x.x.x</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.BeardedManZhao</groupId>
+            <artifactId>zhao-utils</artifactId>
+            <version>x.x.x</version>
+        </dependency>
+        <!-- 如果您要使用 DiskMirrorHttpAdapter 请添加 httpClient 核心库 -->
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>x.x.x</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpmime</artifactId>
+            <version>x.x.x</version>
+        </dependency>
+	at top.lingyuzhao.diskMirror.core.DiskMirror.getAdapter(DiskMirror.java:217)
+	at top.lingyuzhao.diskMirror.core.DiskMirror.getAdapter(DiskMirror.java:235)
+	at top.lingyuzhao.diskMirror.test.MAIN.main(MAIN.java:16)
+
+    进程已结束,退出代码1
+
+         */
+    }
+}
+```
+
+4. 针对函数中 jsonObject 参数为 null 的校验进行处理，如果发现为 null 则直接报错，报错信息示例如下所示。
+
+```
+Exception in thread "main" java.lang.UnsupportedOperationException: 您提供的 json 对象为空，diskMirror 拒绝了您的访问
+The json object you provided is empty, and diskMirror has denied your access
+error json = null
+	at top.lingyuzhao.diskMirror.core.Adapter.checkJsonObj(Adapter.java:24)
+	at top.lingyuzhao.diskMirror.core.FSAdapter.upload(FSAdapter.java:243)
+	at top.lingyuzhao.diskMirror.test.MAIN.main(MAIN.java:17)
+```
+
 #### 2024-02-08 1.1.2 版本发布
 
 1. 新增diskMirror 盘镜 后端服务器的适配器，通过该适配器您可以直接远程操作 diskMirror
