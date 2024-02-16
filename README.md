@@ -3,11 +3,23 @@
 用于进行磁盘文件管理的一面镜子，其包含许多的适配器，能够将任何类型的文件数据流中的数据接入到管理中，并将保存之后的 url 返回，支持不同文件所属空间的管控，您还可以通过此API 获取到指定 userid 下面的所有文件的
 url，在诸多场景中可以简化IO相关的实现操作，能够降低开发量，例如web服务器中的磁盘管理操作!
 
+diskMirror 的处理方式能够将多种文件系统的操作统一成为一样的，降低了开发难度，同时可以将磁盘文件管理统一到一起，方便进行管理。
+
 ## 什么是适配器
 
 适配器在这里是用于进行文件传输的桥梁，能够让您将自己的数据源（例如您的后端服务器）与指定的数据终端（例如您的各类文件系统）进行连接，将数据提供给数据终端，减少了您手动开发IO代码的时间。
 
 在未来，我们将会提供更多的适配器选项，让适配器的数据终端具有更多的支持。
+
+### 支持哪些适配器
+
+所有支持的适配器都会在 `top.lingyuzhao.diskMirror.core.DiskMirror` 类中找到，您可以查阅类文件，也可以在这里查看已支持的适配器的表格。
+
+| 适配器                              | 自从何时支持 | 需要引入的外部依赖（fastjson2 和 zhao-utils 除外） | 功能介绍                                                                                                                                                                                          |
+|----------------------------------|--------|--------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| DiskMirror.LocalFSAdapter        | v1.0   | 无外部依赖                                | 能够将适配器运行所在的主机的磁盘做为 diskMirror 管理，一般来说是作用于本机的本地文件系统磁盘管理。                                                                                                                                       |
+| DiskMirror.HDFSAdapter           | v1.0   | hadoop-client                        | 将 HDFS 文件系统提供给 diskMirror 管理，能够通过 diskMirror 操作 HDFS                                                                                                                                          |
+| DiskMirror.DiskMirrorHttpAdapter | v1.1.2 | httpclient, httpmime                | 将 [后端版本的 diskMirror](https://github.com/BeardedManZhao/DiskMirrorBackEnd.git) 接入到 diskMirror 管理，能够通过 diskMirror 操作 [后端 diskMirror]((https://github.com/BeardedManZhao/DiskMirrorBackEnd.git)) |
 
 ### 我如何获取 盘镜
 
@@ -780,6 +792,60 @@ public final class MAIN {
 ---- 
 
 ### 更新记录
+
+#### 2024-02-16 1.1.3 版本开始开发
+
+1. 新增 CHAR_SET 配置项 能够在将一个字符串保存的时候指定操作字符集
+2. 适配器中新增 `writer` 函数 能够写入一个字符串，并将字符串保存为一个文件，下面是一个示例
+
+```java
+package top.lingyuzhao.diskMirror.test;
+
+import com.alibaba.fastjson2.JSONObject;
+import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
+import top.lingyuzhao.diskMirror.core.Adapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+
+import java.io.IOException;
+
+/**
+ * @author zhao
+ */
+@DiskMirrorConfig()
+public final class MAIN {
+    public static void main(String[] args) throws IOException {
+        final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(MAIN.class);
+        final JSONObject text = adapter.writer(
+                "这是一个即将会被写进文件中的字符串！！！！",
+                // 设置在 diskMirror 空间中用于存储字符串的文件名字
+                "test.txt",
+                // 设置用于存储数据的 diskMirror 空间的id
+                1,
+                // 设置文件类型
+                "text",
+                // 设置需要使用的安全密钥 由于我们没有设置密钥 所以写为 空
+                0
+        );
+        System.out.println(text);
+    }
+}
+```
+
+下面就是运行结果
+
+```json
+{
+  "fileName": "test.txt",
+  "userId": 1,
+  "type": "text",
+  "secure.key": 0,
+  "useAgreement": true,
+  "res": "ok!!!!",
+  "url": "http://localhost:8080/1/text/test.txt",
+  "useSize": 63,
+  "maxSize": 134217728
+}
+```
 
 #### 2024-02-08 1.1.2 版本发布
 

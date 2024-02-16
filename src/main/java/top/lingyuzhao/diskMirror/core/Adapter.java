@@ -50,6 +50,25 @@ public interface Adapter {
      */
     long rDelete(String path) throws IOException;
 
+
+    /**
+     * 将一个字符串写到文件中，并将文件保存
+     *
+     * @param data      文件数据流
+     * @param fileName  文件名称
+     * @param userId    空间id
+     * @param type      文件类型,
+     * @param secureKey 需要使用的加密密钥
+     * @return {
+     * res:上传结果,
+     * url:上传之后的 url,
+     * userId:文件所属用户id,
+     * type:文件类型
+     * }
+     * @throws IOException 操作异常
+     */
+    JSONObject writer(String data, String fileName, int userId, String type, int secureKey) throws IOException;
+
     /**
      * 将一个文件上传
      *

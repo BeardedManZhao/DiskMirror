@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.conf.Config;
 import top.lingyuzhao.diskMirror.utils.PathGeneration;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -167,6 +168,32 @@ public abstract class FSAdapter implements Adapter {
     @Override
     public Config getConfig() {
         return this.config;
+    }
+
+    /**
+     * 将一个字符串写到文件中，并将文件保存
+     *
+     * @param data      文件数据流
+     * @param fileName  文件名称
+     * @param userId    空间id
+     * @param type      文件类型,
+     * @param secureKey 需要使用的加密密钥
+     * @return {
+     * res:上传结果,
+     * url:上传之后的 url,
+     * userId:文件所属用户id,
+     * type:文件类型
+     * }
+     * @throws IOException 操作异常
+     */
+    @Override
+    public JSONObject writer(String data, String fileName, int userId, String type, int secureKey) throws IOException {
+        final JSONObject jsonObject = new JSONObject();
+        jsonObject.put("fileName", fileName);
+        jsonObject.put("userId", userId);
+        jsonObject.put("type", type);
+        jsonObject.put("secure.key", secureKey);
+        return this.upload(new ByteArrayInputStream(data.getBytes(config.getOrDefault(Config.CHAR_SET, "UTF-8").toString())), jsonObject);
     }
 
     /**
