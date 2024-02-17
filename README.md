@@ -31,7 +31,7 @@ diskMirror 的处理方式能够将多种文件系统的操作统一成为一样
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.1.2</version>
+        <version>1.1.3</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -940,7 +940,36 @@ public final class MAIN {
 }
 ```
 
-6. 针对 HTTP 适配器的 `getSpaceMaxSize` 进行优化和重写，让其能够直接从远程 diskMirror 服务器获取数据，而不是从本地获取。
+6. 针对 HTTP 适配器的 `getSpaceMaxSize` 进行优化和重写，让其能够直接从远程 diskMirror 服务器获取数据，而不是从本地获取（需要远程的 diskMirror 后端服务器的包 是在 2024年02月17日
+   以及以后发布的！！！）。
+
+```java
+package top.lingyuzhao.diskMirror.test;
+
+import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
+import top.lingyuzhao.diskMirror.core.Adapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+
+/**
+ * @author zhao
+ */
+@DiskMirrorConfig(
+        // TODO 设置 DiskMirror 远程 后端 服务器地址 这个是需要搭建的哦!!!
+        // 具体的后端服务器搭建 可以阅读：https://github.com/BeardedManZhao/DiskMirrorBackEnd.git
+        fsDefaultFS = "https://xxx/DiskMirrorBackEnd"
+)
+public final class MAIN {
+    public static void main(String[] args) {
+        // 获取到 远程 diskMirror 适配器
+        final Adapter adapter = DiskMirror.DiskMirrorHttpAdapter.getAdapter(MAIN.class);
+        // 获取到 远程服务器版本
+        System.out.println(adapter.version());
+        // 查看 1 25 空间的 maxSize
+        System.out.println(adapter.getSpaceMaxSize("1"));
+        System.out.println(adapter.getSpaceMaxSize("25"));
+    }
+}
+```
 
 #### 2024-02-08 1.1.2 版本发布
 

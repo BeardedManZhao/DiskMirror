@@ -30,7 +30,7 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
      * <p>
      * There are some operations that are not applicable to the backend server version. When encountering such functions, an error will be directly thrown here
      */
-    private final UnsupportedOperationException unsupportedOperationException = new UnsupportedOperationException("DiskMirrorHttpAdapter 不支持此函数操作!!! 这是因为 DiskMirror 中暂时没有对应的服务!!");
+    private final UnsupportedOperationException unsupportedOperationException = new UnsupportedOperationException("DiskMirrorHttpAdapter 不支持此函数操作!!! 这是因为 DiskMirror 中暂时没有对应的服务 或 此服务还未启用!!");
 
     private final CloseableHttpClient httpClient;
     private final HttpPost httpPost;
@@ -386,7 +386,7 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
      * 获取指定空间 id 的最大占用量，此函数的返回值是空间最大容量的字节数值。
      * <p>
      * Get the maximum usage of the specified space ID, and the return value of this function is the byte value of the maximum capacity of the space.
-     *
+     * <p>
      * 此函数 需要确保远程服务器是 2024年02月17日 以及此日期以后 发布的 DiskMirrorBackEnd 包 因为此服务在旧版本中可能不存在!!!
      *
      * @param id 需要被检索的空间的 id
