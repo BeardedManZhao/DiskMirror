@@ -19,7 +19,7 @@ diskMirror 的处理方式能够将多种文件系统的操作统一成为一样
 |----------------------------------|--------|--------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | DiskMirror.LocalFSAdapter        | v1.0   | 无外部依赖                                | 能够将适配器运行所在的主机的磁盘做为 diskMirror 管理，一般来说是作用于本机的本地文件系统磁盘管理。                                                                                                                                       |
 | DiskMirror.HDFSAdapter           | v1.0   | hadoop-client                        | 将 HDFS 文件系统提供给 diskMirror 管理，能够通过 diskMirror 操作 HDFS                                                                                                                                          |
-| DiskMirror.DiskMirrorHttpAdapter | v1.1.2 | httpclient, httpmime                | 将 [后端版本的 diskMirror](https://github.com/BeardedManZhao/DiskMirrorBackEnd.git) 接入到 diskMirror 管理，能够通过 diskMirror 操作 [后端 diskMirror]((https://github.com/BeardedManZhao/DiskMirrorBackEnd.git)) |
+| DiskMirror.DiskMirrorHttpAdapter | v1.1.2 | httpclient, httpmime                 | 将 [后端版本的 diskMirror](https://github.com/BeardedManZhao/DiskMirrorBackEnd.git) 接入到 diskMirror 管理，能够通过 diskMirror 操作 [后端 diskMirror]((https://github.com/BeardedManZhao/DiskMirrorBackEnd.git)) |
 
 ### 我如何获取 盘镜
 
@@ -915,6 +915,29 @@ error json = null
 	at top.lingyuzhao.diskMirror.test.MAIN.main(MAIN.java:17)
 ```
 
+5. 为所有的适配器新增了一个`setSpaceMaxSize`函数，用于判断指定空间的最大容量，单位是字节，下面是一个示例。
+```java
+package top.lingyuzhao.diskMirror.test;
+
+import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
+import top.lingyuzhao.diskMirror.core.Adapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+
+/**
+ * @author zhao
+ */
+@DiskMirrorConfig()
+public final class MAIN {
+    public static void main(String[] args) {
+        final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(MAIN.class);
+        // 将 1024 号空间的最大容量修改为 256MB
+        adapter.setSpaceMaxSize("1024", 256 << 10 << 10);
+        // 查看 1 号空间 和 1024 号空间的最大容量
+        System.out.println(adapter.getSpaceMaxSize("1")); // 134217728
+        System.out.println(adapter.getSpaceMaxSize("1024")); // 268435456
+    }
+}
+```
 #### 2024-02-08 1.1.2 版本发布
 
 1. 新增diskMirror 盘镜 后端服务器的适配器，通过该适配器您可以直接远程操作 diskMirror

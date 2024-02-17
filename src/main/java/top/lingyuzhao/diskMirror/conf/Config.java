@@ -155,7 +155,11 @@ public class Config extends JSONObject {
      * @return 指定空间的最大使用量 字节数
      */
     public long getSpaceMaxSize(String spaceId) {
-        return SPACE_SIZE.getLongValue(spaceId, this.getLongValue(USER_DISK_MIRROR_SPACE_QUOTA));
+        final Long longValue = SPACE_SIZE.getLong(spaceId);
+        if (longValue == null) {
+            return this.getLongValue(USER_DISK_MIRROR_SPACE_QUOTA);
+        }
+        return longValue;
     }
 
     /**

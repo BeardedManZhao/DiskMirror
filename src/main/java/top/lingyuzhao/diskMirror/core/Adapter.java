@@ -203,6 +203,20 @@ public interface Adapter {
     long getUseSize(JSONObject jsonObject, String path) throws IOException;
 
     /**
+     * 获取指定空间 id 的最大占用量，此函数的返回值是空间最大容量的字节数值。
+     * <p>
+     * Get the maximum usage of the specified space ID, and the return value of this function is the byte value of the maximum capacity of the space.
+     *
+     * @param id 需要被检索的空间的 id
+     *           <p>
+     *           The ID of the space that needs to be retrieved
+     * @return 用户空间的存储最大的大小 字节为单位，请注意这里的返回值是最大大小，而不是已使用的大小，如果您需要获取已使用的字节数 请调用 getUseSize 方法
+     * <p>
+     * The maximum storage size of user space is in bytes. Please note that the return value here is the maximum size, not the used size. If you need to obtain the number of used bytes, please call the getUseSize method
+     */
+    long getSpaceMaxSize(String id);
+
+    /**
      * 关闭适配器
      */
     void close();
