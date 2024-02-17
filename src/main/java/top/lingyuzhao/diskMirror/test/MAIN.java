@@ -7,14 +7,20 @@ import top.lingyuzhao.diskMirror.core.DiskMirror;
 /**
  * @author zhao
  */
-@DiskMirrorConfig()
+@DiskMirrorConfig(
+        // TODO 设置 DiskMirror 远程 后端 服务器地址 这个是需要搭建的哦!!!
+        // 具体的后端服务器搭建 可以阅读：https://github.com/BeardedManZhao/DiskMirrorBackEnd.git
+        fsDefaultFS = "https://diskMirror.lingyuzhao.top/DiskMirrorBackEnd",
+        secureKey = 2123691651
+)
 public final class MAIN {
     public static void main(String[] args) {
-        final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(MAIN.class);
-        // 将 1024 号空间的最大容量修改为 256MB
-        adapter.setSpaceMaxSize("1024", 256 << 10 << 10);
-        // 查看 1 号空间 和 1024 号空间的最大容量
+        // 获取到 远程 diskMirror 适配器
+        final Adapter adapter = DiskMirror.DiskMirrorHttpAdapter.getAdapter(MAIN.class);
+        // 获取到 远程服务器版本
+        System.out.println(adapter.version());
+        // 查看 1 25 的maxSize
         System.out.println(adapter.getSpaceMaxSize("1"));
-        System.out.println(adapter.getSpaceMaxSize("1024"));
+        System.out.println(adapter.getSpaceMaxSize("25"));
     }
 }

@@ -23,9 +23,20 @@ public interface Adapter {
         if (jsonObject == null) {
             throw new UnsupportedOperationException("您提供的 json 对象为空，diskMirror 拒绝了您的访问\nThe json object you provided is empty, and diskMirror has denied your access\nerror json = null");
         }
-        final int orDefault = (int) jsonObject.getOrDefault(Config.SECURE_KEY, 0);
-        if (config.getSecureKey() != orDefault) {
-            throw new UnsupportedOperationException("您提供的密钥错误，diskMirror 拒绝了您的访问\nThe key you provided is incorrect, and diskMirror has denied your access\nerror key = " + orDefault);
+        checkSK(config, (int) jsonObject.getOrDefault(Config.SECURE_KEY, 0));
+    }
+
+    /**
+     * 检查函数 此函数会处于所有服务函数的第一行
+     *
+     * @param config 需要使用的适配器的配置类对象
+     * @param sk     需要被检查的 sk 参数
+     */
+    static void checkSK(Config config, int sk) {
+        if (config.getSecureKey() != sk) {
+            StringBuilder stringBuilder = new StringBuilder(String.valueOf(sk));
+            stringBuilder.replace(1, stringBuilder.length() - 1, "******");
+            throw new UnsupportedOperationException("您提供的密钥错误，diskMirror 拒绝了您的访问\nThe key you provided is incorrect, and diskMirror has denied your access\nerror key = " + stringBuilder);
         }
     }
 
@@ -43,6 +54,15 @@ public interface Adapter {
      * @param maxSize 指定空间的最大使用量
      */
     void setSpaceMaxSize(String spaceId, long maxSize);
+
+    /**
+     * 设置指定空间的最大使用量
+     *
+     * @param spaceId 指定空间的 id
+     * @param maxSize 指定空间的最大使用量
+     * @param sk      安全密钥
+     */
+    void setSpaceMaxSize(String spaceId, long maxSize, int sk);
 
     /**
      * 递归删除一个目录 并将删除的字节数值返回

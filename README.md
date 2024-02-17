@@ -916,6 +916,7 @@ error json = null
 ```
 
 5. 为所有的适配器新增了一个`setSpaceMaxSize`函数，用于判断指定空间的最大容量，单位是字节，下面是一个示例。
+
 ```java
 package top.lingyuzhao.diskMirror.test;
 
@@ -938,6 +939,9 @@ public final class MAIN {
     }
 }
 ```
+
+6. 针对 HTTP 适配器的 `getSpaceMaxSize` 进行优化和重写，让其能够直接从远程 diskMirror 服务器获取数据，而不是从本地获取。
+
 #### 2024-02-08 1.1.2 版本发布
 
 1. 新增diskMirror 盘镜 后端服务器的适配器，通过该适配器您可以直接远程操作 diskMirror

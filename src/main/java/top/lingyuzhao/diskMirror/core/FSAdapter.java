@@ -44,6 +44,19 @@ public abstract class FSAdapter implements Adapter {
      */
     @Override
     public void setSpaceMaxSize(String spaceId, long maxSize) {
+        this.setSpaceMaxSize(spaceId, maxSize, 0);
+    }
+
+    /**
+     * 设置指定空间的最大使用量
+     *
+     * @param spaceId 指定空间的 id
+     * @param maxSize 指定空间的最大使用量
+     * @param sk      安全密钥
+     */
+    @Override
+    public void setSpaceMaxSize(String spaceId, long maxSize, int sk) {
+        Adapter.checkSK(this.config, sk);
         this.config.setSpaceMaxSize(spaceId, maxSize);
     }
 
