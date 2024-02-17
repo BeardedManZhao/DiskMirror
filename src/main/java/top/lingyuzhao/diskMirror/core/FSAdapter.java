@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.conf.Config;
 import top.lingyuzhao.diskMirror.utils.PathGeneration;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -43,6 +44,19 @@ public abstract class FSAdapter implements Adapter {
      */
     @Override
     public void setSpaceMaxSize(String spaceId, long maxSize) {
+        this.setSpaceMaxSize(spaceId, maxSize, 0);
+    }
+
+    /**
+     * 设置指定空间的最大使用量
+     *
+     * @param spaceId 指定空间的 id
+     * @param maxSize 指定空间的最大使用量
+     * @param sk      安全密钥
+     */
+    @Override
+    public void setSpaceMaxSize(String spaceId, long maxSize, int sk) {
+        Adapter.checkSK(this.config, sk);
         this.config.setSpaceMaxSize(spaceId, maxSize);
     }
 
@@ -167,6 +181,54 @@ public abstract class FSAdapter implements Adapter {
     @Override
     public Config getConfig() {
         return this.config;
+    }
+
+    /**
+     * 将一个字符串写到文件中，并将文件保存
+     *
+     * @param data      文件数据流
+     * @param fileName  文件名称
+     * @param userId    空间id
+     * @param type      文件类型,
+     * @param secureKey 需要使用的加密密钥
+     * @return {
+     * res:上传结果,
+     * url:上传之后的 url,
+     * userId:文件所属用户id,
+     * type:文件类型
+     * }
+     * @throws IOException 操作异常
+     */
+    @Override
+    public JSONObject writer(String data, String fileName, int userId, String type, int secureKey) throws IOException {
+        return this.writer(data.getBytes(config.getOrDefault(Config.CHAR_SET, "UTF-8").toString()), fileName, userId, type, secureKey);
+    }
+
+    /**
+     * 将一个字符串写到文件中，并将文件保存
+     *
+     * @param bytes     需要被写入的二进制数据
+     * @param fileName  文件名称
+     * @param userId    空间id
+     * @param type      文件类型,
+     * @param secureKey 需要使用的加密密钥
+     * @return {
+     * res:上传结果,
+     * url:上传之后的 url,
+     * userId:文件所属用户id,
+     * type:文件类型
+     * }
+     * @throws IOException 操作异常
+     */
+    @Override
+    public JSONObject writer(byte[] bytes, String fileName, int userId, String type, int secureKey) throws IOException {
+        final JSONObject jsonObject = new JSONObject();
+        jsonObject.put("fileName", fileName);
+        jsonObject.put("userId", userId);
+        jsonObject.put("type", type);
+        jsonObject.put("secure.key", secureKey);
+        return this.upload(new ByteArrayInputStream(bytes), jsonObject);
+
     }
 
     /**
@@ -373,6 +435,23 @@ public abstract class FSAdapter implements Adapter {
         return getUseSize(jsonObject, ((PathGeneration) config.get(Config.GENERATION_RULES)).function(
                 jsonObject
         )[0]);
+    }
+
+    /**
+     * 获取指定空间 id 的最大占用量，此函数的返回值是空间最大容量的字节数值。
+     * <p>
+     * Get the maximum usage of the specified space ID, and the return value of this function is the byte value of the maximum capacity of the space.
+     *
+     * @param id 需要被检索的空间的 id
+     *           <p>
+     *           The ID of the space that needs to be retrieved
+     * @return 用户空间的存储最大的大小 字节为单位，请注意这里的返回值是最大大小，而不是已使用的大小，如果您需要获取已使用的字节数 请调用 getUseSize 方法
+     * <p>
+     * The maximum storage size of user space is in bytes. Please note that the return value here is the maximum size, not the used size. If you need to obtain the number of used bytes, please call the getUseSize method
+     */
+    @Override
+    public long getSpaceMaxSize(String id) {
+        return config.getSpaceMaxSize(id);
     }
 
     /**

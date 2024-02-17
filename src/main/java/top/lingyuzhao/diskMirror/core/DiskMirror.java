@@ -25,8 +25,27 @@ public enum DiskMirror {
          * @return 适配器对象 能够用于管理磁盘文件
          */
         @Override
-        public Adapter getAdapter(Config config) {
+        public Adapter getAdapterInDM(Config config) {
             return new LocalFSAdapter(config);
+        }
+
+        /**
+         * @return 能够返回出当前的配置类中需要的依赖包，以 xml 展示。
+         * <p>
+         * The dependency package required in the current configuration class can be returned and displayed in XML.
+         */
+        @Override
+        protected String needDependent() {
+            return "        <dependency>\n" +
+                    "            <groupId>com.alibaba.fastjson2</groupId>\n" +
+                    "            <artifactId>fastjson2</artifactId>\n" +
+                    "            <version>x.x.x</version>\n" +
+                    "        </dependency>\n" +
+                    "        <dependency>\n" +
+                    "            <groupId>io.github.BeardedManZhao</groupId>\n" +
+                    "            <artifactId>zhao-utils</artifactId>\n" +
+                    "            <version>x.x.x</version>\n" +
+                    "        </dependency>\n";
         }
     },
 
@@ -43,8 +62,23 @@ public enum DiskMirror {
          * @return 适配器对象 能够用于管理磁盘文件
          */
         @Override
-        public Adapter getAdapter(Config config) {
+        public Adapter getAdapterInDM(Config config) {
             return new HDFSAdapter(config);
+        }
+
+        /**
+         * @return 能够返回出当前的配置类中需要的依赖包，以 xml 展示。
+         * <p>
+         * The dependency package required in the current configuration class can be returned and displayed in XML.
+         */
+        @Override
+        protected String needDependent() {
+            return LocalFSAdapter.needDependent() + "        <!-- 如果您要使用 HDFSAdapter 请添加Hadoop核心库 -->\n" +
+                    "        <dependency>\n" +
+                    "            <groupId>org.apache.hadoop</groupId>\n" +
+                    "            <artifactId>hadoop-client</artifactId>\n" +
+                    "            <version>x.x.x</version>\n" +
+                    "        </dependency>";
         }
     },
 
@@ -65,8 +99,28 @@ public enum DiskMirror {
          * The adapter object can be used to manage disk files
          */
         @Override
-        public Adapter getAdapter(Config config) {
+        public Adapter getAdapterInDM(Config config) {
             return this.getAdapter(config, "FsCrud", null);
+        }
+
+        /**
+         * @return 能够返回出当前的配置类中需要的依赖包，以 xml 展示。
+         * <p>
+         * The dependency package required in the current configuration class can be returned and displayed in XML.
+         */
+        @Override
+        protected String needDependent() {
+            return LocalFSAdapter.needDependent() + "        <!-- 如果您要使用 DiskMirrorHttpAdapter 请添加 httpClient 核心库 -->\n" +
+                    "        <dependency>\n" +
+                    "            <groupId>org.apache.httpcomponents</groupId>\n" +
+                    "            <artifactId>httpclient</artifactId>\n" +
+                    "            <version>x.x.x</version>\n" +
+                    "        </dependency>\n" +
+                    "        <dependency>\n" +
+                    "            <groupId>org.apache.httpcomponents</groupId>\n" +
+                    "            <artifactId>httpmime</artifactId>\n" +
+                    "            <version>x.x.x</version>\n" +
+                    "        </dependency>";
         }
 
         /**
@@ -94,7 +148,7 @@ public enum DiskMirror {
      * <p>
      * The current version of the disk mirror library
      */
-    public final static String VERSION = "1.1.2";
+    public final static String VERSION = "1.1.3";
 
     /**
      * 获取到当前 盘镜 的版本 以及 适配器的名称
@@ -134,7 +188,35 @@ public enum DiskMirror {
      * <p>
      * The adapter object can be used to manage disk files
      */
-    public abstract Adapter getAdapter(Config config);
+    protected abstract Adapter getAdapterInDM(Config config);
+
+    /**
+     * @return 能够返回出当前的配置类中需要的依赖包，以 xml 展示。
+     * <p>
+     * The dependency package required in the current configuration class can be returned and displayed in XML.
+     */
+    protected abstract String needDependent();
+
+    /**
+     * 通过配置类，创建出对应的适配器对象
+     * <p>
+     * Create the corresponding adapter object by configuring the class
+     *
+     * @param config 配置类
+     * @return 适配器对象 能够用于管理磁盘文件
+     * <p>
+     * The adapter object can be used to manage disk files
+     */
+    public Adapter getAdapter(Config config) {
+        try {
+            return this.getAdapterInDM(config);
+        } catch (NoClassDefFoundError e) {
+            throw new UnsupportedOperationException(
+                    "不支持您进行【" + super.toString() + "】适配器的实例化操作，因为您的项目中缺少必须的依赖，下面是依赖信息\nYou are not supported to instantiate the [" + super.toString() + "] adapter because your project lacks the necessary dependencies. Here is the dependency information\n" +
+                            this.needDependent()
+            );
+        }
+    }
 
     /**
      * 通过配置类，创建出对应的适配器对象

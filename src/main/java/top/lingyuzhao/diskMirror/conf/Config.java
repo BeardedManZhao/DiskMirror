@@ -59,6 +59,16 @@ public class Config extends JSONObject {
     public final static String SECURE_KEY = "secure.key";
 
     /**
+     * 盘镜 服务中 所有与字符编码相关的操作，要使用的字符编码集。
+     * <p>
+     * The character encoding set to be used for all operations related to character encoding in the disk mirror service.
+     */
+    public final static String CHAR_SET = "diskMirror.charset";
+    /**
+     * 盘镜 服务如果对接到第三方的文件系统，且第三方文件系统需要使用用户名和密码，则需要使用此配置项目来实现用户密码的验证
+     */
+    public final static String USER_AT_PASS = "user@password";
+    /**
      * 用户 盘镜 空间配合映射表，通过此处的映射操作可以获取到指定用户的空间的使用量最大值。
      */
     private final static JSONObject SPACE_SIZE = new JSONObject();
@@ -77,6 +87,7 @@ public class Config extends JSONObject {
         super.put(USER_DISK_MIRROR_SPACE_QUOTA, 128 << 10 << 10);
         super.putObject(PARAMS);
         super.put(SECURE_KEY, 0);
+        super.put(CHAR_SET, "UTF-8");
         // 默认的路径生成逻辑  由 <空间id，文件名称> 生成 文件路径
         super.put(GENERATION_RULES, getPathGeneration(this));
     }
@@ -96,6 +107,7 @@ public class Config extends JSONObject {
         super.put(USER_DISK_MIRROR_SPACE_QUOTA, config.userDiskMirrorSpaceQuota());
         super.put(PARAMS, JSONObject.parse(config.params()));
         super.put(SECURE_KEY, config.secureKey());
+        super.put(CHAR_SET, config.charSet());
         // 默认的路径生成逻辑  由 <空间id，文件名称> 生成 文件路径
         super.put(GENERATION_RULES, getPathGeneration(this));
     }
@@ -111,7 +123,7 @@ public class Config extends JSONObject {
             final int userId = jsonObject.getIntValue("userId");
             final String type = jsonObject.get("type").toString();
             final String fileName = jsonObject.getString("fileName");
-            final String fn = fileName != null ? fileName : "";
+            final String fn = fileName != null ? fileName : "未命名_" + System.currentTimeMillis();
             boolean isRead = (boolean) jsonObject.getOrDefault("useAgreement", true);
             // 如果连接需要读取 同时 具有前部协议 则 在这里去掉 路径前缀 使用 协议前缀替代 反之加上路径前缀
             final String protocol = config.getString(PROTOCOL_PREFIX);
@@ -143,7 +155,11 @@ public class Config extends JSONObject {
      * @return 指定空间的最大使用量 字节数
      */
     public long getSpaceMaxSize(String spaceId) {
-        return SPACE_SIZE.getLongValue(spaceId, this.getLongValue(USER_DISK_MIRROR_SPACE_QUOTA));
+        final Long longValue = SPACE_SIZE.getLong(spaceId);
+        if (longValue == null) {
+            return this.getLongValue(USER_DISK_MIRROR_SPACE_QUOTA);
+        }
+        return longValue;
     }
 
     /**

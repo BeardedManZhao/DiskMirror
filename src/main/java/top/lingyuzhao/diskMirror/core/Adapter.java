@@ -20,9 +20,23 @@ public interface Adapter {
      * @param jsonObject 需要被检查的 json 对象
      */
     static void checkJsonObj(Config config, JSONObject jsonObject) {
-        final int orDefault = jsonObject == null ? 0 : (int) jsonObject.getOrDefault(Config.SECURE_KEY, 0);
-        if (config.getSecureKey() != orDefault) {
-            throw new UnsupportedOperationException("您提供的密钥错误，diskMirror 拒绝了您的访问\nThe key you provided is incorrect, and diskMirror has denied your access\nerror key = " + orDefault);
+        if (jsonObject == null) {
+            throw new UnsupportedOperationException("您提供的 json 对象为空，diskMirror 拒绝了您的访问\nThe json object you provided is empty, and diskMirror has denied your access\nerror json = null");
+        }
+        checkSK(config, (int) jsonObject.getOrDefault(Config.SECURE_KEY, 0));
+    }
+
+    /**
+     * 检查函数 此函数会处于所有服务函数的第一行
+     *
+     * @param config 需要使用的适配器的配置类对象
+     * @param sk     需要被检查的 sk 参数
+     */
+    static void checkSK(Config config, int sk) {
+        if (config.getSecureKey() != sk) {
+            StringBuilder stringBuilder = new StringBuilder(String.valueOf(sk));
+            stringBuilder.replace(1, stringBuilder.length() - 1, "******");
+            throw new UnsupportedOperationException("您提供的密钥错误，diskMirror 拒绝了您的访问\nThe key you provided is incorrect, and diskMirror has denied your access\nerror key = " + stringBuilder);
         }
     }
 
@@ -42,6 +56,15 @@ public interface Adapter {
     void setSpaceMaxSize(String spaceId, long maxSize);
 
     /**
+     * 设置指定空间的最大使用量
+     *
+     * @param spaceId 指定空间的 id
+     * @param maxSize 指定空间的最大使用量
+     * @param sk      安全密钥
+     */
+    void setSpaceMaxSize(String spaceId, long maxSize, int sk);
+
+    /**
      * 递归删除一个目录 并将删除的字节数值返回
      *
      * @param path 需要被删除的文件目录
@@ -49,6 +72,44 @@ public interface Adapter {
      * @throws IOException 删除操作出现异常
      */
     long rDelete(String path) throws IOException;
+
+
+    /**
+     * 将一个字符串写到文件中，并将文件保存
+     *
+     * @param data      文件数据流
+     * @param fileName  文件名称
+     * @param userId    空间id
+     * @param type      文件类型,
+     * @param secureKey 需要使用的加密密钥
+     * @return {
+     * res:上传结果,
+     * url:上传之后的 url,
+     * userId:文件所属用户id,
+     * type:文件类型
+     * }
+     * @throws IOException 操作异常
+     */
+    JSONObject writer(String data, String fileName, int userId, String type, int secureKey) throws IOException;
+
+
+    /**
+     * 将一个字符串写到文件中，并将文件保存
+     *
+     * @param bytes     需要被写入的二进制数据
+     * @param fileName  文件名称
+     * @param userId    空间id
+     * @param type      文件类型,
+     * @param secureKey 需要使用的加密密钥
+     * @return {
+     * res:上传结果,
+     * url:上传之后的 url,
+     * userId:文件所属用户id,
+     * type:文件类型
+     * }
+     * @throws IOException 操作异常
+     */
+    JSONObject writer(byte[] bytes, String fileName, int userId, String type, int secureKey) throws IOException;
 
     /**
      * 将一个文件上传
@@ -160,6 +221,20 @@ public interface Adapter {
      * @throws IOException 操作异常
      */
     long getUseSize(JSONObject jsonObject, String path) throws IOException;
+
+    /**
+     * 获取指定空间 id 的最大占用量，此函数的返回值是空间最大容量的字节数值。
+     * <p>
+     * Get the maximum usage of the specified space ID, and the return value of this function is the byte value of the maximum capacity of the space.
+     *
+     * @param id 需要被检索的空间的 id
+     *           <p>
+     *           The ID of the space that needs to be retrieved
+     * @return 用户空间的存储最大的大小 字节为单位，请注意这里的返回值是最大大小，而不是已使用的大小，如果您需要获取已使用的字节数 请调用 getUseSize 方法
+     * <p>
+     * The maximum storage size of user space is in bytes. Please note that the return value here is the maximum size, not the used size. If you need to obtain the number of used bytes, please call the getUseSize method
+     */
+    long getSpaceMaxSize(String id);
 
     /**
      * 关闭适配器

@@ -30,11 +30,12 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
      * <p>
      * There are some operations that are not applicable to the backend server version. When encountering such functions, an error will be directly thrown here
      */
-    private final UnsupportedOperationException unsupportedOperationException = new UnsupportedOperationException("DiskMirrorHttpAdapter 不支持此函数操作!!! 这是因为 DiskMirror 中暂时没有对应的服务!!");
+    private final UnsupportedOperationException unsupportedOperationException = new UnsupportedOperationException("DiskMirrorHttpAdapter 不支持此函数操作!!! 这是因为 DiskMirror 中暂时没有对应的服务 或 此服务还未启用!!");
 
     private final CloseableHttpClient httpClient;
     private final HttpPost httpPost;
     private final URI upload, remove, getUrls, mkdirs, reName, version;
+    private final String getSpaceMaxSizeURL;
 
     /**
      * 构建一个适配器
@@ -64,6 +65,7 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
             getUrls = new URI(url + "getUrls");
             mkdirs = new URI(url + "mkdirs");
             reName = new URI(url + "reName");
+            getSpaceMaxSizeURL = url + "getSpaceSize?";
         } catch (URISyntaxException e) {
             throw new UnsupportedOperationException("error url => " + url, e);
         }
@@ -225,21 +227,24 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
      */
     @Override
     public JSONObject upload(InputStream inputStream, JSONObject jsonObject) throws IOException {
-        if (jsonObject != null && jsonObject.containsKey("fileName"))
+        if (jsonObject != null && jsonObject.containsKey("fileName")) {
             // 开始上传
             this.httpPost.setURI(this.upload);
-        this.httpPost.setEntity(
-                MultipartEntityBuilder.create()
-                        .addTextBody("params", jsonObject.toString())
-                        .addBinaryBody("file", inputStream)
-                        .setContentType(ContentType.MULTIPART_FORM_DATA)
-                        .build()
-        );
-        final HttpEntity entity = httpClient.execute(this.httpPost).getEntity();
-        final String string = EntityUtils.toString(entity);
-        IOUtils.close(inputStream);
-        EntityUtils.consume(entity);
-        return JSONObject.parseObject(string);
+            this.httpPost.setEntity(
+                    MultipartEntityBuilder.create()
+                            .addTextBody("params", jsonObject.toString())
+                            .addBinaryBody("file", inputStream)
+                            .setContentType(ContentType.MULTIPART_FORM_DATA)
+                            .build()
+            );
+            final HttpEntity entity = httpClient.execute(this.httpPost).getEntity();
+            final String string = EntityUtils.toString(entity);
+            IOUtils.close(inputStream);
+            EntityUtils.consume(entity);
+            return JSONObject.parseObject(string);
+        } else {
+            throw new UnsupportedOperationException("您的参数中没有包含 fileName 或者 参数为 空，因此无法将您的请求交由后端服务器处理！\nYour parameter does not include fileName or is empty, so your request cannot be handed over to the backend server for processing!\nerror params => " + jsonObject);
+        }
     }
 
     /**
@@ -364,5 +369,40 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
         final String string = EntityUtils.toString(entity);
         EntityUtils.consume(entity);
         return JSONObject.parseObject(string);
+    }
+
+    /**
+     * 设置指定空间的最大使用量
+     *
+     * @param spaceId 指定空间的 id
+     * @param maxSize 指定空间的最大使用量
+     */
+    @Override
+    public void setSpaceMaxSize(String spaceId, long maxSize) {
+        throw this.unsupportedOperationException;
+    }
+
+    /**
+     * 获取指定空间 id 的最大占用量，此函数的返回值是空间最大容量的字节数值。
+     * <p>
+     * Get the maximum usage of the specified space ID, and the return value of this function is the byte value of the maximum capacity of the space.
+     * <p>
+     * 此函数 需要确保远程服务器是 2024年02月17日 以及此日期以后 发布的 DiskMirrorBackEnd 包 因为此服务在旧版本中可能不存在!!!
+     *
+     * @param id 需要被检索的空间的 id
+     *           <p>
+     *           The ID of the space that needs to be retrieved
+     * @return 用户空间的存储最大的大小 字节为单位，请注意这里的返回值是最大大小，而不是已使用的大小，如果您需要获取已使用的字节数 请调用 getUseSize 方法
+     * <p>
+     * The maximum storage size of user space is in bytes. Please note that the return value here is the maximum size, not the used size. If you need to obtain the number of used bytes, please call the getUseSize method
+     */
+    @Override
+    public long getSpaceMaxSize(String id) {
+        try {
+            this.httpPost.setURI(new URI(this.getSpaceMaxSizeURL + "spaceId=" + id));
+            return JSONObject.parseObject(EntityUtils.toString(httpClient.execute(this.httpPost).getEntity())).getLong(this.config.getString(Config.RES_KEY));
+        } catch (URISyntaxException | IOException e) {
+            throw new UnsupportedOperationException(e);
+        }
     }
 }

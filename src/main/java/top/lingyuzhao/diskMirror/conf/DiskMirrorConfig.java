@@ -68,4 +68,11 @@ public @interface DiskMirrorConfig {
      * User disk mirror space quota, each user can only use a fixed capacity disk mirror quota space! Here is a numerical value in bytes, with a default value of 128MB
      */
     long userDiskMirrorSpaceQuota() default 128 << 10 << 10;
+
+    /**
+     * @return 盘镜 服务中 所有与字符编码相关的操作，要使用的字符编码集。
+     * <p>
+     * The character encoding set to be used for all operations related to character encoding in the disk mirror service.
+     */
+    String charSet() default "UTF-8";
 }
