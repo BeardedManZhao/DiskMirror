@@ -7,6 +7,7 @@ import top.lingyuzhao.diskMirror.utils.PathGeneration;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
 
 /**
@@ -132,6 +133,16 @@ public abstract class FSAdapter implements Adapter {
      * @throws IOException 操作异常
      */
     protected abstract JSONObject pathProcessorMkdirs(String path, JSONObject inJson) throws IOException;
+
+    /**
+     * 路径处理器 接收一个路径 返回此数据的数据流对象
+     *
+     * @param path   路径对象
+     * @param inJson 文件输入的 json 对象
+     * @return 指定目标文件的数据流对象！
+     * @throws IOException 操作异常 | 文件没有找到会异常，这里的异常必须捕获！！！ 否则会导致程序终止运行
+     */
+    protected abstract InputStream pathProcessorDownLoad(String path, JSONObject inJson) throws IOException;
 
     /**
      * 路径处理器 接收一个路径 输出结果对象  需要注意的是 您需要在这里设置返回的 useSize
@@ -265,7 +276,7 @@ public abstract class FSAdapter implements Adapter {
         final String type = jsonObject.getString("type");
         final long l = this.addUseSize(userId, type, inputSize);
         final long maxSize = config.getSpaceMaxSize(userId.toString());
-        jsonObject.put("useAgreement", config.getString(Config.PROTOCOL_PREFIX).length() > 0);
+        jsonObject.put("useAgreement", !config.getString(Config.PROTOCOL_PREFIX).isEmpty());
         if (l > maxSize) {
             jsonObject.put("useSize", this.diffUseSize(userId, type, inputSize));
             throw new IOException("id为 " + userId + " 的 " + type + " 空间不足，因为上传《" + jsonObject.getString("fileName") + "》之后的字节数【" + l + "】 > 最大字节数【" + maxSize + "】");
@@ -279,6 +290,19 @@ public abstract class FSAdapter implements Adapter {
             jsonObject.put("useSize", this.diffUseSize(userId, type, inputSize));
             throw e;
         }
+    }
+
+    @Override
+    public InputStream downLoad(JSONObject jsonObject) throws IOException {
+        // 首先获取到 文件的路径
+        final Config config = this.getConfig();
+        Adapter.checkJsonObj(config, jsonObject);
+        // 这里就是文件的路径了
+        final String path = ((PathGeneration) config.get(Config.GENERATION_RULES)).function(
+                jsonObject
+        )[2];
+        // 直接调用抽象逻辑
+        return this.pathProcessorDownLoad(path, jsonObject);
     }
 
     /**
@@ -364,7 +388,7 @@ public abstract class FSAdapter implements Adapter {
                 jsonObject
         );
         jsonObject.put("useSize", getUseSize(jsonObject, path[0]));
-        jsonObject.put("useAgreement", config.getString(Config.PROTOCOL_PREFIX).length() > 0);
+        jsonObject.put("useAgreement", !config.getString(Config.PROTOCOL_PREFIX).isEmpty());
         jsonObject.put("maxSize", config.getSpaceMaxSize(jsonObject.getString("userId")));
         return pathProcessorGetUrls(path[0], path[1], jsonObject);
     }

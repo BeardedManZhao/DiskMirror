@@ -10,6 +10,7 @@ import top.lingyuzhao.utils.StrUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * HDFS 文件系统适配器
@@ -111,6 +112,11 @@ public class HDFSAdapter extends FSAdapter {
     protected JSONObject pathProcessorMkdirs(String path, JSONObject inJson) throws IOException {
         inJson.put(config.getString(Config.RES_KEY), fileSystem.mkdirs(new Path(path)) ? config.getString(Config.OK_VALUE) : "创建失败，可能文件目录已经存在，或者无法连接到 HDFS 服务器");
         return inJson;
+    }
+
+    @Override
+    protected InputStream pathProcessorDownLoad(String path, JSONObject inJson) throws IOException {
+        return fileSystem.open(new Path(path));
     }
 
     @Override

@@ -351,6 +351,54 @@ public final class MAIN {
 }
 ```
 
+### 从适配器中获取数据的数据流对象 下载文件
+
+在 1.1.4 版本之后，diskMirror 的文件存储可以获取到数据流对象，而不是只能使用 url 下载文件，这有助于您在使用 diskMirror 的时候，可以使用更灵活的下载方式，也可以避免一些配置！
+
+在下面就是一个使用的示例！
+
+```java
+import com.alibaba.fastjson2.JSONObject;
+import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
+import top.lingyuzhao.diskMirror.core.Adapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+import top.lingyuzhao.diskMirror.core.Type;
+import top.lingyuzhao.utils.IOUtils;
+
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
+/**
+ * @author zhao
+ */
+@DiskMirrorConfig(
+        rootDir = "/diskMirror"
+)
+public final class MAIN {
+    public static void main(String[] args) throws IOException {
+        // 获取到 diskMirror 适配器
+        final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(MAIN.class);
+        // 准备我们需要的文件的描述信息
+        final JSONObject jsonObject = new JSONObject();
+        // 设置文件所属空间id
+        jsonObject.put("userId", 1024);
+        // 设置文件类型 根据自己的文件类型选择不同的类型
+        jsonObject.put("type", Type.Binary);
+        // 设置要获取的文件的文件名字
+        jsonObject.put("fileName", "test.txt");
+        // 获取到数据流对象
+        try(
+                final InputStream inputStream = adapter.downLoad(jsonObject);
+                final FileOutputStream fileOutputStream = new FileOutputStream("C:\\Users\\zhao\\Desktop\\fsdownload\\res.png")
+        ){
+            // 在这里可以使用数据流 数据流中就是我们需要的文件！
+            IOUtils.copy(inputStream, fileOutputStream, true);
+        }
+    }
+}
+```
+
 ### 从适配器中删除数据
 
 ```java

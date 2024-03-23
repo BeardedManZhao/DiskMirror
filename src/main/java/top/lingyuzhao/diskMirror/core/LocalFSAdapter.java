@@ -110,6 +110,11 @@ public final class LocalFSAdapter extends FSAdapter {
     }
 
     @Override
+    protected InputStream pathProcessorDownLoad(String path, JSONObject inJson) throws IOException {
+        return new BufferedInputStream(Files.newInputStream(Paths.get(path)));
+    }
+
+    @Override
     protected JSONObject pathProcessorRemove(String path, JSONObject jsonObject) throws IOException {
         final Config config = this.getConfig();
         // 开始进行删除操作

@@ -2,6 +2,8 @@ package top.lingyuzhao.diskMirror.core;
 
 import com.alibaba.fastjson2.JSONObject;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
@@ -34,7 +36,7 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
 
     private final CloseableHttpClient httpClient;
     private final HttpPost httpPost;
-    private final URI upload, remove, getUrls, mkdirs, reName, version;
+    private final URI upload, remove, getUrls, mkdirs, reName, version, dowbLoad;
     private final String getSpaceMaxSizeURL;
 
     /**
@@ -65,6 +67,7 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
             getUrls = new URI(url + "getUrls");
             mkdirs = new URI(url + "mkdirs");
             reName = new URI(url + "reName");
+            dowbLoad = new URI(url + "downLoad");
             getSpaceMaxSizeURL = url + "getSpaceSize?";
         } catch (URISyntaxException e) {
             throw new UnsupportedOperationException("error url => " + url, e);
@@ -101,49 +104,6 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
         throw unsupportedOperationException;
     }
 
-    /**
-     * 路径处理器 接收一个路径 输出结果对象  需要注意的是 您需要在这里设置返回的 useSize
-     *
-     * @param path     路径对象
-     * @param path_res 能够直接与协议前缀拼接的路径
-     * @param inJson   文件输入的 json 对象
-     * @return 获取到的结果，在这里有一个示例 ```{
-     * "userId": 1024,
-     * "type": "Binary",
-     * "useSize": 787141,
-     * "useAgreement": true,
-     * "maxSize": 134217728,
-     * "urls": [
-     * {
-     * "fileName": "fsdownload",
-     * "url": "http://localhost:8080/1024/Binary//fsdownload",
-     * "lastModified": 1705762229601,
-     * "size": 0,
-     * "type": "Binary",
-     * "isDir": true,
-     * "urls": [
-     * {
-     * "fileName": "myFile.png",
-     * "url": "http://localhost:8080/1024/Binary//fsdownload/myFile.png",
-     * "lastModified": 1705762229664,
-     * "size": 293172,
-     * "type": "Binary",
-     * "isDir": false
-     * }
-     * ]
-     * },
-     * {
-     * "fileName": "test.png",
-     * "url": "http://localhost:8080/1024/Binary//test.png",
-     * "lastModified": 1702903450767,
-     * "size": 493969,
-     * "type": "Binary",
-     * "isDir": false
-     * }
-     * ],
-     * "res": "ok!!!!"
-     * }```
-     */
     @Override
     protected JSONObject pathProcessorGetUrls(String path, String path_res, JSONObject inJson) {
         throw unsupportedOperationException;
@@ -158,6 +118,11 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
      */
     @Override
     protected JSONObject pathProcessorMkdirs(String path, JSONObject inJson) {
+        throw unsupportedOperationException;
+    }
+
+    @Override
+    protected InputStream pathProcessorDownLoad(String path, JSONObject inJson) {
         throw unsupportedOperationException;
     }
 
@@ -349,6 +314,12 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
         return super.version() + "\n ↓↓↓ \n" + string;
     }
 
+    @Override
+    public InputStream downLoad(JSONObject jsonObject) throws IOException {
+        // 开远程的数据流
+        return requestGetStream(jsonObject, this.dowbLoad);
+    }
+
     /**
      * 统一的请求发送格式
      *
@@ -369,6 +340,30 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
         final String string = EntityUtils.toString(entity);
         EntityUtils.consume(entity);
         return JSONObject.parseObject(string);
+    }
+
+    /**
+     * 统一的请求发送格式 并以数据流做返回值
+     *
+     * @param jsonObject 请求参数
+     * @param conPath    控制器处理服务路径
+     * @return 从远程服务器获取的响应处理结果
+     * @throws IOException 请求发送过程出现错误则返回此异常对象
+     */
+    protected InputStream requestGetStream(JSONObject jsonObject, URI conPath) throws IOException {
+        this.httpPost.setURI(conPath);
+        this.httpPost.setEntity(
+                MultipartEntityBuilder.create()
+                        .addTextBody("params", jsonObject.toString())
+                        .setContentType(ContentType.MULTIPART_FORM_DATA)
+                        .build()
+        );
+        final CloseableHttpResponse execute = httpClient.execute(this.httpPost);
+        final int statusCode = execute.getStatusLine().getStatusCode();
+        if (statusCode != HttpStatus.SC_OK) {
+            throw new IOException("请求错误：" + statusCode);
+        }
+        return execute.getEntity().getContent();
     }
 
     /**
