@@ -129,10 +129,10 @@ public enum DiskMirror {
          * Create the corresponding adapter object by configuring the class
          * @param config 配置类
          * @param controller 远程服务器中 用于处理diskMirror 的控制器名称
-         *
+         * <p>
          *                   The name of the controller used to handle diskMirror in the remote server
          * @param httpClient 如果您已经创建了一个 http 客户端，您可以传入此客户端对象。如果没有可以直接设置未 null
-         *
+         * <p>
          *                   If you have already created an HTTP client, you can pass in this client object. If not, you can directly set non null
          * @return 适配器对象 能够用于管理磁盘文件
          * <p>

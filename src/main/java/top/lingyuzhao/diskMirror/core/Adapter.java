@@ -5,7 +5,6 @@ import top.lingyuzhao.diskMirror.conf.Config;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 
 /**
  * 适配器对象的接口，通过此类可以实现操作对应的文件系统设备，同时也是通过此类的实例来管理文件系统设备
@@ -163,12 +162,13 @@ public interface Adapter {
 
     /**
      * 将一个文件下载，使用数据流的方式来进行文件获取。
-     * @param jsonObject  {
-     *                    fileName  文件名称
-     *                    userId      空间id
-     *                    type        文件类型,
-     *                    secure.key  加密密钥
-     *                    }
+     *
+     * @param jsonObject {
+     *                   fileName  文件名称
+     *                   userId      空间id
+     *                   type        文件类型,
+     *                   secure.key  加密密钥
+     *                   }
      * @return 对应的目标文件的数据流对象
      * @throws IOException 操作异常
      */

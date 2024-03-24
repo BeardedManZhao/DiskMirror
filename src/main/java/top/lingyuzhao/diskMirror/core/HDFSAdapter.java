@@ -10,7 +10,6 @@ import top.lingyuzhao.utils.StrUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 
 /**
  * HDFS 文件系统适配器

@@ -2,8 +2,6 @@ package top.lingyuzhao.diskMirror.core;
 
 import com.alibaba.fastjson2.JSONObject;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
@@ -17,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 
 /**
  * diskMirror 后端服务器的适配器，您可以直接通过此适配器操作远程的 diskMirror 后端服务器!
@@ -36,7 +35,8 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
 
     private final CloseableHttpClient httpClient;
     private final HttpPost httpPost;
-    private final URI upload, remove, getUrls, mkdirs, reName, version, dowbLoad;
+    private final URI upload, remove, getUrls, mkdirs, reName, version;
+    private final String downLoad;
     private final String getSpaceMaxSizeURL;
 
     /**
@@ -67,7 +67,7 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
             getUrls = new URI(url + "getUrls");
             mkdirs = new URI(url + "mkdirs");
             reName = new URI(url + "reName");
-            dowbLoad = new URI(url + "downLoad");
+            downLoad = url + "downLoad/";
             getSpaceMaxSizeURL = url + "getSpaceSize?";
         } catch (URISyntaxException e) {
             throw new UnsupportedOperationException("error url => " + url, e);
@@ -317,7 +317,12 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
     @Override
     public InputStream downLoad(JSONObject jsonObject) throws IOException {
         // 开远程的数据流
-        return requestGetStream(jsonObject, this.dowbLoad);
+        String path = this.downLoad +
+                '/' + jsonObject.getString("userId") +
+                '/' + jsonObject.getOrDefault("secure.key", "0") +
+                '/' + jsonObject.getString("type") +
+                "?fileName=" + jsonObject.getString("fileName");
+        return requestGetStream(new URL(path));
     }
 
     /**
@@ -345,25 +350,16 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
     /**
      * 统一的请求发送格式 并以数据流做返回值
      *
-     * @param jsonObject 请求参数
-     * @param conPath    控制器处理服务路径
+     * @param urlPath 数据对应的路径 的 url 对象
      * @return 从远程服务器获取的响应处理结果
      * @throws IOException 请求发送过程出现错误则返回此异常对象
      */
-    protected InputStream requestGetStream(JSONObject jsonObject, URI conPath) throws IOException {
-        this.httpPost.setURI(conPath);
-        this.httpPost.setEntity(
-                MultipartEntityBuilder.create()
-                        .addTextBody("params", jsonObject.toString())
-                        .setContentType(ContentType.MULTIPART_FORM_DATA)
-                        .build()
-        );
-        final CloseableHttpResponse execute = httpClient.execute(this.httpPost);
-        final int statusCode = execute.getStatusLine().getStatusCode();
-        if (statusCode != HttpStatus.SC_OK) {
-            throw new IOException("请求错误：" + statusCode);
+    protected InputStream requestGetStream(URL urlPath) throws IOException {
+        try {
+            return urlPath.openStream();
+        } catch (IOException e) {
+            throw new IOException("error:" + urlPath, e);
         }
-        return execute.getEntity().getContent();
     }
 
     /**

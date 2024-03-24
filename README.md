@@ -1,6 +1,7 @@
 # ![image](https://github.com/BeardedManZhao/DiskMirror/assets/113756063/b8a15b22-5ca0-4552-aab2-7131c63dc727) DiskMirror
 
-用于进行磁盘文件管理的一面镜子，其包含许多的适配器，能够将任何类型的文件数据流中的数据接入到管理中，并将保存之后的 url 返回，支持不同文件所属空间的管控，您还可以通过此API 获取到指定 userid 下面的所有文件的
+用于进行磁盘文件管理的一面镜子，其包含许多的适配器，能够将任何类型的文件数据流中的数据接入到管理中，并将保存之后的 url
+返回，支持不同文件所属空间的管控，您还可以通过此API 获取到指定 userid 下面的所有文件的
 url，在诸多场景中可以简化IO相关的实现操作，能够降低开发量，例如web服务器中的磁盘管理操作!
 
 diskMirror 的处理方式能够将多种文件系统的操作统一成为一样的，降低了开发难度，同时可以将磁盘文件管理统一到一起，方便进行管理。
@@ -229,7 +230,8 @@ public final class MAIN {
 
 ### 从适配器中读取数据
 
-在这里我们将演示如何从适配器中读取数据，并将读取的数据的 url 返回给您，当您从适配器中读取数据的时候，盘镜中的适配器将自动的根据您设置的各种参数将可以访问的 url 返回给您!
+在这里我们将演示如何从适配器中读取数据，并将读取的数据的 url 返回给您，当您从适配器中读取数据的时候，盘镜中的适配器将自动的根据您设置的各种参数将可以访问的
+url 返回给您!
 
 ```java
 package top.lingyuzhao.diskMirror.test;
@@ -353,7 +355,8 @@ public final class MAIN {
 
 ### 从适配器中获取数据的数据流对象 下载文件
 
-在 1.1.4 版本之后，diskMirror 的文件存储可以获取到数据流对象，而不是只能使用 url 下载文件，这有助于您在使用 diskMirror 的时候，可以使用更灵活的下载方式，也可以避免一些配置！
+在 1.1.4 版本之后，diskMirror 的文件存储可以获取到数据流对象，而不是只能使用 url 下载文件，这有助于您在使用 diskMirror
+的时候，可以使用更灵活的下载方式，也可以避免一些配置！
 
 在下面就是一个使用的示例！
 
@@ -388,10 +391,10 @@ public final class MAIN {
         // 设置要获取的文件的文件名字
         jsonObject.put("fileName", "test.txt");
         // 获取到数据流对象
-        try(
+        try (
                 final InputStream inputStream = adapter.downLoad(jsonObject);
                 final FileOutputStream fileOutputStream = new FileOutputStream("C:\\Users\\zhao\\Desktop\\fsdownload\\res.png")
-        ){
+        ) {
             // 在这里可以使用数据流 数据流中就是我们需要的文件！
             IOUtils.copy(inputStream, fileOutputStream, true);
         }
@@ -502,7 +505,8 @@ public final class MAIN {
 
 ### 通过适配器创建一个文件目录
 
-从 diskMirror 1.1.1 版本开始 针对文件目录的创建功能开始被支持，1.0.0 版本之后，diskMirror 能够实现路径的功能，提高了灵活性，而在最新的 1.1.1 版本中，可以显式的创建一个文件目录。
+从 diskMirror 1.1.1 版本开始 针对文件目录的创建功能开始被支持，1.0.0 版本之后，diskMirror 能够实现路径的功能，提高了灵活性，而在最新的
+1.1.1 版本中，可以显式的创建一个文件目录。
 
 ```java
 package top.lingyuzhao.diskMirror.test;
@@ -539,11 +543,64 @@ public final class MAIN {
 }
 ```
 
+### 通过适配器下载一个文件
+
+在 1.1.4 以及之后的版本中，针对所有的适配器对象新增了一个 `download` 函数，其可以越过 url
+的限制，直接使用内部的组件来进行文件下载链接的生成，这能够最大程度上解决文件下载问题！在下面就是一个示例。
+
+```java
+package top.lingyuzhao.diskMirror.test;
+
+import com.alibaba.fastjson2.JSONObject;
+import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
+import top.lingyuzhao.diskMirror.core.Adapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+import top.lingyuzhao.diskMirror.core.Type;
+import top.lingyuzhao.utils.IOUtils;
+
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
+/**
+ * @author zhao
+ */
+@DiskMirrorConfig(
+        rootDir = "/diskMirror",
+        // TODO 设置 diskMirror的 http 服务器访问地址 当然，您如果使用本地适配器也可以不设置！
+        fsDefaultFS = "http://localhost:8080/"
+)
+public final class MAIN {
+    public static void main(String[] args) throws IOException {
+        // 获取到 diskMirror 适配器
+        final Adapter adapter = DiskMirror.DiskMirrorHttpAdapter.getAdapter(MAIN.class);
+        // 准备我们需要的文件的描述信息
+        final JSONObject jsonObject = new JSONObject();
+        // 设置文件所属空间id
+        jsonObject.put("userId", 1024);
+        // 设置文件类型 根据自己的文件类型选择不同的类型
+        jsonObject.put("type", Type.Binary);
+        // 设置要获取的文件的文件名字
+        jsonObject.put("fileName", "/myDir/Test.png");
+        // 从 适配器 中获取到数据流对象
+        try (
+                final InputStream inputStream = adapter.downLoad(jsonObject);
+                final FileOutputStream fileOutputStream = new FileOutputStream("C:\\Users\\zhao\\Desktop\\fsdownload\\backImageFromHttp.svg.jpg")
+        ) {
+            // 在这里可以使用来自 diskMirror 中的数据流 数据流中就是我们需要的文件！
+            IOUtils.copy(inputStream, fileOutputStream, true);
+        }
+    }
+}
+```
+
 ## 进阶使用示例
 
 ### 密码设置
 
-当我们将这个适配器部署到如 web后端服务器 这类服务器后，任何人都可以以任何http协议将 json 请求发送到服务器，从而获取到文件的 url 或者未经过允许访问您的服务器，这是不安全的，所以需要对 diskMirror
+当我们将这个适配器部署到如 web后端服务器 这类服务器后，任何人都可以以任何http协议将 json 请求发送到服务器，从而获取到文件的
+url 或者未经过允许访问您的服务器，这是不安全的，所以需要对 diskMirror
 进行安全密钥设置。
 
 ```java
@@ -577,6 +634,46 @@ public final class MAIN {
     }
 }
 ```
+
+### 设置空间的最大容量
+
+在新版本中 您可以直接手动的指定某个空间的最大容量，当空间中的文件超过了这个容量时，会阻止文件上传操作。
+
+```java
+package top.lingyuzhao.diskMirror.test;
+
+import com.alibaba.fastjson2.JSONObject;
+import top.lingyuzhao.diskMirror.conf.Config;
+import top.lingyuzhao.diskMirror.core.Adapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+import top.lingyuzhao.diskMirror.core.Type;
+
+import java.io.IOException;
+
+/**
+ * @author zhao
+ */
+public final class MAIN {
+    public static void main(String[] args) throws IOException {
+        // 准备适配器对象
+        final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(new Config());
+        // 获取到 1024 空间中的所有文件的url 首先准备参数
+        final JSONObject jsonObject = new JSONObject();
+        // 设置文件所属空间id
+        jsonObject.put("userId", 1024);
+        // 设置文件类型 根据自己的文件类型选择不同的类型
+        jsonObject.put("type", Type.Binary);
+        // 打印此空间中的所有文件 其中会包含一个 maxSize 参数 由于我们没有设置，所以这里是默认的
+        System.out.println(adapter.getUrls(jsonObject.clone()));
+        // 设置 1024 空间的最大空间大小
+        adapter.setSpaceMaxSize("1024", 999999999);
+        // 再一次打印 TODO 其中的 maxSize 已经被修改为 999999999 在校验的时候也会按照这个参数进行校验
+        System.out.println(adapter.getUrls(jsonObject.clone()));
+    }
+}
+```
+
+---- 
 
 ## 综合使用示例
 
@@ -691,7 +788,8 @@ public final class MAIN {
 
 ### HDFS 文件系统 适配器使用示例
 
-做为一种文件系统适配器，当然也要支持 HDFS 这类大数据文件系统，下面我们演示了如何将文件数据流和 HDFS 文件系统对接，提供给 DiskMirror 进行管理，并获取到结果 url 的示例。 被进行 ‘TODO’
+做为一种文件系统适配器，当然也要支持 HDFS 这类大数据文件系统，下面我们演示了如何将文件数据流和 HDFS 文件系统对接，提供给
+DiskMirror 进行管理，并获取到结果 url 的示例。 被进行 ‘TODO’
 标记的地方都是与本地文件系统适配器有一点不同的操作，只不过在这里我们使用的是 HDFS 文件系统。
 
 ```java
@@ -799,49 +897,14 @@ public final class MAIN {
 }
 ```
 
-### 设置空间的最大容量
-
-在新版本中 您可以直接手动的指定某个空间的最大容量，当空间中的文件超过了这个容量时，会阻止文件上传操作。
-
-```java
-package top.lingyuzhao.diskMirror.test;
-
-import com.alibaba.fastjson2.JSONObject;
-import top.lingyuzhao.diskMirror.conf.Config;
-import top.lingyuzhao.diskMirror.core.Adapter;
-import top.lingyuzhao.diskMirror.core.DiskMirror;
-import top.lingyuzhao.diskMirror.core.Type;
-
-import java.io.IOException;
-
-/**
- * @author zhao
- */
-public final class MAIN {
-    public static void main(String[] args) throws IOException {
-        // 准备适配器对象
-        final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(new Config());
-        // 获取到 1024 空间中的所有文件的url 首先准备参数
-        final JSONObject jsonObject = new JSONObject();
-        // 设置文件所属空间id
-        jsonObject.put("userId", 1024);
-        // 设置文件类型 根据自己的文件类型选择不同的类型
-        jsonObject.put("type", Type.Binary);
-        // 打印此空间中的所有文件 其中会包含一个 maxSize 参数 由于我们没有设置，所以这里是默认的
-        System.out.println(adapter.getUrls(jsonObject.clone()));
-        // 设置 1024 空间的最大空间大小
-        adapter.setSpaceMaxSize("1024", 999999999);
-        // 再一次打印 TODO 其中的 maxSize 已经被修改为 999999999 在校验的时候也会按照这个参数进行校验
-        System.out.println(adapter.getUrls(jsonObject.clone()));
-    }
-}
-```
-
----- 
-
 ### 更新记录
 
-#### 2024-02-16 1.1.3 版本开始开发
+#### 20240-03-24 1.1.4 版本开始开发
+
+1. 针对每个适配器对象，新增 `download` 函数，能将一个文件以数据流的方式获取到，这能够最大程度上的提升文件获取的灵活性，避免了被
+   url 协议所限制的问题！
+
+#### 2024-02-17 1.1.3 版本发布
 
 1. 新增 CHAR_SET 配置项 能够在将一个字符串保存的时候指定操作字符集
 2. 适配器中新增 `writer` 函数 能够写入一个字符串，并将字符串保存为一个文件，下面是一个示例
@@ -988,7 +1051,8 @@ public final class MAIN {
 }
 ```
 
-6. 针对 HTTP 适配器的 `getSpaceMaxSize` 进行优化和重写，让其能够直接从远程 diskMirror 服务器获取数据，而不是从本地获取（需要远程的 diskMirror 后端服务器的包 是在 2024年02月17日
+6. 针对 HTTP 适配器的 `getSpaceMaxSize` 进行优化和重写，让其能够直接从远程 diskMirror 服务器获取数据，而不是从本地获取（需要远程的
+   diskMirror 后端服务器的包 是在 2024年02月17日
    以及以后发布的！！！）。
 
 ```java
@@ -1154,7 +1218,8 @@ public final class MAIN {
 
 #### 2024-01-21 1.1.0 版本发布【稳定版本】
 
-1. 修正依赖组件重复的问题，需要注意的是，您的在这里的 zhao-utils 依赖应在 1.0.20240121 及 以上版本!!! 新版本的工具类修正了一些 bug
+1. 修正依赖组件重复的问题，需要注意的是，您的在这里的 zhao-utils 依赖应在 1.0.20240121 及 以上版本!!! 新版本的工具类修正了一些
+   bug
 2. 针对 重命名失败 的错误信息进行详细的解答。
 3. 提供了密钥的生成设置，设置密钥之后 将必须要使用密钥访问，这增加了安全性!
 
@@ -1280,6 +1345,27 @@ public final class MAIN {
 3. 针对稳定性进行升级，修复了部分bug
 4. 针对文件上传的接口增加了文件大小限制的配置项目，默认为 128Mb
 
+### 可能出现的问题
+
+#### 文件系统类问题
+
+当我们使用 diskMirror 对接文件系统的时候，如果遇到了文件系统抛出的问题，则 diskMirror 会原样的抛给用户，且将堆栈包含在其中，diskMirror
+不会对这类情况进行处理，因为这类情况与文件系统有关，diskMirror 不得修改任何有关文件系统的配置，这是为了安全考虑！
+
+| 可能出现的情况 | 代表意义                                                                                     | diskMirror 是否干涉 |
+|---------|------------------------------------------------------------------------------------------|-----------------|
+| 权限问题    | 文件系统不允许我们使用 diskMirror 去操作，您只需要提升 diskMirror 的程序权限即可，确保diskMirror 的根目录可以被 diskMirror 读写！ | false           |
+| 文件找不到   | 文件系统中没有找到您需要的文件，您可以检查一下文件是否存在，或者检查一下文件名是否正确！                                             | false           |
+
+#### 依赖问题
+
+在 diskMirror 中有诸多的组件，某些组件可能会需要使用到外部的依赖，在这里如果依赖导入的不全，会直接给出依赖的详细信息，有着完整的报错机制，您无需担心！
+
+#### API 使用问题
+
+API 的说明文档某些地方若描述不清晰，让您的使用难度增加，或者您有什么建议，您可以联系作者或者发布 issue，作者会尽快处理！
+
+### 更多详细
 ----
 
 - diskMirror starter SpringBoot：https://github.com/BeardedManZhao/diskMirror-spring-boot-starter.git
