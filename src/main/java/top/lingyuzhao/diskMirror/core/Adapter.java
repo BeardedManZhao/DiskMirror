@@ -34,9 +34,15 @@ public interface Adapter {
      */
     static void checkSK(Config config, int sk) {
         if (config.getSecureKey() != sk) {
-            StringBuilder stringBuilder = new StringBuilder(String.valueOf(sk));
-            stringBuilder.replace(1, stringBuilder.length() - 1, "******");
-            throw new UnsupportedOperationException("您提供的密钥错误，diskMirror 拒绝了您的访问\nThe key you provided is incorrect, and diskMirror has denied your access\nerror key = " + stringBuilder);
+            StringBuilder showData = new StringBuilder(String.valueOf(sk));
+            final int length = showData.length();
+            for (int i = 0; i < length; i++) {
+                showData.setCharAt(i, i - (i >> 1 << 1) == 0 ? showData.charAt(i) : '*');
+            }
+            throw new UnsupportedOperationException(
+                    "您提供的密钥错误，diskMirror 拒绝了您的访问\nThe key you provided is incorrect, and diskMirror has denied your access\nerror key = " +
+                            showData
+            );
         }
     }
 

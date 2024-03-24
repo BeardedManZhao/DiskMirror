@@ -159,8 +159,8 @@ public enum DiskMirror {
         return "             'WWWKXXXXNWWNk,     ,kkd7               KWWb,                     \n" +
                 "             ;WWN3.....,lNWWk.                       KWWb,                     \n" +
                 "             ;WWNl        XWWk.  :XXk,   oKNNWNKo    KWWb,   dXXO:             \n" +
-                "             ;WWNl        3WWX7  7WWO7  0WWo:,:O0d,  KWWb, lNWKb:              \n" +
-                "             ;WWNl        :WWNl  7WWO7  0WWO,.       KWWbbXWKb:.               \n" +
+                "             ;WWNl  ^  ^  3WWX7  7WWO7  0WWo:,:O0d,  KWWb, lNWKb:              \n" +
+                "             ;WWNl  -__-  :WWNl  7WWO7  0WWO,.       KWWbbXWKb:.               \n" +
                 "             ;WWNl        kWW03  7WWO7   lXWWWN0o.   KWWNWWW0;                 \n" +
                 "             ;WWNl       lWWNo,  7WWO7     .,7dWWN;  KWWOolWWN7                \n" +
                 "             'WWNo,..,'oXWWKo'   7WWO7 .lb:    XWNl. KWWb, .KWWk.              \n" +

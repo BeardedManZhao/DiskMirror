@@ -1,0 +1,6 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="IOStreamConstructor" enabled="false" level="TEXT ATTRIBUTES" enabled_by_default="false" editorAttributes="CONSIDERATION_ATTRIBUTES" />
+  </profile>
+</component>

@@ -101,10 +101,9 @@ public final class LocalFSAdapter extends FSAdapter {
      * @param path   路径对象
      * @param inJson 文件输入的 json 对象
      * @return {"res": 创建结果}
-     * @throws IOException 操作异常
      */
     @Override
-    protected JSONObject pathProcessorMkdirs(String path, JSONObject inJson) throws IOException {
+    protected JSONObject pathProcessorMkdirs(String path, JSONObject inJson) {
         inJson.put(config.getString(Config.RES_KEY), new File(path).mkdirs() ? config.getString(Config.OK_VALUE) : "文件目录创建失败，可能文件目录已经存在了!!!");
         return inJson;
     }
@@ -152,10 +151,9 @@ public final class LocalFSAdapter extends FSAdapter {
      * fileName:旧的文件名字
      * newName:新的文件名字
      * }
-     * @throws IOException 操作异常
      */
     @Override
-    protected JSONObject pathProcessorReName(String path, JSONObject inJson) throws IOException {
+    protected JSONObject pathProcessorReName(String path, JSONObject inJson) {
         System.out.println(inJson);
         final String fileName = inJson.getString("fileName");
         final File file = new File(path + fileName);
