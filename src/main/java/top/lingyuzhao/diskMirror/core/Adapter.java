@@ -34,9 +34,15 @@ public interface Adapter {
      */
     static void checkSK(Config config, int sk) {
         if (config.getSecureKey() != sk) {
-            StringBuilder stringBuilder = new StringBuilder(String.valueOf(sk));
-            stringBuilder.replace(1, stringBuilder.length() - 1, "******");
-            throw new UnsupportedOperationException("您提供的密钥错误，diskMirror 拒绝了您的访问\nThe key you provided is incorrect, and diskMirror has denied your access\nerror key = " + stringBuilder);
+            StringBuilder showData = new StringBuilder(String.valueOf(sk));
+            final int length = showData.length();
+            for (int i = 0; i < length; i++) {
+                showData.setCharAt(i, i - (i >> 1 << 1) == 0 ? showData.charAt(i) : '*');
+            }
+            throw new UnsupportedOperationException(
+                    "您提供的密钥错误，diskMirror 拒绝了您的访问\nThe key you provided is incorrect, and diskMirror has denied your access\nerror key = " +
+                            showData
+            );
         }
     }
 
@@ -159,6 +165,20 @@ public interface Adapter {
      * @throws IOException 操作异常
      */
     JSONObject reName(JSONObject jsonObject) throws IOException;
+
+    /**
+     * 将一个文件下载，使用数据流的方式来进行文件获取。
+     *
+     * @param jsonObject {
+     *                   fileName  文件名称
+     *                   userId      空间id
+     *                   type        文件类型,
+     *                   secure.key  加密密钥
+     *                   }
+     * @return 对应的目标文件的数据流对象
+     * @throws IOException 操作异常
+     */
+    InputStream downLoad(JSONObject jsonObject) throws IOException;
 
     /**
      * 将一个用户所有的 url 获取到

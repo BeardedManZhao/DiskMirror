@@ -114,6 +114,11 @@ public class HDFSAdapter extends FSAdapter {
     }
 
     @Override
+    protected InputStream pathProcessorDownLoad(String path, JSONObject inJson) throws IOException {
+        return fileSystem.open(new Path(path));
+    }
+
+    @Override
     protected JSONObject pathProcessorRemove(String path, JSONObject inJson) {
         try {
             final Path path1 = new Path(path);

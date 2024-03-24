@@ -129,10 +129,10 @@ public enum DiskMirror {
          * Create the corresponding adapter object by configuring the class
          * @param config 配置类
          * @param controller 远程服务器中 用于处理diskMirror 的控制器名称
-         *
+         * <p>
          *                   The name of the controller used to handle diskMirror in the remote server
          * @param httpClient 如果您已经创建了一个 http 客户端，您可以传入此客户端对象。如果没有可以直接设置未 null
-         *
+         * <p>
          *                   If you have already created an HTTP client, you can pass in this client object. If not, you can directly set non null
          * @return 适配器对象 能够用于管理磁盘文件
          * <p>
@@ -148,7 +148,7 @@ public enum DiskMirror {
      * <p>
      * The current version of the disk mirror library
      */
-    public final static String VERSION = "1.1.3";
+    public final static String VERSION = "1.1.4";
 
     /**
      * 获取到当前 盘镜 的版本 以及 适配器的名称
@@ -159,8 +159,8 @@ public enum DiskMirror {
         return "             'WWWKXXXXNWWNk,     ,kkd7               KWWb,                     \n" +
                 "             ;WWN3.....,lNWWk.                       KWWb,                     \n" +
                 "             ;WWNl        XWWk.  :XXk,   oKNNWNKo    KWWb,   dXXO:             \n" +
-                "             ;WWNl        3WWX7  7WWO7  0WWo:,:O0d,  KWWb, lNWKb:              \n" +
-                "             ;WWNl        :WWNl  7WWO7  0WWO,.       KWWbbXWKb:.               \n" +
+                "             ;WWNl  ^  ^  3WWX7  7WWO7  0WWo:,:O0d,  KWWb, lNWKb:              \n" +
+                "             ;WWNl  -__-  :WWNl  7WWO7  0WWO,.       KWWbbXWKb:.               \n" +
                 "             ;WWNl        kWW03  7WWO7   lXWWWN0o.   KWWNWWW0;                 \n" +
                 "             ;WWNl       lWWNo,  7WWO7     .,7dWWN;  KWWOolWWN7                \n" +
                 "             'WWNo,..,'oXWWKo'   7WWO7 .lb:    XWNl. KWWb, .KWWk.              \n" +

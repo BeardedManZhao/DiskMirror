@@ -116,7 +116,7 @@ public class Config extends JSONObject {
      * 获取路径生成逻辑实现函数
      *
      * @param config 需要用于的配置类
-     * @return 路径生成逻辑实现函数
+     * @return 路径生成逻辑实现函数 函数处理之后的返回结果应为：[空间路径（无协议）, 空间路径（有协议）, 文件路径（无协议）, 文件路径（有协议）]
      */
     protected static PathGeneration getPathGeneration(Config config) {
         return jsonObject -> {
