@@ -319,9 +319,9 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
         // 开远程的数据流
         String path = this.downLoad +
                 '/' + jsonObject.getString("userId") +
-                '/' + jsonObject.getOrDefault("secure.key", "0") +
                 '/' + jsonObject.getString("type") +
-                "?fileName=" + jsonObject.getString("fileName");
+                "?fileName=" + jsonObject.getString("fileName") +
+                "&sk=" + jsonObject.getOrDefault("secure.key", 0);
         return requestGetStream(new URL(path));
     }
 

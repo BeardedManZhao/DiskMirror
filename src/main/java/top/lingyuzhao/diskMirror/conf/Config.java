@@ -65,10 +65,6 @@ public class Config extends JSONObject {
      */
     public final static String CHAR_SET = "diskMirror.charset";
     /**
-     * 盘镜 服务如果对接到第三方的文件系统，且第三方文件系统需要使用用户名和密码，则需要使用此配置项目来实现用户密码的验证
-     */
-    public final static String USER_AT_PASS = "user@password";
-    /**
      * 用户 盘镜 空间配合映射表，通过此处的映射操作可以获取到指定用户的空间的使用量最大值。
      */
     private final static JSONObject SPACE_SIZE = new JSONObject();

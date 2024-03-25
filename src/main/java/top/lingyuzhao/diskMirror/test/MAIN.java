@@ -17,7 +17,7 @@ import java.io.InputStream;
 @DiskMirrorConfig(
         rootDir = "/diskMirror",
         // TODO 设置 diskMirror的 http 服务器访问地址
-        fsDefaultFS = "http://localhost:8080/DiskMirrorBackEnd"
+        fsDefaultFS = "https://diskMirror.lingyuzhao.top/DiskMirrorBackEnd"
 )
 public final class MAIN {
     public static void main(String[] args) throws IOException {
@@ -26,11 +26,13 @@ public final class MAIN {
         // 准备我们需要的文件的描述信息
         final JSONObject jsonObject = new JSONObject();
         // 设置文件所属空间id
-        jsonObject.put("userId", 1024);
+        jsonObject.put("userId", 1);
         // 设置文件类型 根据自己的文件类型选择不同的类型
         jsonObject.put("type", Type.Binary);
         // 设置要获取的文件的文件名字
-        jsonObject.put("fileName", "/myDir/Test.png");
+        jsonObject.put("fileName", "1702811591685.jpg");
+        // 设置访问时要使用的 sk 这个数值要与后端服务器设置的一致！
+        jsonObject.put("secure.key", 1001101010);
         // 从 适配器 中获取到数据流对象
         try (
                 final InputStream inputStream = adapter.downLoad(jsonObject);

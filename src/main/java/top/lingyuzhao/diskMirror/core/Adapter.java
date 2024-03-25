@@ -23,7 +23,12 @@ public interface Adapter {
         if (jsonObject == null) {
             throw new UnsupportedOperationException("您提供的 json 对象为空，diskMirror 拒绝了您的访问\nThe json object you provided is empty, and diskMirror has denied your access\nerror json = null");
         }
-        checkSK(config, (int) jsonObject.getOrDefault(Config.SECURE_KEY, 0));
+        final Object orDefault = jsonObject.getOrDefault(Config.SECURE_KEY, 0);
+        if (orDefault instanceof Integer) {
+            checkSK(config, (int) orDefault);
+        } else {
+            checkSK(config, 0);
+        }
     }
 
     /**
