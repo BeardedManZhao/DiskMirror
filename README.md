@@ -32,7 +32,7 @@ diskMirror 的处理方式能够将多种文件系统的操作统一成为一样
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.1.3</version>
+        <version>1.1.6</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -899,7 +899,9 @@ public final class MAIN {
 
 ### 更新记录
 
-#### 2024-03-25 1.1.5 版本发布
+#### 2024-03-26 1.1.6 版本发布
+
+> PS `1.1.5` 版本中某些兼容性可能不是很好，因此 `1.1.5` 暂时停止下载，请使用 `1.1.6` 版本！
 
 - 修复 HTTP 适配器组件中的 `download` 函数无法使用的问题！您在 2024-03-26 之后的后端服务器中，可以正常使用此函数！
 - 优化每个函数中的参数检查逻辑。
