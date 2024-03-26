@@ -26,13 +26,17 @@ diskMirror 的处理方式能够将多种文件系统的操作统一成为一样
 
 您可以通过配置 maven 依赖的方式实现库的获取，下面就演示了如何获取到 盘镜。
 
+> 库的 maven 版本在一般情况下是与 diskMirror 内部的版本号一致的，您可以在 [更新列表](#-更多详细) 中查询到支持 maven 下载的版本，若不存在于列表中的版本，则会自动尝试使用相近的 SNAPSHOT 版本，若您需要使用 SNAPSHOT 版本。
+> SNAPSHOT 版本是一些已发布版本的中间过渡版本，他们最显著的特点就是框架内部的版本号与maven版本号不一致！
+> 因此，若您没有特殊的需求，请在[更新列表](#-更多详细) 中选择您需要的版本哦！！！
+
 ```xml
 
 <dependencies>
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.1.6</version>
+        <version>1.1.7</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -899,9 +903,7 @@ public final class MAIN {
 
 ### 更新记录
 
-#### 2024-03-26 1.1.6 版本发布
-
-> PS `1.1.5` 版本中某些兼容性可能不是很好，因此 `1.1.5` 暂时停止下载，请使用 `1.1.6` 版本！
+#### 2024-03-26 1.1.7 版本发布
 
 - 修复 HTTP 适配器组件中的 `download` 函数无法使用的问题！您在 2024-03-26 之后的后端服务器中，可以正常使用此函数！
 - 优化每个函数中的参数检查逻辑。
