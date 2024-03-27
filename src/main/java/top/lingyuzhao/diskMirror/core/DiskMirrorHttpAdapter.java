@@ -1,5 +1,6 @@
 package top.lingyuzhao.diskMirror.core;
 
+import com.alibaba.fastjson2.JSONException;
 import com.alibaba.fastjson2.JSONObject;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpPost;
@@ -31,11 +32,11 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
      * <p>
      * There are some operations that are not applicable to the backend server version. When encountering such functions, an error will be directly thrown here
      */
-    private final UnsupportedOperationException unsupportedOperationException = new UnsupportedOperationException("DiskMirrorHttpAdapter 不支持此函数操作!!! 这是因为 DiskMirror 中暂时没有对应的服务 或 此服务还未启用!!");
+    private final static UnsupportedOperationException unsupportedOperationException = new UnsupportedOperationException("DiskMirrorHttpAdapter 不支持此函数操作!!! 这是因为 DiskMirror 中暂时没有对应的服务 或 此服务还未启用!!");
 
     private final CloseableHttpClient httpClient;
     private final HttpPost httpPost;
-    private final URI upload, remove, getUrls, mkdirs, reName, version;
+    private final URI upload, remove, getUrls, mkdirs, reName, version, useSize;
     private final String downLoad;
     private final String getSpaceMaxSizeURL;
 
@@ -67,6 +68,7 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
             getUrls = new URI(url + "getUrls");
             mkdirs = new URI(url + "mkdirs");
             reName = new URI(url + "reName");
+            useSize = new URI(url + "getUseSize");
             downLoad = url + "downLoad/";
             getSpaceMaxSizeURL = url + "getSpaceSize?";
         } catch (URISyntaxException e) {
@@ -74,15 +76,18 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
         }
     }
 
-    /**
-     * 递归删除一个目录 并将删除的字节数值返回
-     *
-     * @param path 需要被删除的文件目录
-     * @return 被删除的所有文件所展示用的空间字节数
-     */
-    @Override
-    public long rDelete(String path) {
-        throw unsupportedOperationException;
+    private JSONObject getJsonObject(String string, URI url) {
+        try {
+            final JSONObject jsonObject = JSONObject.parseObject(string);
+            final String string1 = jsonObject.getString(config.getString(Config.RES_KEY));
+            if (string1.equals(config.getString(Config.OK_VALUE))) {
+                return jsonObject;
+            } else {
+                throw new JSONException(string1);
+            }
+        } catch (JSONException e) {
+            throw new JSONException(url.toString() + ':' + string, e);
+        }
     }
 
     /**
@@ -168,8 +173,13 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
      * @return 用户空间的存储占用大小 字节为单位
      */
     @Override
-    protected long pathProcessorUseSize(String path, JSONObject inJson) {
-        throw unsupportedOperationException;
+    protected long pathProcessorUseSize(String path, JSONObject inJson) throws IOException {
+        final JSONObject request = request(inJson, this.useSize);
+        final String string = request.getString(this.config.getString(Config.RES_KEY));
+        if (string.equals(this.config.getString(Config.OK_VALUE))) {
+            return request.getLongValue("useSize");
+        }
+        throw new IOException(string);
     }
 
     /**
@@ -197,7 +207,7 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
             this.httpPost.setURI(this.upload);
             this.httpPost.setEntity(
                     MultipartEntityBuilder.create()
-                            .addTextBody("params", jsonObject.toString())
+                            .addTextBody("params", jsonObject.toString(), ContentType.APPLICATION_JSON.withCharset(this.config.getString(Config.CHAR_SET)))
                             .addBinaryBody("file", inputStream)
                             .setContentType(ContentType.MULTIPART_FORM_DATA)
                             .build()
@@ -206,7 +216,7 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
             final String string = EntityUtils.toString(entity);
             IOUtils.close(inputStream);
             EntityUtils.consume(entity);
-            return JSONObject.parseObject(string);
+            return getJsonObject(string, this.upload);
         } else {
             throw new UnsupportedOperationException("您的参数中没有包含 fileName 或者 参数为 空，因此无法将您的请求交由后端服务器处理！\nYour parameter does not include fileName or is empty, so your request cannot be handed over to the backend server for processing!\nerror params => " + jsonObject);
         }
@@ -337,14 +347,14 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
         this.httpPost.setURI(conPath);
         this.httpPost.setEntity(
                 MultipartEntityBuilder.create()
-                        .addTextBody("params", jsonObject.toString())
+                        .addTextBody("params", jsonObject.toString(), ContentType.APPLICATION_JSON.withCharset(this.config.getString(Config.CHAR_SET)))
                         .setContentType(ContentType.MULTIPART_FORM_DATA)
                         .build()
         );
         final HttpEntity entity = httpClient.execute(this.httpPost).getEntity();
         final String string = EntityUtils.toString(entity);
         EntityUtils.consume(entity);
-        return JSONObject.parseObject(string);
+        return getJsonObject(string, this.httpPost.getURI());
     }
 
     /**
@@ -370,7 +380,7 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
      */
     @Override
     public void setSpaceMaxSize(String spaceId, long maxSize) {
-        throw this.unsupportedOperationException;
+        throw unsupportedOperationException;
     }
 
     /**

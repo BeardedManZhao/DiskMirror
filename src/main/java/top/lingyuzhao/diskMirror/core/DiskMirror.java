@@ -141,6 +141,23 @@ public enum DiskMirror {
         public Adapter getAdapter(Config config, String controller, Object httpClient) {
             return new DiskMirrorHttpAdapter(config, controller, httpClient);
         }
+    },
+
+    /**
+     * DM-DFS 分布式集群存储适配器，此适配器可以实现将多个子适配器统一管理，实现多个适配器一起进行数据存储的效果！
+     * <p>
+     * DM-DFS distributed storage adapter, this adapter can achieve unified management of multiple sub adapters, achieving the effect of multiple adapters storing data together!
+     */
+    DM_DfsAdapter {
+        @Override
+        protected DM_DfsAdapter getAdapterInDM(Config config) {
+            return new DM_DfsAdapter(config);
+        }
+
+        @Override
+        protected String needDependent() {
+            return "----";
+        }
     };
 
     /**
@@ -148,7 +165,7 @@ public enum DiskMirror {
      * <p>
      * The current version of the disk mirror library
      */
-    public final static String VERSION = "1.1.7";
+    public final static String VERSION = "1.1.8";
 
     /**
      * 获取到当前 盘镜 的版本 以及 适配器的名称

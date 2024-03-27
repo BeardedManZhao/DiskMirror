@@ -211,7 +211,6 @@ public final class LocalFSAdapter extends FSAdapter {
      * @param path 需要被删除的文件目录
      * @throws IOException 删除操作出现异常
      */
-    @Override
     public long rDelete(String path) throws IOException {
         // 判断路径是否存在
         Path dir = Paths.get(path);

@@ -3,6 +3,8 @@ package top.lingyuzhao.diskMirror.conf;
 import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.utils.PathGeneration;
 
+import java.util.HashMap;
+
 
 /**
  * 盘镜配置类，用于存储配置信息，此配置类是通过JSON对象实现的，因此可以使用JSON对象的API进行操作。
@@ -64,6 +66,7 @@ public class Config extends JSONObject {
      * The character encoding set to be used for all operations related to character encoding in the disk mirror service.
      */
     public final static String CHAR_SET = "diskMirror.charset";
+
     /**
      * 用户 盘镜 空间配合映射表，通过此处的映射操作可以获取到指定用户的空间的使用量最大值。
      */
@@ -106,6 +109,10 @@ public class Config extends JSONObject {
         super.put(CHAR_SET, config.charSet());
         // 默认的路径生成逻辑  由 <空间id，文件名称> 生成 文件路径
         super.put(GENERATION_RULES, getPathGeneration(this));
+    }
+
+    public Config(HashMap<String, Object> hashMap) {
+        super(hashMap);
     }
 
     /**

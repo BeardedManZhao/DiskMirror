@@ -26,7 +26,8 @@ diskMirror 的处理方式能够将多种文件系统的操作统一成为一样
 
 您可以通过配置 maven 依赖的方式实现库的获取，下面就演示了如何获取到 盘镜。
 
-> 库的 maven 版本在一般情况下是与 diskMirror 内部的版本号一致的，您可以在 [更新列表](#-更多详细) 中查询到支持 maven 下载的版本，若不存在于列表中的版本，则会自动尝试使用相近的 SNAPSHOT 版本，若您需要使用 SNAPSHOT 版本。
+> 库的 maven 版本在一般情况下是与 diskMirror 内部的版本号一致的，您可以在 [更新列表](#-更多详细) 中查询到支持 maven
+> 下载的版本，若不存在于列表中的版本，则会自动尝试使用相近的 SNAPSHOT 版本，若您需要使用 SNAPSHOT 版本。
 > SNAPSHOT 版本是一些已发布版本的中间过渡版本，他们最显著的特点就是框架内部的版本号与maven版本号不一致！
 > 因此，若您没有特殊的需求，请在[更新列表](#-更多详细) 中选择您需要的版本哦！！！
 
@@ -36,7 +37,7 @@ diskMirror 的处理方式能够将多种文件系统的操作统一成为一样
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.1.7</version>
+        <version>1.1.8</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -45,10 +46,11 @@ diskMirror 的处理方式能够将多种文件系统的操作统一成为一样
         <!--        <scope>provided</scope>-->
     </dependency>
     <!-- 从 disk Mirror 1.1.0 版本开始 请确保 zhao-utils 的版本 >= 1.0.20240121 -->
+    <!-- 从 disk Mirror 1.1.8 版本开始 请确保 zhao-utils 的版本 >= 1.0.20240328-->
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>zhao-utils</artifactId>
-        <version>1.0.20240121</version>
+        <version>1.0.20240327</version>
         <!--        <scope>provided</scope>-->
     </dependency>
     <!-- 如果需要对接 HDFS 才导入 如果不需要就不导入此依赖 -->
@@ -901,7 +903,146 @@ public final class MAIN {
 }
 ```
 
+### DM_DfsAdapter 分布式存储适配器
+
+在 `DiskMirror` 框架中，我们提供了分布式存储适配器，您可以使用此适配器将多个 diskMirror 进行链接，成为一个大集群！通常情况下，它会将多个
+diskMirror 的适配器进行统一管理，您可以手动追加适配器的数量 也可以指定 fs-default-fs 配置项来指定要链接的几个后端
+diskMirror 下面是一个示例！
+
+下面的代码中，我们通过注解指定了一些 diskMirror 的后端服务器做为集群的子节点！并上传了三个文件！
+
+```java
+package top.lingyuzhao.diskMirror.test;
+
+import com.alibaba.fastjson2.JSONObject;
+import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
+import top.lingyuzhao.diskMirror.core.DM_DfsAdapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+import top.lingyuzhao.diskMirror.core.StorageStrategy;
+import top.lingyuzhao.diskMirror.core.Type;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+
+/**
+ * @author zhao
+ */
+@DiskMirrorConfig(
+        rootDir = "/diskMirror",
+        // TODO 设置 DM-DFS 中所有的子节点的 http 服务器访问地址
+        // 这样会自动的准备 两个 http 服务器 对应的适配器对象，需要注意的是，您需要在启动时，启动两个 diskMirror 的 http 服务器
+        fsDefaultFS = "http://192.168.0.105:8080/,http://localhost:8080"
+)
+public final class MAIN {
+    public static void main(String[] args) throws IOException {
+        // 获取到 分布式 适配器
+        final DM_DfsAdapter adapter = (DM_DfsAdapter) DiskMirror.DM_DfsAdapter.getAdapter(MAIN.class);
+        // 设置存储策略 这里的存储策略 默认是轮询 在这里我们修改为以文件名字取 hash 值
+        adapter.setStorageStrategy(StorageStrategy.fileNameHash);
+        // 在这里我们打开三个数据流
+        try (
+                final FileInputStream fileInputStream1 = new FileInputStream("C:\\Users\\zhao\\Downloads\\application.yaml");
+                final FileInputStream fileInputStream2 = new FileInputStream("C:\\Users\\zhao\\Downloads\\工程进度计划.txt");
+                final FileInputStream fileInputStream3 = new FileInputStream("C:\\Users\\zhao\\Downloads\\diskMirror.js")
+        ) {
+            final JSONObject jsonObject = new JSONObject();
+            jsonObject.put("userId", 1);
+            jsonObject.put("type", Type.Binary);
+            // 设置集群内所有子节点的密钥
+            jsonObject.put("secure.key", 2139494269);
+
+            // 上传三个文件 在这里的三个文件会按照存储策略被分布到集群中不同的节点上
+            jsonObject.put("fileName", "test/application.yaml");
+            adapter.upload(fileInputStream1, jsonObject);
+
+            jsonObject.put("fileName", "test/工程进度计划.txt");
+            adapter.upload(fileInputStream2, jsonObject);
+
+            jsonObject.put("fileName", "test/diskMirror.js");
+            adapter.upload(fileInputStream3, jsonObject);
+
+            // 查看文件系统的结构
+            System.out.println(adapter.getUrls(jsonObject));
+        }
+
+    }
+}
+```
+
+下面就是计算结果
+>
+需要注意的是，在这里的集群中，有两个节点，所以上传的文件会分别被存储到两个节点上！而集群所在主机必须要启动 [diskMirrorBackEnd](https://github.com/BeardedManZhao/DiskMirrorBackEnd.git)
+或者 [diskMirror-springBoot](https://github.com/BeardedManZhao/diskMirror-backEnd-spring-boot.git)。
+
+```json lines
+{
+  "userId": 1,
+  "type": "Binary",
+  "secure.key": 2139494269,
+  "okSize": 2,
+  "adapterSize": 2,
+  "fileName": "/test/diskMirror.js",
+  "useSize": 21586,
+  "useAgreement": true,
+  "maxSize": 134217728,
+  "urls": [
+    {
+      "fileName": "test",
+      "url": "http://192.168.0.105:8080//1/Binary//test",
+      "lastModified": 1711543807465,
+      "size": 0,
+      "type": "Binary",
+      "isDir": true,
+      "urls": [
+        {
+          "fileName": "工程进度计划.txt",
+          "url": "http://192.168.0.105:8080//1/Binary//test/工程进度计划.txt",
+          "lastModified": 1711543807465,
+          "size": 907,
+          "type": "Binary",
+          "isDir": false
+        }
+      ]
+    },
+    {
+      "fileName": "test",
+      "url": "http://localhost:8080//1/Binary//test",
+      "lastModified": 1711543806776,
+      "size": 0,
+      "type": "Binary",
+      "isDir": true,
+      "urls": [
+        {
+          "fileName": "application.yaml",
+          "url": "http://localhost:8080//1/Binary//test/application.yaml",
+          "lastModified": 1711543806720,
+          "size": 1437,
+          "type": "Binary",
+          "isDir": false
+        },
+        {
+          "fileName": "diskMirror.js",
+          "url": "http://localhost:8080//1/Binary//test/diskMirror.js",
+          "lastModified": 1711543806776,
+          "size": 20149,
+          "type": "Binary",
+          "isDir": false
+        }
+      ]
+    }
+  ],
+  "res": "ok!!!!"
+}
+```
+
 ### 更新记录
+
+#### 2024-03-27 1.1.8 版本开始开发
+
+- 将适配器的 `long rDelete(String path) throws IOException` 函数变更为 `protected`
+  权限，因为它的操作能够删除文件目录但是不释放可用空间标记，这导致一些存储空间泄漏的情况发生!!!
+- 为 `DiskMirrorHttpAdapter` 添加编码集支持，防止乱码，且为此适配器新增异常信息的自动判断逻辑！
+- 新增 `DM_DfsAdapter` 分布式存储适配器，其可以将多个 diskMirror 进行链接，成为一个大集群！
 
 #### 2024-03-26 1.1.7 版本发布
 

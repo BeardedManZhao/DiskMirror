@@ -5,6 +5,7 @@ import top.lingyuzhao.diskMirror.conf.Config;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.function.Consumer;
 
 /**
  * 适配器对象的接口，通过此类可以实现操作对应的文件系统设备，同时也是通过此类的实例来管理文件系统设备
@@ -74,16 +75,6 @@ public interface Adapter {
      * @param sk      安全密钥
      */
     void setSpaceMaxSize(String spaceId, long maxSize, int sk);
-
-    /**
-     * 递归删除一个目录 并将删除的字节数值返回
-     *
-     * @param path 需要被删除的文件目录
-     * @return 被删除的所有文件所展示用的空间字节数
-     * @throws IOException 删除操作出现异常
-     */
-    long rDelete(String path) throws IOException;
-
 
     /**
      * 将一个字符串写到文件中，并将文件保存
@@ -205,6 +196,20 @@ public interface Adapter {
      * @throws IOException 操作异常
      */
     JSONObject getUrls(JSONObject jsonObject) throws IOException;
+
+    /**
+     * 将当前适配器对应的文件系统，指定空间的所有文件的路径获取到！
+     * <p>
+     * Retrieve the paths of all files in the specified space from the file system corresponding to the current adapter!
+     *
+     * @param jsonObject {
+     *                   userId      空间id,
+     *                   type        文件类型,
+     *                   secure.key  加密密钥
+     *                   }
+     * @param result     每一个文件路径的处理逻辑
+     */
+    void getFilesPath(JSONObject jsonObject, Consumer<String> result) throws IOException;
 
     /**
      * 通过盘镜在指定的用户文件空间中创建一个文件夹

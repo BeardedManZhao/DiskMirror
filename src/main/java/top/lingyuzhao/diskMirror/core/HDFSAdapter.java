@@ -193,7 +193,6 @@ public class HDFSAdapter extends FSAdapter {
      * @param path 需要被删除的文件目录
      * @throws IOException 删除操作出现异常
      */
-    @Override
     public long rDelete(String path) throws IOException {
         final Path path1 = new Path(path);
         return rDelete(path1);
