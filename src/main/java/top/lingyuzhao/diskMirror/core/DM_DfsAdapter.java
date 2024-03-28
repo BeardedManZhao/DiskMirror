@@ -3,8 +3,9 @@ package top.lingyuzhao.diskMirror.core;
 import com.alibaba.fastjson2.JSONException;
 import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.conf.Config;
-import top.lingyuzhao.utils.JsonUtils;
+import top.lingyuzhao.diskMirror.utils.JsonUtils;
 import top.lingyuzhao.utils.StrUtils;
+import top.lingyuzhao.utils.dataContainer.KeyValue;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -45,6 +46,13 @@ public class DM_DfsAdapter extends FSAdapter {
      * 当前适配器对象中要使用的存储策略，默认是轮询
      */
     protected StorageStrategy storageStrategy;
+
+    /**
+     * 缓存的目录树 key 是空间标识
+     * value 分别是 是否需要重新合并目录树 如果不需要就直接使用缓存的方式获取目录树，有利于性能！
+     * 缓存的目录树对象
+     */
+    protected HashMap<String, KeyValue<Boolean, JSONObject>> cacheFs = new HashMap<>();
 
     /**
      * 当前此适配器已经存储的文件的数量！
@@ -133,6 +141,7 @@ public class DM_DfsAdapter extends FSAdapter {
 
     @Override
     public JSONObject upload(InputStream inputStream, JSONObject jsonObject) throws IOException {
+        // TODO 需要对元数据进行修改
         // 计算出 okSize(已存储文件的数量) 和 adapterSize(所有适配器的数量)
         jsonObject.put("okSize", now_okSize);
         jsonObject.put("adapterSize", this.ADAPTER_LIST.size());
@@ -146,7 +155,7 @@ public class DM_DfsAdapter extends FSAdapter {
         }
         final int available = inputStream.available();
         final JSONObject upload = adapter.upload(inputStream, jsonObject);
-        CorrectUseSize(upload, true, false, available);
+        CorrectUseSize(upload, true, false, available, jsonObject.getIntValue("userId") + jsonObject.getString("type"));
         // 记录文件所在的适配器索引
         META_MAP.put(jsonObject.getString("fileName"), adapter);
         ++now_okSize;
@@ -156,7 +165,7 @@ public class DM_DfsAdapter extends FSAdapter {
     @Override
     public InputStream downLoad(JSONObject jsonObject) throws IOException {
         // 获取到文件所在适配器对象 并直接进行下载
-        final Adapter adapter = checkFileIsExist(jsonObject);
+        final Adapter adapter = checkFileIsExist(jsonObject, jsonObject.getIntValue("userId") + jsonObject.getString("type"));
         if (adapter == null) {
             throw new FileNotFoundException("File [" + jsonObject.getString("fileName") + "] is not exist!");
         }
@@ -168,17 +177,20 @@ public class DM_DfsAdapter extends FSAdapter {
      * <p>
      * Check if the file to be retrieved already exists. If it exists, return the adapter object corresponding to this file. If it does not exist, return null;
      * @param jsonObject 文件相关的数据 其中必须具有 fileName 字段
-     *
+     * <p>
      *                   The data related to the jsonObject file must have a fileName field
+     * @param spaceMark 空间标识
+     * @return 要获取的目标文件所在的节点对应的适配器对象！
+     * The adapter object corresponding to the node where the target file is located!
+     * @throws IOException IO 异常
      */
-    protected Adapter checkFileIsExist(JSONObject jsonObject) throws IOException {
+    protected Adapter checkFileIsExist(JSONObject jsonObject, String spaceMark) throws IOException {
         String string = (String) jsonObject.remove("fileName");
         if (string.charAt(0) != '/') {
             string = '/' + string;
         }
         // 首先检查当前的空间是否被扫描过
-        final String s = jsonObject.getIntValue("userId") + jsonObject.getString("type");
-        if (!SCAN_OK_MAP.contains(s)) {
+        if (!SCAN_OK_MAP.contains(spaceMark)) {
             // 没被扫描过就先扫描
             for (Adapter adapter : this.ADAPTER_LIST) {
                 try {
@@ -187,7 +199,7 @@ public class DM_DfsAdapter extends FSAdapter {
                 }
             }
             // 扫描结束 做标记
-            SCAN_OK_MAP.add(s);
+            SCAN_OK_MAP.add(spaceMark);
         }
         // 计算文件是否存在
         jsonObject.put("fileName", string);
@@ -196,14 +208,16 @@ public class DM_DfsAdapter extends FSAdapter {
 
     @Override
     public JSONObject remove(JSONObject jsonObject) throws IOException {
+        // 计算空间标识
+        final String s = jsonObject.getIntValue("userId") + jsonObject.getString("type");
         // 获取到文件所在适配器对象
-        final Adapter adapter = checkFileIsExist(jsonObject);
+        final Adapter adapter = checkFileIsExist(jsonObject, s);
         if (adapter == null) {
             throw new FileNotFoundException("File [" + jsonObject.getString("fileName") + "] is not exist!");
         }
         // 删除并矫正
         final JSONObject remove = adapter.remove(jsonObject);
-        CorrectUseSize(remove, true, true, this.getUseSize(jsonObject) - remove.getLong("useSize"));
+        CorrectUseSize(remove, true, true, this.getUseSize(jsonObject) - remove.getLong("useSize"), s);
         // 删除元数据
         META_MAP.remove(jsonObject.getString("fileName"));
         return remove;
@@ -211,14 +225,16 @@ public class DM_DfsAdapter extends FSAdapter {
 
     @Override
     public JSONObject reName(JSONObject jsonObject) throws IOException {
+        // 计算空间标识
+        final String s = jsonObject.getIntValue("userId") + jsonObject.getString("type");
         // 获取到文件所在适配器对象
-        final Adapter adapter = checkFileIsExist(jsonObject);
+        final Adapter adapter = checkFileIsExist(jsonObject, s);
         if (adapter == null) {
             throw new FileNotFoundException("File [" + jsonObject.getString("fileName") + "] is not exist!");
         }
         final JSONObject jsonObject1 = adapter.reName(jsonObject);
         // 进行矫正 这里不需要进行修改 只需要获取
-        CorrectUseSize(jsonObject1, false, false, 0);
+        CorrectUseSize(jsonObject1, false, false, 0, s);
         // 元数据标记
         META_MAP.put(jsonObject.getString("newName"), META_MAP.remove(jsonObject.getString("fileName")));
         return jsonObject1;
@@ -226,26 +242,45 @@ public class DM_DfsAdapter extends FSAdapter {
 
     @Override
     public JSONObject getUrls(JSONObject jsonObject) throws IOException {
-        // 获取到当前的文件目录结构
-        for (Adapter adapter : this.ADAPTER_LIST) {
-            // 合并结构
-            try {
-                JsonUtils.mergeJsonTrees(jsonObject, adapter.getUrls(jsonObject), jsonObject);
-            } catch (JSONException ignored) {
+        // 计算空间表示
+        final String s = jsonObject.getIntValue("userId") + jsonObject.getString("type");
+        // 判断当前是否需要重构树
+        final KeyValue<Boolean, JSONObject> booleanJSONObjectKeyValue = this.cacheFs.get(s);
+        if (booleanJSONObjectKeyValue == null || booleanJSONObjectKeyValue.getKey()) {
+            final JSONObject jsonObject2 = new JSONObject();
+            // 代表需要重构
+            // 获取到集群中所有的的文件目录结构 合并树！
+            for (Adapter adapter : this.ADAPTER_LIST) {
+                // 合并结构
+                try {
+                    JsonUtils.mergeJsonTrees(jsonObject2, adapter.getUrls(jsonObject));
+                } catch (JSONException ignored) {
+                }
             }
+            // 缓存树
+            cacheFs.put(s, new KeyValue<>(false, jsonObject2));
+            jsonObject = jsonObject2;
+        } else {
+            // 不需要重构 直接用缓存
+            jsonObject = booleanJSONObjectKeyValue.getValue();
         }
         // 进行矫正 这里不需要进行修改 只需要获取
-        CorrectUseSize(jsonObject, false, false, 0);
+        CorrectUseSize(jsonObject, false, false, 0, s);
         return jsonObject;
     }
 
     @Override
     public JSONObject mkdirs(JSONObject jsonObject) throws IOException {
+        // 计算出 okSize(已存储文件的数量) 和 adapterSize(所有适配器的数量)
+        jsonObject.put("okSize", now_okSize);
+        jsonObject.put("adapterSize", this.ADAPTER_LIST.size());
+        // 计算空间标识
+        final String s = jsonObject.getIntValue("userId") + jsonObject.getString("type");
         // 使用存储策略计算出当前文件目录要存储的节点
         final Adapter adapter = this.ADAPTER_LIST.get(this.storageStrategy.getStorageStrategy().function(jsonObject));
         final JSONObject jsonObject1 = adapter.mkdirs(jsonObject);
         // 进行矫正 这里不需要进行修改 只需要获取
-        CorrectUseSize(jsonObject1, false, false, 0);
+        CorrectUseSize(jsonObject1, false, false, 0, s);
         // 元数据标记
         META_MAP.put(jsonObject.getString("fileName"), adapter);
         return jsonObject1;
@@ -255,17 +290,24 @@ public class DM_DfsAdapter extends FSAdapter {
      * 矫正使用大小 因为每个子适配器计算之后会返回一个数值，这个数值并不一定是正确的，只能说是站在 子适配器的角度来看是正确的，因此我们需要一个累加的矫正操作！
      *
      * @param jsonObject 输入的 jsonObject
-     * @param isUpdate   使用大小是否发生了变化
-     * @param isDiff     变化操作是否是做差
-     * @param updateSize 变化的数值
+     * @param isUpdate   使用大小是否发生了变化 只有输入 json 中包含 useSize 才生效
+     * @param isDiff     变化操作是否是做差 只有输入 json 中包含 useSize 才生效
+     * @param updateSize 变化的数值 只有输入 json 中包含 useSize 才生效
+     * @param spaceMark  空间标记标识，用于元数据构建
      * @throws IOException 矫正操作出现异常的时候抛出！
      */
-    protected void CorrectUseSize(JSONObject jsonObject, boolean isUpdate, boolean isDiff, long updateSize) throws IOException {
+    protected void CorrectUseSize(JSONObject jsonObject, boolean isUpdate, boolean isDiff, long updateSize, String spaceMark) throws IOException {
         final String string = jsonObject.getString(this.config.getString(Config.RES_KEY));
+        if (string == null) {
+            // 代表此服务 不需要 useSize
+            return;
+        }
         if (!string.equals(this.config.getString(Config.OK_VALUE))) {
             throw new IOException(string);
         }
         if (isUpdate) {
+            // 清空树缓存 并矫正使用大小
+            this.cacheFs.replace(spaceMark, new KeyValue<>(true, null));
             jsonObject.put("useSize", isDiff ?
                     this.diffUseSize(jsonObject.getIntValue("userId"), jsonObject.getString("type"), updateSize) :
                     this.addUseSize(jsonObject.getIntValue("userId"), jsonObject.getString("type"), updateSize));

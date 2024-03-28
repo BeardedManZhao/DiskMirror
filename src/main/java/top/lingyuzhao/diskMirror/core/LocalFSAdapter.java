@@ -209,6 +209,7 @@ public final class LocalFSAdapter extends FSAdapter {
      * 递归删除一个目录 并将删除的字节数值返回
      *
      * @param path 需要被删除的文件目录
+     * @return 删除的字节数值
      * @throws IOException 删除操作出现异常
      */
     public long rDelete(String path) throws IOException {

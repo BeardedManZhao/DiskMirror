@@ -208,8 +208,12 @@ public interface Adapter {
      *                   secure.key  加密密钥
      *                   }
      * @param result     每一个文件路径的处理逻辑
+     * @return 文件系统的 json 结构对象，当处理结束之后，会将文件系统的 json 结构也一并返回
+     * <p>
+     * The JSON structure object of the file system will be returned together with the JSON structure of the file system after processing is completed
+     * @throws IOException 操作异常
      */
-    void getFilesPath(JSONObject jsonObject, Consumer<String> result) throws IOException;
+    JSONObject getFilesPath(JSONObject jsonObject, Consumer<String> result) throws IOException;
 
     /**
      * 通过盘镜在指定的用户文件空间中创建一个文件夹

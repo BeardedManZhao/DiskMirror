@@ -316,6 +316,7 @@ public abstract class FSAdapter implements Adapter {
      *                   secure.key  加密密钥
      *                   }
      * @return {res: 删除结果,maxSize: 当前空间的最大使用量,}
+     * @throws IOException 操作异常
      */
     @Override
     public JSONObject remove(JSONObject jsonObject) throws IOException {
@@ -395,8 +396,10 @@ public abstract class FSAdapter implements Adapter {
     }
 
     @Override
-    public void getFilesPath(JSONObject jsonObject, Consumer<String> r) throws IOException {
-        JsonUtils.jsonToList(this.getUrls(jsonObject), "urls", "fileName", r, "", '/');
+    public JSONObject getFilesPath(JSONObject jsonObject, Consumer<String> r) throws IOException {
+        final JSONObject urls = this.getUrls(jsonObject);
+        JsonUtils.jsonToList(urls, "urls", "fileName", r, "", '/');
+        return urls;
     }
 
     /**

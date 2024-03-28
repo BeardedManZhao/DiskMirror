@@ -3,6 +3,7 @@ package top.lingyuzhao.diskMirror.utils;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 
+import java.util.HashMap;
 import java.util.function.Consumer;
 
 /**
@@ -13,34 +14,47 @@ public class JsonUtils {
     /**
      * 将两个 json 对象进行合并操作。
      *
-     * @param json1      需要被合并的 json 对象 1
-     * @param json2      需要被合并的 json 对象 2
-     * @param mergedJson 合并之后的结果存储的 json 对象
-     * @return 合并之后的新的 json 对象
+     * @param json1 需要被合并的 json 对象 1
+     * @param json2 需要被合并的 json 对象 2
      */
-    public static JSONObject mergeJsonTrees(JSONObject json1, JSONObject json2, JSONObject mergedJson) {
-
-        for (String key : json1.keySet()) {
-            if (json2.containsKey(key)) {
-                final Object o = json1.get(key);
-                final Object o1 = json2.get(key);
-                if (o instanceof JSONObject && o1 instanceof JSONObject) {
-                    mergedJson.put(key, mergeJsonTrees((JSONObject) o, (JSONObject) o1, new JSONObject()));
-                } else if (o instanceof JSONArray && o1 instanceof JSONArray) {
-                    ((JSONArray) o).addAll((JSONArray) o1);
+    public static void mergeJsonTrees(JSONObject json1, JSONObject json2) {
+        final JSONArray jsonArray = json1.getJSONArray("urls");
+        final JSONArray jsonArray2 = json2.getJSONArray("urls");
+        if (jsonArray == null) {
+            if (jsonArray2 != null) {
+                json1.putAll(json2);
+            }
+            return;
+        }
+        if (jsonArray2 == null) return;
+        // 准备一个index 表，记录 json1 中所有的 目录名称 以及 对应的 urls 数组
+        final HashMap<String, JSONObject> hashMap = new HashMap<>();
+        for (Object o : jsonArray) {
+            if (o instanceof JSONObject) {
+                final String string = ((JSONObject) o).getString("fileName");
+                if (string == null) {
+                    continue;
                 }
-            } else {
-                mergedJson.put(key, json1.get(key));
+                final JSONArray jsonArray1 = ((JSONObject) o).getJSONArray("urls");
+                if (jsonArray1 != null) {
+                    hashMap.put(string, (JSONObject) o);
+                }
             }
         }
-
-        for (String key : json2.keySet()) {
-            if (!json1.containsKey(key)) {
-                mergedJson.put(key, json2.get(key));
+        // 代表 json2 有数据
+        for (Object o : jsonArray2) {
+            // 查看当前文件对象是否存在于 json1 中
+            if (o instanceof JSONObject) {
+                final String string = ((JSONObject) o).getString("fileName");
+                if (hashMap.containsKey(string)) {
+                    // 代表 json1 中有一个同名的文件夹，直接将同名文件夹的 json对象 和 当前的对象进行合并
+                    mergeJsonTrees(hashMap.get(string), (JSONObject) o);
+                    continue;
+                }
+                // 代表 json1 中没有同名的文件夹，直接将当前对象添加到 json1 的 urls 中
+                jsonArray.add(o);
             }
         }
-
-        return mergedJson;
     }
 
     /**

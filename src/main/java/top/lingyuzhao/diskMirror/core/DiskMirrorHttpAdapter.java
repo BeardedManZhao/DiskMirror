@@ -327,8 +327,7 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
     @Override
     public InputStream downLoad(JSONObject jsonObject) throws IOException {
         // 开远程的数据流
-        String path = this.downLoad +
-                '/' + jsonObject.getString("userId") +
+        String path = this.downLoad + jsonObject.getString("userId") +
                 '/' + jsonObject.getString("type") +
                 "?fileName=" + jsonObject.getString("fileName") +
                 "&sk=" + jsonObject.getOrDefault("secure.key", 0);
