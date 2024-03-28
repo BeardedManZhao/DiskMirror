@@ -2,12 +2,14 @@ package top.lingyuzhao.diskMirror.core;
 
 import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.conf.Config;
+import top.lingyuzhao.diskMirror.utils.JsonUtils;
 import top.lingyuzhao.diskMirror.utils.PathGeneration;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.function.Consumer;
 
 /**
  * 文件系统适配器接口
@@ -25,7 +27,7 @@ public abstract class FSAdapter implements Adapter {
     /**
      * 内存使用占用映射 key是空间id  value 就是空间中已使用的内存数量
      */
-    private final HashMap<String, Long> HASH_MAP = new HashMap<>();
+    protected final HashMap<String, Long> REMEMBER_MAP = new HashMap<>();
 
     /**
      * 构建一个适配器
@@ -314,6 +316,7 @@ public abstract class FSAdapter implements Adapter {
      *                   secure.key  加密密钥
      *                   }
      * @return {res: 删除结果,maxSize: 当前空间的最大使用量,}
+     * @throws IOException 操作异常
      */
     @Override
     public JSONObject remove(JSONObject jsonObject) throws IOException {
@@ -392,6 +395,13 @@ public abstract class FSAdapter implements Adapter {
         return pathProcessorGetUrls(path[0], path[1], jsonObject);
     }
 
+    @Override
+    public JSONObject getFilesPath(JSONObject jsonObject, Consumer<String> r) throws IOException {
+        final JSONObject urls = this.getUrls(jsonObject);
+        JsonUtils.jsonToList(urls, "urls", "fileName", r, "", '/');
+        return urls;
+    }
+
     /**
      * 通过盘镜在指定的用户文件空间中创建一个文件夹
      *
@@ -432,13 +442,13 @@ public abstract class FSAdapter implements Adapter {
     public long getUseSize(JSONObject jsonObject, String path) throws IOException {
         final Integer userId = jsonObject.getInteger("userId");
         final String key = userId + jsonObject.getString("type");
-        if (HASH_MAP.containsKey(key)) {
+        if (REMEMBER_MAP.containsKey(key)) {
             // 代表有值了 直接返回 Map 中的值
-            return HASH_MAP.get(key);
+            return REMEMBER_MAP.get(key);
         }
         // 计算占用空间
         final long l = this.pathProcessorUseSize(path, jsonObject);
-        HASH_MAP.put(key, l);
+        REMEMBER_MAP.put(key, l);
         return l;
     }
 
@@ -489,8 +499,8 @@ public abstract class FSAdapter implements Adapter {
     public long addUseSize(int id, String type, long size) throws IOException {
         final String key = id + type;
         initUseSize(key, id, type);
-        final long l = HASH_MAP.get(key) + size;
-        HASH_MAP.put(key, l);
+        final long l = REMEMBER_MAP.get(key) + size;
+        REMEMBER_MAP.put(key, l);
         return l;
     }
 
@@ -506,8 +516,8 @@ public abstract class FSAdapter implements Adapter {
     public long diffUseSize(int id, String type, long size) throws IOException {
         final String key = id + type;
         initUseSize(key, id, type);
-        final long l = HASH_MAP.get(key) - size;
-        HASH_MAP.put(key, l);
+        final long l = REMEMBER_MAP.get(key) - size;
+        REMEMBER_MAP.put(key, l);
         return l;
     }
 
@@ -520,12 +530,12 @@ public abstract class FSAdapter implements Adapter {
      * @throws IOException 操作异常
      */
     private void initUseSize(String key, int id, String type) throws IOException {
-        if (!HASH_MAP.containsKey(key)) {
+        if (!REMEMBER_MAP.containsKey(key)) {
             // 如果这个路径没有初始化过 就进行一次计算
             final JSONObject jsonObject = new JSONObject();
             jsonObject.put("userId", id);
             jsonObject.put("type", type);
-            HASH_MAP.put(key, getUseSize(jsonObject));
+            REMEMBER_MAP.put(key, getUseSize(jsonObject));
         }
     }
 

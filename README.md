@@ -26,7 +26,8 @@ diskMirror 的处理方式能够将多种文件系统的操作统一成为一样
 
 您可以通过配置 maven 依赖的方式实现库的获取，下面就演示了如何获取到 盘镜。
 
-> 库的 maven 版本在一般情况下是与 diskMirror 内部的版本号一致的，您可以在 [更新列表](#-更多详细) 中查询到支持 maven 下载的版本，若不存在于列表中的版本，则会自动尝试使用相近的 SNAPSHOT 版本，若您需要使用 SNAPSHOT 版本。
+> 库的 maven 版本在一般情况下是与 diskMirror 内部的版本号一致的，您可以在 [更新列表](#-更多详细) 中查询到支持 maven
+> 下载的版本，若不存在于列表中的版本，则会自动尝试使用相近的 SNAPSHOT 版本，若您需要使用 SNAPSHOT 版本。
 > SNAPSHOT 版本是一些已发布版本的中间过渡版本，他们最显著的特点就是框架内部的版本号与maven版本号不一致！
 > 因此，若您没有特殊的需求，请在[更新列表](#-更多详细) 中选择您需要的版本哦！！！
 
@@ -36,7 +37,7 @@ diskMirror 的处理方式能够将多种文件系统的操作统一成为一样
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.1.7</version>
+        <version>1.1.8</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -48,7 +49,7 @@ diskMirror 的处理方式能够将多种文件系统的操作统一成为一样
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>zhao-utils</artifactId>
-        <version>1.0.20240121</version>
+        <version>1.0.20240327</version>
         <!--        <scope>provided</scope>-->
     </dependency>
     <!-- 如果需要对接 HDFS 才导入 如果不需要就不导入此依赖 -->
@@ -76,7 +77,25 @@ diskMirror 的处理方式能够将多种文件系统的操作统一成为一样
 
 ## 基本使用示例
 
-在这里我们将演示如何使用 盘镜 进行一些基本的 CRUD 操作，能够实现在文件系统中的文件管理操作。
+在开始之前，我们需要了解下这个库的字段，它的函数接收的大部分是一个 json 对象 其具有几个字段，下面就是有关字段的解释。
+
+> 在下面的表展示的就是各种常见的返回结果中的字段，diskMirror 中所有的返回值中，如果存在某个字段，则字段一定遵循下面的规则！
+> 当然，您设置的也需要遵循下面的规则！
+
+| 参数名称         | 参数类型    | 参数解释                                                              | 参数类型  |
+|--------------|---------|-------------------------------------------------------------------|:------|
+| secure.key   | int     | diskMirror 允许您对于文件系统的操作设置密钥，如果您在启动的配置中设置了密钥，则您需要在该字段写入密钥          | 输入    |
+| fileName     | String  | 被落盘的文件名称 或者 您要操作的文件的路径（绝对路径）                                      | 输入&输出 |
+| useSize      | long    | 当前用户空间的某个类型的文件总共使用量，按照字节为单位                                       | 输出    |
+| userId       | int     | 落盘文件所在的空间id                                                       | 输入    |
+| type         | String  | 落盘文件所在的空间的类型                                                      | 输入    |
+| res          | String  | 落盘结果正常/错误信息                                                       | 输出    |
+| url          | String  | 落盘文件的读取 url 这个url 会根据协议前缀拼接字符串                                    | 输出    |
+| urls         | array   | 一般来说，这个代表的是一个目录中包含的所有子文件/目录对象的列表，常常会在 [`getUrls`](#从适配器中读取数据) 中见到 | 输出    |
+| maxSize      | long    | 当前用户空间中某个类型的文件最大使用量，按照字节为单位                                       | 输出    |
+| useAgreement | boolean | 是否使用了协议前缀 如过此值不为 undefined/null 且 为 true 则代表使用了协议前缀 否则代表没有使用协议前缀  | 输出    |
+
+接下来我们将演示如何使用 盘镜 进行一些基本的 CRUD 操作，能够实现在文件系统中的文件管理操作。
 
 ### 实例化适配器
 
@@ -209,16 +228,6 @@ public final class MAIN {
 ```
 
 适配器的 upload 函数返回的结果如下所示
-
-| 参数名称         | 参数类型    | 参数解释                                                             |
-|--------------|---------|------------------------------------------------------------------|
-| fileName     | String  | 被落盘的文件名称                                                         |
-| useAgreement | boolean | 是否使用了协议前缀 如过此值不为 undefined/null 且 为 true 则代表使用了协议前缀 否则代表没有使用协议前缀 |
-| useSize      | long    | 当前用户空间的某个类型的文件总共使用量，按照字节为单位                                      |
-| userId       | int     | 落盘文件所在的空间id                                                      |
-| type         | String  | 落盘文件的类型                                                          |
-| res          | String  | 落盘结果正常/错误信息                                                      |
-| url          | String  | 落盘文件的读取 url 这个url 会根据协议前缀拼接字符串                                   |
 
 ```json
 {
@@ -901,7 +910,217 @@ public final class MAIN {
 }
 ```
 
+### diskMirror http 适配器
+
+diskMirror 提供了后端服务器的版本，因为实际开发任务中我们经常需要使用 http 服务器来进行存储工作，因此 diskMirror
+后端服务器由此出现，且提供了一个 JS 文件用来操作后端服务器，实际上您还可以通过 Java API 操作 diskMirror 服务器，这也就是
+http 适配器的工作，下面是一个使用示例！
+
+```java
+package top.lingyuzhao.diskMirror.test;
+
+import com.alibaba.fastjson2.JSONObject;
+import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
+import top.lingyuzhao.diskMirror.core.Adapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+import top.lingyuzhao.diskMirror.core.Type;
+
+import java.io.IOException;
+
+/**
+ * @author zhao
+ */
+@DiskMirrorConfig(
+        rootDir = "/diskMirror",
+        // TODO 设置我们要使用 http 协议访问的后端服务器的地址（如果您使用的是 DM_DfsAdapter 适配器，可以在这里指定多个，这样会被当作一整个来进行处理！）
+        //  后端服务器是已经启动了的哦！
+        fsDefaultFS = "http://localhost:8080"
+)
+public final class MAIN {
+    public static void main(String[] args) throws IOException {
+        // 获取到 http 适配器
+        final Adapter adapter = DiskMirror.DiskMirrorHttpAdapter.getAdapter(MAIN.class);
+        // 打印出远程服务器的版本
+        System.out.println(adapter.version());
+        // 直接在这里打印出远程服务器的文件系统目录
+        final JSONObject jsonObject = new JSONObject();
+        jsonObject.put("userId", 1);
+        jsonObject.put("type", Type.Binary);
+        jsonObject.put("secure.key", 2139494269);
+        System.out.println(adapter.getUrls(jsonObject));
+    }
+}
+```
+
+接下来展示的就是计算结果
+
+```
+E:\RunTime\jdk8\jdk-8u351\bin\java.exe "-javaagent:D:\Liming\MyApplication\IntelliJ_IDEA\IntelliJ IDEA 2021.3.2\lib\idea_rt.jar=51839:D:\Liming\MyApplication\IntelliJ_IDEA\IntelliJ IDEA 2021.3.2\bin" -Dfile.encoding=UTF-8 -classpath E:\RunTime\jdk8\jdk-8u351\jre\lib\charsets.jar;E:\RunTime\jdk8\jdk-8u351\jre\lib\deploy.jar;E:\RunTime\jdk8\jdk-8u351\jre\lib\ext\access-bridge-64.jar;E:\RunTime\jdk8\jdk-8u351\jre\lib\ext\cldrdata.jar;E:\RunTime\jdk8\jdk-8u351\jre\lib\ext\dnsns.jar;E:\RunTime\jdk8\jdk-8u351\jre\lib\ext\jaccess.jar;E:\RunTime\jdk8\jdk-8u351\jre\lib\ext\jfxrt.jar;E:\RunTime\jdk8\jdk-8u351\jre\lib\ext\localedata.jar;E:\RunTime\jdk8\jdk-8u351\jre\lib\ext\nashorn.jar;E:\RunTime\jdk8\jdk-8u351\jre\lib\ext\sunec.jar;E:\RunTime\jdk8\jdk-8u351\jre\lib\ext\sunjce_provider.jar;E:\RunTime\jdk8\jdk-8u351\jre\lib\ext\sunmscapi.jar;E:\RunTime\jdk8\jdk-8u351\jre\lib\ext\sunpkcs11.jar;E:\RunTime\jdk8\jdk-8u351\jre\lib\ext\zipfs.jar;E:\RunTime\jdk8\jdk-8u351\jre\lib\javaws.jar;E:\RunTime\jdk8\jdk-8u351\jre\lib\jce.jar;E:\RunTime\jdk8\jdk-8u351\jre\lib\jfr.jar;E:\RunTime\jdk8\jdk-8u351\jre\lib\jfxswt.jar;E:\RunTime\jdk8\jdk-8u351\jre\lib\jsse.jar;E:\RunTime\jdk8\jdk-8u351\jre\lib\management-agent.jar;E:\RunTime\jdk8\jdk-8u351\jre\lib\plugin.jar;E:\RunTime\jdk8\jdk-8u351\jre\lib\resources.jar;E:\RunTime\jdk8\jdk-8u351\jre\lib\rt.jar;G:\MyGithub\DiskMirror\target\classes;G:\RunTime\MAVEN\MAVEN_BASE\com\alibaba\fastjson2\fastjson2\2.0.25\fastjson2-2.0.25.jar;G:\RunTime\MAVEN\MAVEN_BASE\io\github\BeardedManZhao\zhao-utils\1.0.20240121\zhao-utils-1.0.20240121.jar;G:\RunTime\MAVEN\MAVEN_BASE\org\apache\httpcomponents\httpclient\4.5.14\httpclient-4.5.14.jar;G:\RunTime\MAVEN\MAVEN_BASE\org\apache\httpcomponents\httpcore\4.4.16\httpcore-4.4.16.jar;G:\RunTime\MAVEN\MAVEN_BASE\commons-logging\commons-logging\1.2\commons-logging-1.2.jar;G:\RunTime\MAVEN\MAVEN_BASE\commons-codec\commons-codec\1.11\commons-codec-1.11.jar;G:\RunTime\MAVEN\MAVEN_BASE\org\apache\httpcomponents\httpmime\4.5.14\httpmime-4.5.14.jar top.lingyuzhao.diskMirror.test.MAIN
+top.lingyuzhao.diskMirror.core.DiskMirrorHttpAdapter@2d7275fc:V1.1.8
+ ↓↓↓ 
+remote → ↘↘
+             'WWWKXXXXNWWNk,     ,kkd7               KWWb,                     
+             ;WWN3.....,lNWWk.                       KWWb,                     
+             ;WWNl        XWWk.  :XXk,   oKNNWNKo    KWWb,   dXXO:             
+             ;WWNl  ^  ^  3WWX7  7WWO7  0WWo:,:O0d,  KWWb, lNWKb:              
+             ;WWNl  -__-  :WWNl  7WWO7  0WWO,.       KWWbbXWKb:.               
+             ;WWNl        kWW03  7WWO7   lXWWWN0o.   KWWNWWW0;                 
+             ;WWNl       lWWNo,  7WWO7     .,7dWWN;  KWWOolWWN7                
+             'WWNo,..,'oXWWKo'   7WWO7 .lb:    XWNl. KWWb, .KWWk.              
+             ;WWWWWWWWWNKOo:.    7WWO7  oNWX0KWWKb:  KWWb,   bWWX'             
+              ,'''''''',,.        ,'',    ,;777;,.    '''.    .''',            
+KWWNWK,        ,WWNWWd.   ;33:                                                 
+KWWbWWO.       XWXkWWd.   ...    ...  .,,   ...  ,,.      .,,,,        ...  .,,
+KWWodWWd      OWNlOWWd.  .WWN7   KWW3OWNWl.:WWOlNWNO:  3KWWXXNWWXo.   ,WWX3XWNK
+KWWo.OWWo    oWWb;xWWd.  .WWXl   0WWXkl',, ;WWNKb:,,, XWWkl,..,oWWN'  ,WWNKd7,,
+KWWo  XWN7  ;WWx3 dWWd.  .WWXl   0WWO3     ;WWWl,    bWW03      OWWk, ,WWWo'   
+KWWo  ,NWK',NW0l  dWWd.  .WWXl   0WWd,     ;WWX3     kWWO:      dWMO: ,WWNl    
+KWWo   ;WWkKWXl.  dWWd.  .WWXl   0WWd.     ;WWK7     7WWX7      XWWd; ,WWN3    
+KWWo    lWWWNo,   dWWd.  .WWXl   0WWd.     ;WWK7      oWWX3,.,7XWWk3  ,WWN3    
+kXXo     dXXd:    oXXb.  .KX0l   xXXb.     'KXO7       .o0XNNNXKkl'   .KXKl    
+LocalFSAdapter:1.1.7
+{"userId":1,"type":"Binary","secure.key":2139494269,"useSize":43172,"useAgreement":true,"maxSize":134217728,"urls":[{"fileName":"test","url":"http://localhost:8080//1/Binary//test","lastModified":1711613815127,"size":0,"type":"Binary","isDir":true,"urls":[{"fileName":"application.yaml","url":"http://localhost:8080//1/Binary//test/application.yaml","lastModified":1711613815070,"size":1437,"type":"Binary","isDir":false},{"fileName":"diskMirror.js","url":"http://localhost:8080//1/Binary//test/diskMirror.js","lastModified":1711613815127,"size":20149,"type":"Binary","isDir":false}]}],"res":"ok!!!!"}
+
+进程已结束，退出代码为 0
+```
+
+### DM_DfsAdapter 分布式集群 使用示例！
+
+在 `DiskMirror` 框架中，我们提供了分布式存储适配器，您可以使用此适配器将多个 diskMirror 进行链接，成为一个大集群！通常情况下，它会将多个
+diskMirror 的适配器进行统一管理，您可以手动追加适配器的数量 也可以指定 fs-default-fs 配置项来指定要链接的几个后端
+diskMirror 下面是一个示例！
+
+下面的代码中，我们通过注解指定了一些 diskMirror 的后端服务器做为集群的子节点！并上传了三个文件！
+
+```java
+package top.lingyuzhao.diskMirror.test;
+
+import com.alibaba.fastjson2.JSONObject;
+import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
+import top.lingyuzhao.diskMirror.core.DM_DfsAdapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+import top.lingyuzhao.diskMirror.core.StorageStrategy;
+import top.lingyuzhao.diskMirror.core.Type;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+
+/**
+ * @author zhao
+ */
+@DiskMirrorConfig(
+        rootDir = "/diskMirror",
+        // TODO 设置 DM-DFS 中所有的子节点的 http 服务器访问地址
+        // 这样会自动的准备 两个 http 服务器 对应的适配器对象，需要注意的是，您需要在启动时，启动两个 diskMirror 的 http 服务器
+        fsDefaultFS = "http://192.168.0.104:8080/,http://localhost:8080"
+)
+public final class MAIN {
+    public static void main(String[] args) throws IOException {
+        // 获取到 分布式 适配器
+        final DM_DfsAdapter adapter = (DM_DfsAdapter) DiskMirror.DM_DfsAdapter.getAdapter(MAIN.class);
+        // 设置存储策略 这里的存储策略 默认是轮询 在这里我们修改为以文件名字取 hash 值
+        adapter.setStorageStrategy(StorageStrategy.fileNameHash);
+        // 在这里我们打开三个数据流
+        try (
+                final FileInputStream fileInputStream1 = new FileInputStream("C:\\Users\\zhao\\Downloads\\application.yaml");
+                final FileInputStream fileInputStream2 = new FileInputStream("C:\\Users\\zhao\\Downloads\\工程进度计划.txt");
+                final FileInputStream fileInputStream3 = new FileInputStream("C:\\Users\\zhao\\Downloads\\diskMirror.js")
+        ) {
+            final JSONObject jsonObject = new JSONObject();
+            jsonObject.put("userId", 1);
+            jsonObject.put("type", Type.Binary);
+            // 设置集群内所有子节点的密钥 要和子节点的 diskMirror 配置一样！
+            jsonObject.put("secure.key", 2139494269);
+
+            // 上传三个文件 在这里的三个文件会按照存储策略被分布到集群中不同的节点上
+            jsonObject.put("fileName", "test/application.yaml");
+            adapter.remove(jsonObject);
+            adapter.upload(fileInputStream1, jsonObject.clone());
+
+            jsonObject.put("fileName", "test/工程进度计划.txt");
+            adapter.remove(jsonObject);
+            adapter.upload(fileInputStream2, jsonObject.clone());
+
+            jsonObject.put("fileName", "test/diskMirror.js");
+            adapter.remove(jsonObject);
+            adapter.upload(fileInputStream3, jsonObject.clone());
+
+            // 移除掉文件名字，这是因为调用 getUrls 操作不需要文件名字
+            jsonObject.remove("fileName");
+
+            // 查看文件系统的结构
+            System.out.println(adapter.getUrls(jsonObject));
+        }
+
+    }
+}
+```
+
+下面就是计算结果
+
+需要注意的是，在这里的集群中，有两个节点，所以上传的文件会分别被存储到两个节点上！而集群所在主机必须要启动 [diskMirrorBackEnd](https://github.com/BeardedManZhao/DiskMirrorBackEnd.git)
+或者 [diskMirror-springBoot](https://github.com/BeardedManZhao/diskMirror-backEnd-spring-boot.git)。
+
+> 结果中之所以包含 `"fileName": "/test/diskMirror.js"` 这是因为内部为了节约资源考虑，没有进行 json对象的 创建，直接使用的传递进去的
+> json，您不需要使用 `getUrls` 返回的json 中的第一层对象中的 `fileName`！
+
+```json
+{
+  "userId": 1,
+  "type": "Binary",
+  "secure.key": 2139494269,
+  "fileName": "/test/diskMirror.js",
+  "useSize": 43172,
+  "useAgreement": true,
+  "maxSize": 134217728,
+  "urls": [
+    {
+      "fileName": "test",
+      "url": "http://192.168.0.105:8080//1/Binary//test",
+      "lastModified": 1711613815001,
+      "size": 0,
+      "type": "Binary",
+      "isDir": true,
+      "urls": [
+        {
+          "fileName": "工程进度计划.txt",
+          "url": "http://192.168.0.105:8080//1/Binary//test/工程进度计划.txt",
+          "lastModified": 1711613815001,
+          "size": 907,
+          "type": "Binary",
+          "isDir": false
+        },
+        {
+          "fileName": "application.yaml",
+          "url": "http://localhost:8080//1/Binary//test/application.yaml",
+          "lastModified": 1711613815070,
+          "size": 1437,
+          "type": "Binary",
+          "isDir": false
+        },
+        {
+          "fileName": "diskMirror.js",
+          "url": "http://localhost:8080//1/Binary//test/diskMirror.js",
+          "lastModified": 1711613815127,
+          "size": 20149,
+          "type": "Binary",
+          "isDir": false
+        }
+      ]
+    }
+  ],
+  "res": "ok!!!!"
+}
+```
+
 ### 更新记录
+
+#### 2024-03-28 1.1.8 版本发布
+
+- 将适配器的 `long rDelete(String path) throws IOException` 函数变更为 `protected`
+  权限，因为它的操作能够删除文件目录但是不释放可用空间标记，这导致一些存储空间泄漏的情况发生!!!
+- 为 `DiskMirrorHttpAdapter` 添加编码集支持，防止乱码，且为此适配器新增异常信息的自动判断逻辑！
+- 新增 `DM_DfsAdapter` 分布式集群存储适配器，其可以将多个 diskMirror 进行链接，成为一个大集群！（还在不断优化中）
 
 #### 2024-03-26 1.1.7 版本发布
 
