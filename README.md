@@ -21,6 +21,7 @@ diskMirror 的处理方式能够将多种文件系统的操作统一成为一样
 | DiskMirror.LocalFSAdapter        | v1.0   | 无外部依赖                                | 能够将适配器运行所在的主机的磁盘做为 diskMirror 管理，一般来说是作用于本机的本地文件系统磁盘管理。                                                                                                                                       |
 | DiskMirror.HDFSAdapter           | v1.0   | hadoop-client                        | 将 HDFS 文件系统提供给 diskMirror 管理，能够通过 diskMirror 操作 HDFS                                                                                                                                          |
 | DiskMirror.DiskMirrorHttpAdapter | v1.1.2 | httpclient, httpmime                 | 将 [后端版本的 diskMirror](https://github.com/BeardedManZhao/DiskMirrorBackEnd.git) 接入到 diskMirror 管理，能够通过 diskMirror 操作 [后端 diskMirror]((https://github.com/BeardedManZhao/DiskMirrorBackEnd.git)) |
+| DiskMirror.DM_DfsAdapter         | v1.1.8 | DiskMirror                           | 集中管理多个 适配器 的集群适配器，能够实现将多个适配器合并管理，实现集群的效果                                                                                                                                                      |
 
 ### 我如何获取 盘镜
 
