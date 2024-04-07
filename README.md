@@ -38,7 +38,7 @@ diskMirror 的处理方式能够将多种文件系统的操作统一成为一样
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.1.8</version>
+        <version>1.1.9</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -1115,6 +1115,10 @@ public final class MAIN {
 ```
 
 ### 更新记录
+
+#### 2024-04-06 1.1.9 版本发布
+
+- 优化 `LocalFSAdapter` 适配器的`long rDelete(String path) throws IOException` 函数，让它的性能更好，且具有更精确的文件容量计算。
 
 #### 2024-03-28 1.1.8 版本发布
 

@@ -6,9 +6,7 @@ import top.lingyuzhao.diskMirror.conf.Config;
 import top.lingyuzhao.utils.IOUtils;
 
 import java.io.*;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 
@@ -124,7 +122,7 @@ public final class LocalFSAdapter extends FSAdapter {
         }
         if (file.isDirectory()) {
             // 如果是文件夹就使用文件夹的删除方法
-            jsonObject.put("useSize", this.diffUseSize(jsonObject.getIntValue("userId"), jsonObject.getString("type"), rDelete(path)));
+            jsonObject.put("useSize", this.diffUseSize(jsonObject.getIntValue("userId"), jsonObject.getString("type"), rDelete(file)));
             jsonObject.put(config.getString(Config.RES_KEY), config.getString(Config.OK_VALUE));
             return jsonObject;
         }
@@ -208,36 +206,43 @@ public final class LocalFSAdapter extends FSAdapter {
     /**
      * 递归删除一个目录 并将删除的字节数值返回
      *
-     * @param path 需要被删除的文件目录
+     * @param file1 需要被删除的文件目录
      * @return 删除的字节数值
      * @throws IOException 删除操作出现异常
      */
-    public long rDelete(String path) throws IOException {
+    public long rDelete(File file1) throws IOException {
         // 判断路径是否存在
-        Path dir = Paths.get(path);
-        if (!Files.exists(dir)) {
+        if (!file1.exists()) {
             throw new IOException("Directory does not exist.");
         }
         // 判断路径是否为目录
-        if (!Files.isDirectory(dir)) {
-            throw new IOException("Path is not a directory.");
+        if (!file1.isDirectory()) {
+            final long length = file1.length();
+            if (file1.delete()) {
+                return length;
+            } else {
+                throw new IOException("Failed to delete file: " + file1.getName());
+            }
         }
         // 递归删除目录及其内容
         long bytesDeleted = 0;
-        try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(dir)) {
-            for (Path file : directoryStream) {
-                if (Files.isDirectory(file)) {
-                    bytesDeleted += rDelete(file.toString());
+        for (File file : file1.listFiles()) {
+            if (file.isDirectory()) {
+                bytesDeleted += rDelete(file);
+            } else {
+                final long length = file.length();
+                if (file.delete()) {
+                    bytesDeleted += length;
                 } else {
-                    bytesDeleted += Files.size(file);
-                    Files.delete(file);
+                    throw new IOException("Failed to delete file: " + file.getName());
                 }
             }
-        } finally {
-            // 最后删除目录本身
-            bytesDeleted += Files.size(dir);
-            Files.delete(dir);
         }
-        return bytesDeleted;
+        // 然后删除自己
+        if (file1.delete()) {
+            return bytesDeleted + file1.length();
+        } else {
+            throw new IOException("Failed to delete directory: " + file1.getName());
+        }
     }
 }
