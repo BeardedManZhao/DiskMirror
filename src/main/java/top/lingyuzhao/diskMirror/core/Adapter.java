@@ -5,6 +5,7 @@ import top.lingyuzhao.diskMirror.conf.Config;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.function.Consumer;
 
 /**
@@ -228,6 +229,57 @@ public interface Adapter {
      * @throws IOException 创建过程出现错误则返回此异常对象
      */
     JSONObject mkdirs(JSONObject jsonObject) throws IOException;
+
+    /**
+     * 跨盘镜空间文件转移，将一个非盘镜空间的文件通过 url 上传到盘镜空间
+     *
+     * @param jsonObject {
+     *                   fileName  文件名称
+     *                   userId      空间id
+     *                   type        文件类型,
+     *                   secure.key  加密密钥,
+     *                   url 需要被下载的文件的路径
+     *                   }
+     * @return 操作结果
+     * @throws IOException 异常信息
+     */
+    JSONObject transferDeposit(JSONObject jsonObject) throws IOException;
+
+    /**
+     * 将一个 url 地址指向的数据进行转存操作，将 url 指向的文件转存到空间中的指定位置！
+     * <p>
+     * Transfer the data pointed to by a URL address to a specified location in the space!
+     *
+     * @param jsonObject {
+     *                   fileName     文件目录名称
+     *                   userId      空间id
+     *                   type        文件类型,
+     *                   secure.key  加密密钥
+     *                   }
+     * @param url        需要被转存的文件资源对应的地址
+     *                   <p>
+     *                   The address corresponding to the file resource that needs to be transferred
+     * @return 转存后的结果
+     * <p>
+     * Result after transfer
+     * @throws IOException 操作异常信息
+     */
+    JSONObject transferDeposit(JSONObject jsonObject, URL url) throws IOException;
+
+    /**
+     * 查询当前用户转存状态
+     *
+     * @param jsonObject {
+     *                   fileName     文件目录名称
+     *                   userId      空间id
+     *                   type        文件类型,
+     *                   secure.key  加密密钥
+     *                   }
+     * @return 当前空间中 包含着处于转存状态文件的的Map集合 其中 k 代表的就是当前转存的文件名字，value 代表的就是当前转存的 url
+     * <p>
+     * The current space contains a collection of Maps for files in the transfer state, where k represents the name of the current transfer file and value represents the URL of the current transfer
+     */
+    JSONObject transferDepositStatus(JSONObject jsonObject);
 
     /**
      * 获取用户使用空间大小

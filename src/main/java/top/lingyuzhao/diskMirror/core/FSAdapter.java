@@ -8,6 +8,8 @@ import top.lingyuzhao.diskMirror.utils.PathGeneration;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.function.Consumer;
 
@@ -25,9 +27,13 @@ public abstract class FSAdapter implements Adapter {
      */
     protected final Config config;
     /**
-     * 内存使用占用映射 key是空间id  value 就是空间中已使用的内存数量
+     * 使用占用映射 key是空间id  value 就是空间中已使用的数量
      */
     protected final HashMap<String, Long> REMEMBER_MAP = new HashMap<>();
+    /**
+     * 转存操作记录类
+     */
+    protected final HashMap<String, JSONObject> transferDepositMap = new HashMap<>();
 
     /**
      * 构建一个适配器
@@ -263,6 +269,30 @@ public abstract class FSAdapter implements Adapter {
      */
     @Override
     public JSONObject upload(InputStream inputStream, JSONObject jsonObject) throws IOException {
+        return this.upload(inputStream, jsonObject, -1);
+    }
+
+    /**
+     * 将一个文件上传
+     *
+     * @param inputStream 文件数据流
+     * @param jsonObject  {
+     *                    fileName  文件名称
+     *                    userId      空间id
+     *                    type        文件类型
+     *                    secure.key  加密密钥
+     *                    }
+     * @param streamSize  数据流中所包含的数据量 如果此数值为负数，则会尝试从 inputStream.available() 获取数据量
+     * @return {
+     * res:上传结果/错误,
+     * url:上传之后的 url,
+     * userId:文件所属用户id,
+     * maxSize: 当前空间的最大使用量,
+     * type:文件类型
+     * }
+     * @throws IOException 操作异常
+     */
+    public JSONObject upload(InputStream inputStream, JSONObject jsonObject, long streamSize) throws IOException {
         // 首先获取到 文件的路径
         final Config config = this.getConfig();
         Adapter.checkJsonObj(config, jsonObject);
@@ -270,11 +300,17 @@ public abstract class FSAdapter implements Adapter {
         final String[] path = pathGeneration.function(
                 jsonObject
         );
-        // 首先获取到使用的空间占用
-        final long inputSize = inputStream.available();
         // 获取到增加之后的空间占用
         final Integer userId = jsonObject.getInteger("userId");
         final String type = jsonObject.getString("type");
+
+        // 首先获取到使用的空间占用
+        final long inputSize = streamSize > 0 ? streamSize : inputStream.available();
+        if (inputSize < 0) {
+            // 代表数据流不合法，在这里清理缓存 为了重新计算数据占用
+            this.removeUseSize(userId, type);
+        }
+
         final long l = this.addUseSize(userId, type, inputSize);
         final long maxSize = config.getSpaceMaxSize(userId.toString());
         jsonObject.put("useAgreement", !config.getString(Config.PROTOCOL_PREFIX).isEmpty());
@@ -429,6 +465,65 @@ public abstract class FSAdapter implements Adapter {
     }
 
     /**
+     * 跨盘镜空间文件转移，将一个非盘镜空间的文件通过 url 上传到盘镜空间
+     *
+     * @param jsonObject {
+     *                   fileName  文件名称
+     *                   userId      空间id
+     *                   type        文件类型,
+     *                   secure.key  加密密钥,
+     *                   url 需要被下载的文件的路径
+     *                   }
+     * @return 操作结果
+     * @throws IOException 异常信息
+     */
+    public JSONObject transferDeposit(JSONObject jsonObject) throws IOException {
+        final Object url = jsonObject.remove("url");
+        final URL url1;
+        if (url instanceof String) {
+            url1 = new URL((String) url);
+        } else {
+            url1 = (URL) url;
+        }
+        return this.transferDeposit(jsonObject, url1);
+    }
+
+    @Override
+    public JSONObject transferDeposit(JSONObject jsonObject, URL url) throws IOException {
+        final String s = jsonObject.get("userId").toString() + '_' + jsonObject.get("type");
+        final String string = jsonObject.getString("fileName");
+        JSONObject jsonObject1 = this.transferDepositMap.get(s);
+        final boolean b = jsonObject1 != null;
+        if (b && jsonObject1.containsKey(string)) {
+            // 代表正在转存 不需要进行多次转存
+            jsonObject.put(config.getString(Config.RES_KEY), string + " 正在转存中，请不要重复转存哦!!!");
+            return jsonObject;
+        }
+        final URLConnection urlConnection = url.openConnection();
+        try (final InputStream inputStream = urlConnection.getInputStream()) {
+            // 开始标记
+            if (b) {
+                jsonObject1.put(string, url.toString());
+            } else {
+                jsonObject1 = new JSONObject();
+                jsonObject1.put(string, url.toString());
+                this.transferDepositMap.put(s, jsonObject1);
+            }
+            // 开始转存
+            final JSONObject upload = this.upload(inputStream, jsonObject, urlConnection.getContentLengthLong());
+            // 移除标记
+            jsonObject1.remove(string);
+            return upload;
+        }
+    }
+
+    @Override
+    public JSONObject transferDepositStatus(JSONObject jsonObject) {
+        final JSONObject jsonObject1 = this.transferDepositMap.get(jsonObject.get("userId").toString() + '_' + jsonObject.get("type"));
+        return jsonObject1 != null ? jsonObject1 : new JSONObject();
+    }
+
+    /**
      * 获取用户使用空间大小
      *
      * @param jsonObject {
@@ -485,6 +580,17 @@ public abstract class FSAdapter implements Adapter {
     @Override
     public long getSpaceMaxSize(String id) {
         return config.getSpaceMaxSize(id);
+    }
+
+    /**
+     * 清理掉当前用户的使用空间大小，这个操作常用来进行遇到未知数据流时候的缓存清理
+     *
+     * @param id   空间id
+     * @param type 空间类型
+     */
+    public void removeUseSize(int id, String type) {
+        final String key = id + type;
+        REMEMBER_MAP.remove(key);
     }
 
     /**

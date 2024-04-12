@@ -38,7 +38,7 @@ diskMirror 的处理方式能够将多种文件系统的操作统一成为一样
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.1.9</version>
+        <version>1.2.0</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -167,6 +167,10 @@ public final class MAIN {
 
 在这里我们将演示如何向适配器中写入数据，并将写入的数据的 url 返回给您，当您向适配器中写入数据的时候，一切的管理和落盘操作都将由盘镜来处理。
 
+#### 文件数据流写入方式
+
+您可以直接将你的数据流提供给盘镜，然后盘镜会自动的将数据落盘，并返回一个 url 和文件的信息给您。
+
 ```java
 package top.lingyuzhao.diskMirror.test;
 
@@ -240,6 +244,109 @@ public final class MAIN {
   "res": "ok!!!!",
   "url": "/DiskMirror/1024/Binary/arc.png"
 }
+```
+
+#### 将链接中的数据写入
+
+这是一种针对文件上传操作的二开组件，其可以实现将一个 url 解析并写入盘镜的操作，它相对于文件流写入的方式具有一些标记的操作。
+
+```java
+package top.lingyuzhao.diskMirror.test;
+
+import com.alibaba.fastjson2.JSONObject;
+import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
+import top.lingyuzhao.diskMirror.core.Adapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+import top.lingyuzhao.diskMirror.core.Type;
+
+import java.io.IOException;
+
+@DiskMirrorConfig(
+        rootDir = "/DiskMirror/"
+)
+public final class MAIN {
+    public static void main(String[] args) throws IOException {
+        System.out.println(DiskMirror.VERSION);
+        // 准备参数 把 url 放到参数中
+        final JSONObject jsonObject = new JSONObject();
+        jsonObject.put("url", "https://github.com/BeardedManZhao/DiskMirror/assets/113756063/b8a15b22-5ca0-4552-aab2-7131c63dc727");
+        jsonObject.put("fileName", "test.txt");
+        jsonObject.put("userId", 1);
+        jsonObject.put("type", Type.Binary);
+
+        // 准备适配器对象
+        final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(MAIN.class);
+        // 开始进行转存
+        final JSONObject jsonObject1 = adapter.transferDeposit(jsonObject);
+        // 打印转存好的文件的信息
+        System.out.println(jsonObject1);
+    }
+}
+```
+
+接下来我们将演示有关适配器中转存数据的一些标记操作，在转存状态中的文件，是可以直接获取到对应文件的状态 json
+对象的，接下来就是一个示例，我们使用多线程的方式将被转存的文件放到另一个线程中进行转存，然后我们调用了 `transferDepositStstus`
+函数
+获取到了当前正在转存的文件。
+
+```java
+package top.lingyuzhao.diskMirror.test;
+
+import com.alibaba.fastjson2.JSONObject;
+import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
+import top.lingyuzhao.diskMirror.core.Adapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+import top.lingyuzhao.diskMirror.core.Type;
+
+import java.io.IOException;
+
+@DiskMirrorConfig(
+        rootDir = "/DiskMirror/"
+)
+public final class MAIN {
+    public static void main(String[] args) throws IOException {
+        // 准备参数 把 url 放到参数中
+        final JSONObject jsonObject = new JSONObject();
+        jsonObject.put("url", "https://s01.oss.sonatype.org/content/repositories/releases/io/github/BeardedManZhao/diskMirror/1.1.9/diskMirror-1.1.9.jar");
+        jsonObject.put("fileName", "diskMirror-1.1.9.jar");
+        jsonObject.put("userId", 1);
+        jsonObject.put("type", Type.Binary);
+        // 准备适配器对象
+        final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(MAIN.class);
+
+        // 使用一个线程进行转存记录的查看 因为我们要测试查看线程转存状态的小玩意，因此在这里就需要保持转存的同时调用 transferDepositStatus
+        new Thread(() -> {
+            try {
+                // 使用这个 确保转存操作已开始
+                Thread.sleep(1500);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            show(adapter, jsonObject);
+        }).start();
+
+        // 开始进行转存
+        System.out.println("开始转存！");
+        final JSONObject jsonObject1 = adapter.transferDeposit(jsonObject);
+        // 打印转存好的文件的信息
+        System.out.println("转存完毕！" + jsonObject1);
+        // 转存完毕再打印一下看看
+        show(adapter, jsonObject);
+    }
+
+    public static void show(Adapter adapter, JSONObject jsonObject) {
+        adapter.transferDepositStatus(jsonObject).forEach((k, v) -> System.out.println("正在保存的文件：k" + "\t文件对应的链接：" + v));
+    }
+}
+```
+
+下面就是程序运行之后的结果
+
+```
+开始转存！
+正在保存的文件：k	文件对应的链接：https://s01.oss.sonatype.org/content/repositories/releases/io/github/BeardedManZhao/diskMirror/1.1.9/diskMirror-1.1.9.jar
+转存完毕！{"fileName":"diskMirror-1.1.9.jar","userId":1,"type":"Binary","useAgreement":true,"res":"ok!!!!","url":"http://localhost:8080/1/Binary/diskMirror-1.1.9.jar","useSize":8617,"maxSize":134217728}
+
 ```
 
 ### 从适配器中读取数据
@@ -1115,6 +1222,10 @@ public final class MAIN {
 ```
 
 ### 更新记录
+
+#### 2024-04-12 1.2.0 版本发布【稳定版】
+
+- 对于所有的适配器，提供了 `transferDeposit` 函数，用来将一个 url 中的文件数据转存！
 
 #### 2024-04-06 1.1.9 版本发布
 
