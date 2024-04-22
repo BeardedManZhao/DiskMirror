@@ -318,6 +318,7 @@ public abstract class FSAdapter implements Adapter {
             jsonObject.put("useSize", this.diffUseSize(userId, type, inputSize));
             throw new IOException("id为 " + userId + " 的 " + type + " 空间不足，因为上传《" + jsonObject.getString("fileName") + "》之后的字节数【" + l + "】 > 最大字节数【" + maxSize + "】");
         }
+        jsonObject.put("streamSize", inputSize);
         try {
             final JSONObject jsonObject1 = pathProcessorUpload(path[2], path[3], jsonObject, inputStream);
             jsonObject1.put("useSize", l);
