@@ -2,6 +2,7 @@ package top.lingyuzhao.diskMirror.core;
 
 import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.conf.Config;
+import top.lingyuzhao.diskMirror.core.ioStream.AutoCloseableInputStream;
 import top.lingyuzhao.utils.IOUtils;
 import top.lingyuzhao.utils.StrUtils;
 
@@ -94,14 +95,11 @@ public class TcpClientAdapter extends FSAdapter {
 
     @Override
     protected InputStream pathProcessorDownLoad(String path, JSONObject inJson) throws IOException {
-        try (
-                final Socket socket = new Socket((String) string[0], (Integer) string[1]);
-                final DataOutputStream metaO = new DataOutputStream(socket.getOutputStream())
-        ) {
-            metaO.writeUTF("download");
-            metaO.writeUTF(inJson.toString());
-            return new DataInputStream(socket.getInputStream());
-        }
+        final Socket socket = new Socket((String) string[0], (Integer) string[1]);
+        final DataOutputStream metaO = new DataOutputStream(socket.getOutputStream());
+        metaO.writeUTF("download");
+        metaO.writeUTF(inJson.toString());
+        return new AutoCloseableInputStream(socket);
     }
 
     @Override

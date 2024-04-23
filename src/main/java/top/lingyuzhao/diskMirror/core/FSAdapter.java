@@ -625,11 +625,11 @@ public abstract class FSAdapter implements Adapter {
      */
     public long addUseSize(int id, String type, long size, boolean notMustUpdate) throws IOException {
         final String key = id + type;
-        final Long l1 = REMEMBER_MAP.get(key);
         if (initUseSize(key, id, type) && notMustUpdate) {
             // 代表第一次初始化 同时设置了不必须修改的情况下
             return REMEMBER_MAP.get(key);
         }
+        final Long l1 = REMEMBER_MAP.get(key);
         final long l = l1 + size;
         REMEMBER_MAP.put(key, l);
         return l;
@@ -647,11 +647,11 @@ public abstract class FSAdapter implements Adapter {
      */
     public long diffUseSize(int id, String type, long size, boolean notMustUpdate) throws IOException {
         final String key = id + type;
-        final Long l1 = REMEMBER_MAP.get(key);
         if (initUseSize(key, id, type) && notMustUpdate) {
             // 代表第一次初始化 同时设置了不必须修改的情况下
             return REMEMBER_MAP.get(key);
         }
+        final Long l1 = REMEMBER_MAP.get(key);
         final long l = l1 - size;
         REMEMBER_MAP.put(key, l);
         return l;

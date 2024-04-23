@@ -105,8 +105,10 @@ public class TcpAdapter extends AdapterPacking {
                     outputStream.writeUTF(string);
                     outputStream.flush();
                 }
+            } catch (NullPointerException e) {
+                throw new RuntimeException("内部执行错误！", e);
             } catch (Exception e) {
-                outputStream.writeUTF(e.getMessage());
+                outputStream.writeUTF(e.toString());
             }
         }
     }

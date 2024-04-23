@@ -1288,45 +1288,77 @@ import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
 import top.lingyuzhao.diskMirror.core.Adapter;
 import top.lingyuzhao.diskMirror.core.DiskMirror;
 import top.lingyuzhao.diskMirror.core.Type;
+import top.lingyuzhao.utils.IOUtils;
 
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 public final class MAIN2 {
-    public static void main(String[] args) throws IOException {
-        System.out.println("开始发送数据！");
-        // 实例化出 Tcp 客户端适配器
-        final Adapter adapter = DiskMirror.TCP_CLIENT_Adapter.getAdapter(ConfigTcpClient.class);
-        // 直接将 TCP 客户端适配器中的 upload 方法进行调用
-        final JSONObject jsonObject = new JSONObject();
-        jsonObject.put("userId", 1);
-        jsonObject.put("type", Type.Binary);
-        jsonObject.put("secure.key", 0);
-        jsonObject.put("fileName", "test1.jpg");
+   public static void main(String[] args) throws IOException {
+      System.out.println("开始发送数据！");
+      // 实例化出 Tcp 客户端适配器
+      final Adapter adapter = DiskMirror.TCP_CLIENT_Adapter.getAdapter(ConfigTcpClient.class);
+      // 直接将 TCP 客户端适配器中的 upload 方法进行调用
+      final JSONObject jsonObject = new JSONObject();
+      jsonObject.put("userId", 1);
+      jsonObject.put("type", Type.Binary);
+      jsonObject.put("secure.key", 0);
+      jsonObject.put("fileName", "test1.jpg");
 
-        // 删除名为 test1.jpg 的文件
-        final JSONObject remove = adapter.remove(jsonObject);
-        System.out.println(remove);
+      // 删除名为 test1.jpg 的文件
+      final JSONObject remove = adapter.remove(jsonObject);
+      System.out.println(remove);
 
-        // 再将 test1.jpg 上传
-        final FileInputStream fileInputStream = new FileInputStream("C:\\Users\\zhao\\Downloads\\arc.png");
-        final JSONObject upload = adapter.upload(fileInputStream, jsonObject);
-        System.out.println(upload);
+      // 再将 test1.jpg 上传
+      final FileInputStream fileInputStream = new FileInputStream("C:\\Users\\zhao\\Downloads\\arc.png");
+      final JSONObject upload = adapter.upload(fileInputStream, jsonObject);
+      System.out.println(upload);
 
-        // 查看文件结构
-        jsonObject.remove("fileName");
-        final JSONObject urls = adapter.getUrls(jsonObject);
-        System.out.println(urls);
-    }
+      // 下载文件
+      try (
+              final InputStream inputStream = adapter.downLoad(jsonObject);
+              final FileOutputStream outputStream = new FileOutputStream("./out.jpg")
+      ) {
+         IOUtils.copy(inputStream, outputStream, true);
+      }
 
-    // TCP 客户端适配器配置 在这里指定的就是 TCP 适配器所在的主机 和 元数据端口 文件端口
-    @DiskMirrorConfig(
-            fsDefaultFS = "127.0.0.1:10001,10002"
-    )
-    public static final class ConfigTcpClient {
+      // 把 test1.jpg 重命名为 test2.jpg
+      jsonObject.put("newName", "test2.jpg");
+      final JSONObject jsonObject1 = adapter.reName(jsonObject);
+      System.out.println(jsonObject1);
+      jsonObject.remove("newName");
 
-    }
+      // 查看文件结构
+      jsonObject.remove("fileName");
+      final JSONObject urls = adapter.getUrls(jsonObject);
+      System.out.println(urls);
+
+      // 查看版本
+      System.out.println(adapter.version());
+   }
+
+   // TCP 客户端适配器配置 在这里指定的就是 TCP 适配器所在的主机 和 元数据端口 文件端口
+   @DiskMirrorConfig(
+           fsDefaultFS = "127.0.0.1:10001,10002"
+   )
+   public static final class ConfigTcpClient {
+
+   }
 }
+```
+
+#### 客户端执行结果
+
+```
+{"userId":1,"type":"Binary","secure.key":0,"fileName":"test1.jpg","maxSize":134217728,"res":"删除失败!!!文件不存在!"}
+{"userId":1,"type":"Binary","secure.key":0,"fileName":"test1.jpg","useAgreement":true,"streamSize":4237376,"res":"ok!!!!","url":"http://localhost:8080/1/Binary/test1.jpg","useSize":12712128,"maxSize":134217728}
+{"userId":1,"type":"Binary","secure.key":0,"fileName":"test1.jpg","newName":"test2.jpg","useSize":12712128,"maxSize":134217728,"res":"ok!!!!"}
+{"userId":1,"type":"Binary","secure.key":0,"useSize":12712128,"useAgreement":true,"maxSize":134217728,"urls":[{"fileName":"test0.jpg","url":"http://localhost:8080/1/Binary//test0.jpg","lastModified":1713851382691,"size":4237376,"type":"Binary","isDir":false},{"fileName":"test1 - 副本.jpg","url":"http://localhost:8080/1/Binary//test1 - 副本.jpg","lastModified":1713851382691,"size":4237376,"type":"Binary","isDir":false},{"fileName":"test2.jpg","url":"http://localhost:8080/1/Binary//test2.jpg","lastModified":1713858641609,"size":4237376,"type":"Binary","isDir":false}],"res":"ok!!!!"}
+top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
+
+进程已结束，退出代码为 0
 ```
 
 ### 更新记录
