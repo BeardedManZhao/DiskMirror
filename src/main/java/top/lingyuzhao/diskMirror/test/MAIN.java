@@ -10,10 +10,18 @@ public final class MAIN {
     public static void main(String[] args) throws IOException {
         System.out.println(DiskMirror.VERSION);
         // 使用适配器对象 用来接收远程数据并进行处理
-        final TcpAdapter adapterPacking0 = (TcpAdapter) DiskMirror.TCP_Adapter.getAdapterPacking(DiskMirror.LocalFSAdapter, ConfigTCPAdapter1.class, ConfigAdapter.class);
+        final TcpAdapter adapterPacking0 = (TcpAdapter) DiskMirror.TCP_Adapter.getAdapterPacking(
+                // 指定此适配器内部要使用的适配器的类型
+                DiskMirror.LocalFSAdapter,
+                // 指定此适配器的配置
+                ConfigTCPAdapter1.class,
+                // 指定此适配器的子适配的配置
+                ConfigAdapter.class
+        );
 
         // 开始监听！
         while (true) {
+            // run 函数会阻塞线程进行监听！
             adapterPacking0.run();
         }
     }
@@ -26,7 +34,8 @@ public final class MAIN {
     public static final class ConfigTCPAdapter1 {
     }
 
-    // TCP 适配器中所包含的子适配器的配置，TCP适配器可以将任意一种适配器接入到TCP的数据传输中
+    // TCP 适配器中所包含的子适配器的配置，TCP适配器实现了包装器 因此可以将任意一种适配器接入到TCP的数据传输中
+    // 这里就是子适配器的配置
     @DiskMirrorConfig()
     public static final class ConfigAdapter {
     }

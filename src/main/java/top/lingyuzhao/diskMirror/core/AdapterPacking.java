@@ -5,6 +5,8 @@ import top.lingyuzhao.diskMirror.conf.Config;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
+import java.util.function.Consumer;
 
 /**
  * 此类代表的是一个适配器的包装类，其继承了 FSAdapter 同时拓展了子适配器的包装功能!
@@ -18,10 +20,11 @@ import java.io.InputStream;
  *
  * @author zhao
  */
-public class AdapterPacking extends FSAdapter {
+public class AdapterPacking implements Adapter {
 
     private final DiskMirror diskMirror;
     private final FSAdapter subAdapter;
+    private final Config config;
 
     /**
      * 构建一个适配器包装类，此类可以直接调用其所包装的适配器的方法，能够有效的实现将各种适配器对象接入到 FSAdapter 中。
@@ -37,7 +40,8 @@ public class AdapterPacking extends FSAdapter {
      *                      The configuration class of the adapter to be wrapped in the current wrapper class. Please note that this configuration class is not the configuration class of AdapterPacking!
      */
     public AdapterPacking(DiskMirror diskMirror, Config config, Config adapterConfig) {
-        super(config);
+        this.config = config;
+        config.put("adapterConfig", adapterConfig);
         this.diskMirror = diskMirror;
         final Adapter adapter = diskMirror.getAdapter(adapterConfig);
         if (adapter instanceof FSAdapter) {
@@ -69,39 +73,107 @@ public class AdapterPacking extends FSAdapter {
         return this.subAdapter;
     }
 
-
     @Override
-    protected JSONObject pathProcessorUpload(String path, String path_res, JSONObject inJson, InputStream inputStream) throws IOException {
-        return this.subAdapter.pathProcessorUpload(path, path_res, inJson, inputStream);
+    public Config getConfig() {
+        return this.config;
     }
 
     @Override
-    protected JSONObject pathProcessorGetUrls(String path, String path_res, JSONObject inJson) throws IOException {
-        return this.subAdapter.pathProcessorGetUrls(path, path_res, inJson);
+    public void setSpaceMaxSize(String spaceId, long maxSize) {
+        this.subAdapter.setSpaceMaxSize(spaceId, maxSize);
     }
 
     @Override
-    protected JSONObject pathProcessorMkdirs(String path, JSONObject inJson) throws IOException {
-        return this.subAdapter.pathProcessorMkdirs(path, inJson);
+    public void setSpaceMaxSize(String spaceId, long maxSize, int sk) {
+        this.subAdapter.setSpaceMaxSize(spaceId, maxSize, sk);
     }
 
     @Override
-    protected InputStream pathProcessorDownLoad(String path, JSONObject inJson) throws IOException {
-        return this.subAdapter.pathProcessorDownLoad(path, inJson);
+    public JSONObject writer(String data, String fileName, int userId, String type, int secureKey) throws IOException {
+        return this.subAdapter.writer(data, fileName, userId, type, secureKey);
     }
 
     @Override
-    protected JSONObject pathProcessorRemove(String path, JSONObject inJson) throws IOException {
-        return this.subAdapter.pathProcessorRemove(path, inJson);
+    public JSONObject writer(byte[] bytes, String fileName, int userId, String type, int secureKey) throws IOException {
+        return this.subAdapter.writer(bytes, fileName, userId, type, secureKey);
     }
 
     @Override
-    protected JSONObject pathProcessorReName(String path, JSONObject inJson) throws IOException {
-        return this.subAdapter.pathProcessorReName(path, inJson);
+    public JSONObject upload(InputStream inputStream, JSONObject jsonObject) throws IOException {
+        return this.subAdapter.upload(inputStream, jsonObject);
+    }
+
+    public JSONObject upload(InputStream inputStream, JSONObject jsonObject, long streamSize) throws IOException {
+        return this.subAdapter.upload(inputStream, jsonObject, streamSize);
     }
 
     @Override
-    protected long pathProcessorUseSize(String path, JSONObject inJson) throws IOException {
-        return this.subAdapter.pathProcessorUseSize(path, inJson);
+    public JSONObject remove(JSONObject jsonObject) throws IOException {
+        return this.subAdapter.remove(jsonObject);
+    }
+
+    @Override
+    public JSONObject reName(JSONObject jsonObject) throws IOException {
+        return this.subAdapter.reName(jsonObject);
+    }
+
+    @Override
+    public InputStream downLoad(JSONObject jsonObject) throws IOException {
+        return this.subAdapter.downLoad(jsonObject);
+    }
+
+    @Override
+    public JSONObject getUrls(JSONObject jsonObject) throws IOException {
+        return this.subAdapter.getUrls(jsonObject);
+    }
+
+    @Override
+    public JSONObject getFilesPath(JSONObject jsonObject, Consumer<String> result) throws IOException {
+        return this.subAdapter.getFilesPath(jsonObject, result);
+    }
+
+    @Override
+    public JSONObject mkdirs(JSONObject jsonObject) throws IOException {
+        return this.subAdapter.mkdirs(jsonObject);
+    }
+
+    @Override
+    public JSONObject transferDeposit(JSONObject jsonObject) throws IOException {
+        return this.subAdapter.transferDeposit(jsonObject);
+    }
+
+    @Override
+    public JSONObject transferDeposit(JSONObject jsonObject, URL url) throws IOException {
+        return this.subAdapter.transferDeposit(jsonObject, url);
+    }
+
+    @Override
+    public JSONObject transferDepositStatus(JSONObject jsonObject) {
+        return this.subAdapter.transferDepositStatus(jsonObject);
+    }
+
+    @Override
+    public long getUseSize(JSONObject jsonObject) throws IOException {
+        return this.subAdapter.getUseSize(jsonObject);
+    }
+
+    @Override
+    public long getUseSize(JSONObject jsonObject, String path) throws IOException {
+        return this.subAdapter.getUseSize(jsonObject, path);
+    }
+
+    @Override
+    public long getSpaceMaxSize(String id) {
+        return this.subAdapter.getSpaceMaxSize(id);
+    }
+
+    @Override
+    public void close() {
+        this.subAdapter.close();
+    }
+
+    @Override
+    public String version() {
+        return this.subAdapter.version();
     }
 }

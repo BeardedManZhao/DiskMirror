@@ -122,14 +122,14 @@ public final class LocalFSAdapter extends FSAdapter {
         }
         if (file.isDirectory()) {
             // 如果是文件夹就使用文件夹的删除方法
-            jsonObject.put("useSize", this.diffUseSize(jsonObject.getIntValue("userId"), jsonObject.getString("type"), rDelete(file)));
+            jsonObject.put("useSize", this.diffUseSize(jsonObject.getIntValue("userId"), jsonObject.getString("type"), rDelete(file), true));
             jsonObject.put(config.getString(Config.RES_KEY), config.getString(Config.OK_VALUE));
             return jsonObject;
         }
         final long length = file.length();
         if (file.delete()) {
             // 删除成功
-            jsonObject.put("useSize", this.diffUseSize(jsonObject.getIntValue("userId"), jsonObject.getString("type"), length));
+            jsonObject.put("useSize", this.diffUseSize(jsonObject.getIntValue("userId"), jsonObject.getString("type"), length, true));
             jsonObject.put(config.getString(Config.RES_KEY), config.getString(Config.OK_VALUE));
         } else {
             jsonObject.put(config.getString(Config.RES_KEY), "删除失败!!!");

@@ -2,6 +2,7 @@ package top.lingyuzhao.diskMirror.core;
 
 import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.conf.Config;
+import top.lingyuzhao.utils.IOUtils;
 import top.lingyuzhao.utils.StrUtils;
 
 import java.io.BufferedInputStream;
@@ -73,6 +74,12 @@ public class TcpAdapter extends AdapterPacking {
                         break;
                     case "mkdirs":
                         outputStream.writeUTF(mkdirs(JSONObject.parse(inputStream.readUTF())).toString());
+                        break;
+                    case "useSize":
+                        outputStream.writeLong(getUseSize(JSONObject.parse(inputStream.readUTF())));
+                        break;
+                    case "download":
+                        IOUtils.copy(downLoad(JSONObject.parse(inputStream.readUTF())), outputStream, true);
                         break;
                     case "transferDeposit":
                         outputStream.writeUTF(transferDeposit(JSONObject.parse(inputStream.readUTF())).toString());

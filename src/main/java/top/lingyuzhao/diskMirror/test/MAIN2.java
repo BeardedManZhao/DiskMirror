@@ -20,6 +20,12 @@ public final class MAIN2 {
         jsonObject.put("type", Type.Binary);
         jsonObject.put("secure.key", 0);
         jsonObject.put("fileName", "test1.jpg");
+
+        // 删除名为 test1.jpg 的文件
+        final JSONObject remove = adapter.remove(jsonObject);
+        System.out.println(remove);
+
+        // 再将 test1.jpg 上传
         final FileInputStream fileInputStream = new FileInputStream("C:\\Users\\zhao\\Downloads\\arc.png");
         final JSONObject upload = adapter.upload(fileInputStream, jsonObject);
         System.out.println(upload);

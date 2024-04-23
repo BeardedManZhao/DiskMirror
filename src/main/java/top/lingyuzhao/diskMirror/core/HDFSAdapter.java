@@ -126,7 +126,7 @@ public class HDFSAdapter extends FSAdapter {
                 // 如果不存在就代表不需要删除
                 inJson.put(config.getString(Config.RES_KEY), "删除失败!!!文件不存在!");
             }
-            inJson.put("useSize", this.diffUseSize(inJson.getIntValue("userId"), inJson.getString("type"), rDelete(path1)));
+            inJson.put("useSize", this.diffUseSize(inJson.getIntValue("userId"), inJson.getString("type"), rDelete(path1), true));
             inJson.put(config.getString(Config.RES_KEY), config.getString(Config.OK_VALUE));
         } catch (IOException e) {
             inJson.put(config.getString(Config.RES_KEY), "删除失败:" + e);

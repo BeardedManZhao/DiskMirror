@@ -63,15 +63,14 @@ public class TcpClientAdapter extends FSAdapter {
         }
     }
 
-    @Override
-    protected JSONObject pathProcessorGetUrls(String path, String path_res, JSONObject inJson) throws IOException {
+    private JSONObject getResJsonObject(String mkdirs, JSONObject inJson) throws IOException {
         try (
                 final Socket socket = new Socket((String) string[0], (Integer) string[1]);
                 final DataOutputStream metaO = new DataOutputStream(socket.getOutputStream());
                 final DataInputStream metaI = new DataInputStream(socket.getInputStream());
 
         ) {
-            metaO.writeUTF("getUrls");
+            metaO.writeUTF(mkdirs);
             metaO.writeUTF(inJson.toString());
             final String s = metaI.readUTF();
             try {
@@ -83,27 +82,116 @@ public class TcpClientAdapter extends FSAdapter {
     }
 
     @Override
-    protected JSONObject pathProcessorMkdirs(String path, JSONObject inJson) throws IOException {
-        return null;
+    protected JSONObject pathProcessorGetUrls(String path, String path_res, JSONObject inJson) throws IOException {
+        return getResJsonObject("getUrls", inJson);
     }
 
     @Override
+    protected JSONObject pathProcessorMkdirs(String path, JSONObject inJson) throws IOException {
+        return getResJsonObject("mkdirs", inJson);
+    }
+
+
+    @Override
     protected InputStream pathProcessorDownLoad(String path, JSONObject inJson) throws IOException {
-        return null;
+        try (
+                final Socket socket = new Socket((String) string[0], (Integer) string[1]);
+                final DataOutputStream metaO = new DataOutputStream(socket.getOutputStream())
+        ) {
+            metaO.writeUTF("download");
+            metaO.writeUTF(inJson.toString());
+            return new DataInputStream(socket.getInputStream());
+        }
     }
 
     @Override
     protected JSONObject pathProcessorRemove(String path, JSONObject inJson) throws IOException {
-        return null;
+        return getResJsonObject("remove", inJson);
     }
 
     @Override
     protected JSONObject pathProcessorReName(String path, JSONObject inJson) throws IOException {
-        return null;
+        return getResJsonObject("reName", inJson);
     }
 
     @Override
     protected long pathProcessorUseSize(String path, JSONObject inJson) throws IOException {
-        return 0;
+        try (
+                final Socket socket = new Socket((String) string[0], (Integer) string[1]);
+                final DataOutputStream metaO = new DataOutputStream(socket.getOutputStream());
+                final DataInputStream metaI = new DataInputStream(socket.getInputStream());
+
+        ) {
+            metaO.writeUTF("useSize");
+            metaO.writeUTF(inJson.toString());
+            return metaI.readLong();
+        }
     }
+
+    @Override
+    public JSONObject upload(InputStream inputStream, JSONObject jsonObject, long streamSize) throws IOException {
+        return this.pathProcessorUpload("", "", jsonObject, inputStream);
+    }
+
+    @Override
+    public InputStream downLoad(JSONObject jsonObject) throws IOException {
+        return this.pathProcessorDownLoad("", jsonObject);
+    }
+
+    @Override
+    public JSONObject remove(JSONObject jsonObject) throws IOException {
+        return this.pathProcessorRemove("", jsonObject);
+    }
+
+    @Override
+    public JSONObject reName(JSONObject jsonObject) throws IOException {
+        return this.pathProcessorReName("", jsonObject);
+    }
+
+    @Override
+    public JSONObject getUrls(JSONObject jsonObject) throws IOException {
+        return this.pathProcessorGetUrls("", "", jsonObject);
+    }
+
+    @Override
+    public JSONObject mkdirs(JSONObject jsonObject) throws IOException {
+        return this.pathProcessorMkdirs("", jsonObject);
+    }
+
+    @Override
+    public long getUseSize(JSONObject jsonObject, String path) throws IOException {
+        return this.pathProcessorUseSize(path, jsonObject);
+    }
+
+    @Override
+    public long getUseSize(JSONObject jsonObject) throws IOException {
+        return this.pathProcessorUseSize("", jsonObject);
+    }
+
+    @Override
+    public long diffUseSize(int id, String type, long size) throws IOException {
+        throw new UnsupportedOperationException("The client does not support the operation: diffUseSize");
+    }
+
+    @Override
+    public long addUseSize(int id, String type, long size) throws IOException {
+        throw new UnsupportedOperationException("The client does not support the operation: addUseSize");
+    }
+
+    @Override
+    public void removeUseSize(int id, String type) {
+        throw new UnsupportedOperationException("The client does not support the operation: removeUseSize");
+    }
+
+    @Override
+    public void setSpaceMaxSize(String spaceId, long maxSize) {
+        throw new UnsupportedOperationException("The client does not support the operation: setSpaceMaxSize");
+    }
+
+    @Override
+    public long getSpaceMaxSize(String id) {
+        throw new UnsupportedOperationException("The client does not support the operation: getSpaceMaxSize");
+    }
+
+
 }
