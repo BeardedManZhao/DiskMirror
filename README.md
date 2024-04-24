@@ -22,6 +22,8 @@ diskMirror 的处理方式能够将多种文件系统的操作统一成为一样
 | DiskMirror.HDFSAdapter           | v1.0   | hadoop-client                        | 将 HDFS 文件系统提供给 diskMirror 管理，能够通过 diskMirror 操作 HDFS                                                                                                                                          |
 | DiskMirror.DiskMirrorHttpAdapter | v1.1.2 | httpclient, httpmime                 | 将 [后端版本的 diskMirror](https://github.com/BeardedManZhao/DiskMirrorBackEnd.git) 接入到 diskMirror 管理，能够通过 diskMirror 操作 [后端 diskMirror]((https://github.com/BeardedManZhao/DiskMirrorBackEnd.git)) |
 | DiskMirror.DM_DfsAdapter         | v1.1.8 | DiskMirror                           | 集中管理多个 适配器 的集群适配器，能够实现将多个适配器合并管理，实现集群的效果                                                                                                                                                      |
+| DiskMirror.TCP_Adapter           | v1.2.1 | 与子适配器一致                              | 使用TCP协议监听两个端口分别接收指令以及文件数据                                                                                                                                                                     |
+| DiskMirror.TCP_CLIENT_Adapter    | v1.2.1 | 无外部依赖                                | 向指定的TCP适配器的两端口分别发送指令以及文件数据实现远程控制                                                                                                                                                              |
 
 ### 我如何获取 盘镜
 
@@ -38,7 +40,7 @@ diskMirror 的处理方式能够将多种文件系统的操作统一成为一样
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.2.0</version>
+        <version>1.2.1</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -1221,7 +1223,147 @@ public final class MAIN {
 }
 ```
 
+### TCP_Adapter & TCP_CLIENT_Adapter TCP 交互使用示例
+
+在 1.2.1 版本中，这两个适配器可以直接使用 TCP 协议来进行文件和数据的管理操作，此适配器还是雏形，会逐渐进行完善，接下来我们将展示一个示例。
+
+#### TCP_Adapter 服务端
+
+在 服务端适配器中，我们准备了一个 `run` 函数，可以直接进行监听任务，值得注意的是，`run` 函数只会监听一次！需要您手动管理它的循环监听操作，下面是一个示例。
+
+```java
+package top.lingyuzhao.diskMirror.test;
+
+import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+import top.lingyuzhao.diskMirror.core.TcpAdapter;
+
+import java.io.IOException;
+
+public final class MAIN {
+    public static void main(String[] args) throws IOException {
+        System.out.println(DiskMirror.VERSION);
+        // 使用适配器对象 用来接收远程数据并进行处理
+        final TcpAdapter adapterPacking0 = (TcpAdapter) DiskMirror.TCP_Adapter.getAdapterPacking(
+                // 指定此适配器内部要使用的适配器的类型
+                DiskMirror.LocalFSAdapter,
+                // 指定此适配器的配置
+                ConfigTCPAdapter1.class,
+                // 指定此适配器的子适配的配置
+                ConfigAdapter.class
+        );
+
+        // 开始监听！ 这里代表的是监听三次 实际的项目中 您也可以使用循环逻辑实现监听
+        for (int i = 0; i < 3; i++) {
+            // run 函数会阻塞线程进行监听！
+            adapterPacking0.run();
+        }
+    }
+
+    // TCP 适配器1的配置
+    @DiskMirrorConfig(
+            // 设置 TCP 适配器服务打开的端口 分别是 元数据端口 文件传输端口
+            fsDefaultFS = "10001,10002"
+    )
+    public static final class ConfigTCPAdapter1 {
+    }
+
+    // TCP 适配器中所包含的子适配器的配置，TCP适配器实现了包装器 因此可以将任意一种适配器接入到TCP的数据传输中
+    // 这里就是子适配器的配置
+    @DiskMirrorConfig()
+    public static final class ConfigAdapter {
+    }
+}
+```
+
+#### TCP_CLIENT_Adapter 客户端
+
+在 1.2.1 客户端中，您可以向之前的所有适配器调用一样，直接调用这些函数操作，实现有效的文件操作！
+
+```java
+package top.lingyuzhao.diskMirror.test;
+
+import com.alibaba.fastjson2.JSONObject;
+import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
+import top.lingyuzhao.diskMirror.core.Adapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+import top.lingyuzhao.diskMirror.core.Type;
+import top.lingyuzhao.utils.IOUtils;
+
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
+// TCP 客户端适配器配置 在这里指定的就是 TCP 适配器所在的主机 和 元数据端口 文件端口
+@DiskMirrorConfig(
+        fsDefaultFS = "127.0.0.1:10001,10002"
+)
+public final class MAIN2 {
+    public static void main(String[] args) throws IOException {
+        System.out.println("开始发送数据！");
+        // 实例化出 Tcp 客户端适配器
+        final Adapter adapter = DiskMirror.TCP_CLIENT_Adapter.getAdapter(MAIN2.class);
+        // 直接将 TCP 客户端适配器中的 upload 方法进行调用
+        final JSONObject jsonObject = new JSONObject();
+        jsonObject.put("userId", 1);
+        jsonObject.put("type", Type.Binary);
+        jsonObject.put("secure.key", 0);
+        jsonObject.put("fileName", "test1.jpg");
+
+        // 删除名为 test1.jpg 的文件
+        final JSONObject remove = adapter.remove(jsonObject);
+        System.out.println(remove);
+
+        // 再将 test1.jpg 上传
+        final FileInputStream fileInputStream = new FileInputStream("C:\\Users\\zhao\\Downloads\\arc.png");
+        final JSONObject upload = adapter.upload(fileInputStream, jsonObject);
+        System.out.println(upload);
+
+        // 下载文件
+        try (
+                final InputStream inputStream = adapter.downLoad(jsonObject);
+                final FileOutputStream outputStream = new FileOutputStream("./out.jpg")
+        ) {
+            IOUtils.copy(inputStream, outputStream, true);
+        }
+
+        // 把 test1.jpg 重命名为 test2.jpg
+        jsonObject.put("newName", "test2.jpg");
+        final JSONObject jsonObject1 = adapter.reName(jsonObject);
+        System.out.println(jsonObject1);
+        jsonObject.remove("newName");
+
+        // 查看文件结构
+        jsonObject.remove("fileName");
+        final JSONObject urls = adapter.getUrls(jsonObject);
+        System.out.println(urls);
+
+        // 查看版本
+        System.out.println(adapter.version());
+    }
+}
+```
+
+#### 客户端执行结果
+
+```
+{"userId":1,"type":"Binary","secure.key":0,"fileName":"test1.jpg","maxSize":134217728,"res":"删除失败!!!文件不存在!"}
+{"userId":1,"type":"Binary","secure.key":0,"fileName":"test1.jpg","useAgreement":true,"streamSize":4237376,"res":"ok!!!!","url":"http://localhost:8080/1/Binary/test1.jpg","useSize":12712128,"maxSize":134217728}
+{"userId":1,"type":"Binary","secure.key":0,"fileName":"test1.jpg","newName":"test2.jpg","useSize":12712128,"maxSize":134217728,"res":"ok!!!!"}
+{"userId":1,"type":"Binary","secure.key":0,"useSize":12712128,"useAgreement":true,"maxSize":134217728,"urls":[{"fileName":"test0.jpg","url":"http://localhost:8080/1/Binary//test0.jpg","lastModified":1713851382691,"size":4237376,"type":"Binary","isDir":false},{"fileName":"test1 - 副本.jpg","url":"http://localhost:8080/1/Binary//test1 - 副本.jpg","lastModified":1713851382691,"size":4237376,"type":"Binary","isDir":false},{"fileName":"test2.jpg","url":"http://localhost:8080/1/Binary//test2.jpg","lastModified":1713858641609,"size":4237376,"type":"Binary","isDir":false}],"res":"ok!!!!"}
+top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
+
+进程已结束，退出代码为 0
+```
+
 ### 更新记录
+
+#### 2024-04-24 1.2.1 版本发布
+
+- 新增适配器包装类，它可以将任意的适配器对象进行包装，并将方法自动实现为被包装的适配器对象，这样的适配器构造和拓展更加灵活！
+- 修复当程序启动之后，最先调用的是 `remove` 方法时，会导致 `useSize` 不能够正确统计的情况。
+- 新增 `TCP_Adapter` 和 `TCP_CLIENT_Adapter` 适配器，它们可以互相配合，实现通过 TCP 协议来进行文件数据的传输等效果！
 
 #### 2024-04-12 1.2.0 版本发布【稳定版】
 
@@ -1752,6 +1894,10 @@ public final class MAIN {
 4. 针对文件上传的接口增加了文件大小限制的配置项目，默认为 128Mb
 
 ### 可能出现的问题
+
+#### 各类功能性错误
+
+在我们的 [issue](https://github.com/BeardedManZhao/DiskMirror/issues) 界面中，您可以查看所有已经存在的问题，以及如何解决它。
 
 #### 文件系统类问题
 

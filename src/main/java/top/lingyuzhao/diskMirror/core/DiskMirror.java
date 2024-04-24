@@ -36,7 +36,7 @@ public enum DiskMirror {
          */
         @Override
         protected String needDependent() {
-            return "        <dependency>\n" +
+            return "\n        <dependency>\n" +
                     "            <groupId>com.alibaba.fastjson2</groupId>\n" +
                     "            <artifactId>fastjson2</artifactId>\n" +
                     "            <version>x.x.x</version>\n" +
@@ -158,6 +158,28 @@ public enum DiskMirror {
         protected String needDependent() {
             return "----";
         }
+    },
+    TCP_Adapter {
+        @Override
+        protected String needDependent() {
+            return "";
+        }
+
+        @Override
+        protected AdapterPacking getAdapterPackingInDM(DiskMirror diskMirror, Config config, Config adapterConfig) {
+            return new TcpAdapter(diskMirror, config, adapterConfig);
+        }
+    },
+    TCP_CLIENT_Adapter {
+        @Override
+        protected String needDependent() {
+            return "";
+        }
+
+        @Override
+        protected Adapter getAdapterInDM(Config config) {
+            return new TcpClientAdapter(config);
+        }
     };
 
     /**
@@ -165,7 +187,7 @@ public enum DiskMirror {
      * <p>
      * The current version of the disk mirror library
      */
-    public final static String VERSION = "1.2.0";
+    public final static String VERSION = "1.2.1";
 
     /**
      * 获取到当前 盘镜 的版本 以及 适配器的名称
@@ -205,7 +227,30 @@ public enum DiskMirror {
      * <p>
      * The adapter object can be used to manage disk files
      */
-    protected abstract Adapter getAdapterInDM(Config config);
+    protected Adapter getAdapterInDM(Config config) {
+        throw new UnsupportedOperationException(this + " is not a valid adapter, it is an adapter wrapper. Please obtain the adapter wrapper class!");
+    }
+
+
+    /**
+     * 构建一个适配器包装类，此类可以直接调用其所包装的适配器的方法，能够有效的实现将各种适配器对象接入到 FSAdapter 中。
+     * <p>
+     * Build an adapter wrapper class that can directly call the methods of the adapter it wraps, effectively integrating various adapter objects into FSAdapters.
+     *
+     * @param diskMirror    需要获取到的适配器对应的枚举对象！
+     *                      <p>
+     *                      The enumeration object corresponding to the adapter that needs to be obtained!
+     * @param config        当前适配器包装类的配置类！
+     * @param adapterConfig 当前包装类中要包装的适配器的配置类，请注意，此配置类并非是 AdapterPacking 的配置类！
+     *                      <p>
+     *                      The configuration class of the adapter to be wrapped in the current wrapper class. Please note that this configuration class is not the configuration class of AdapterPacking!
+     * @return 一个包装类，能够直接调用其包装的适配器的方法，能够有效的实现将各种适配器对象接入到 FSAdapter 中。
+     * <p>
+     * A wrapper class that can directly call the methods of its wrapped adapters and effectively integrate various adapter objects into FSAdapters.
+     */
+    protected AdapterPacking getAdapterPackingInDM(DiskMirror diskMirror, Config config, Config adapterConfig) {
+        throw new UnsupportedOperationException(this + " is an adapter, not a wrapper class. Please directly obtain the adapter object!");
+    }
 
     /**
      * @return 能够返回出当前的配置类中需要的依赖包，以 xml 展示。
@@ -251,6 +296,30 @@ public enum DiskMirror {
             return getAdapter(new Config(annotation));
         }
         throw new UnsupportedOperationException(configClass.getTypeName() + " Not find annotation: @DiskMirrorConfig");
+    }
+
+    public AdapterPacking getAdapterPacking(DiskMirror diskMirror, Config config, Config adapterConfig) {
+        try {
+            return this.getAdapterPackingInDM(diskMirror, config, adapterConfig);
+        } catch (NoClassDefFoundError e) {
+            throw new UnsupportedOperationException(
+                    "不支持您进行【" + super.toString() + "】适配器的实例化操作，因为您的项目中缺少必须的依赖，下面是依赖信息\nYou are not supported to instantiate the [" + super.toString() + "] adapter because your project lacks the necessary dependencies. Here is the dependency information\n" +
+                            this.needDependent() + "\n+-----------------------+'\n" + diskMirror.needDependent()
+            );
+        }
+    }
+
+    public AdapterPacking getAdapterPacking(DiskMirror diskMirror, Class<?> configMain, Class<?> adapterConfigMain) {
+        try {
+            final DiskMirrorConfig annotation0 = configMain.getAnnotation(DiskMirrorConfig.class);
+            final DiskMirrorConfig annotation1 = adapterConfigMain.getAnnotation(DiskMirrorConfig.class);
+            return this.getAdapterPacking(diskMirror, new Config(annotation0), new Config(annotation1));
+        } catch (NoClassDefFoundError e) {
+            throw new UnsupportedOperationException(
+                    "不支持您进行【" + super.toString() + "】适配器的实例化操作，因为您的项目中缺少必须的依赖，下面是依赖信息\nYou are not supported to instantiate the [" + super.toString() + "] adapter because your project lacks the necessary dependencies. Here is the dependency information\n" +
+                            this.needDependent() + "+-----------------------+" + diskMirror.needDependent()
+            );
+        }
     }
 
     @Override

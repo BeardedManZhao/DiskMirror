@@ -318,6 +318,7 @@ public abstract class FSAdapter implements Adapter {
             jsonObject.put("useSize", this.diffUseSize(userId, type, inputSize));
             throw new IOException("id为 " + userId + " 的 " + type + " 空间不足，因为上传《" + jsonObject.getString("fileName") + "》之后的字节数【" + l + "】 > 最大字节数【" + maxSize + "】");
         }
+        jsonObject.put("streamSize", inputSize);
         try {
             final JSONObject jsonObject1 = pathProcessorUpload(path[2], path[3], jsonObject, inputStream);
             jsonObject1.put("useSize", l);
@@ -593,22 +594,11 @@ public abstract class FSAdapter implements Adapter {
         REMEMBER_MAP.remove(key);
     }
 
-    /**
-     * 手动指定用户空间的占用量
-     *
-     * @param id   用户id
-     * @param type 文件类型
-     * @param size 要调整的空间占用大小
-     * @return 用户空间的存储占用大小 字节为单位
-     * @throws IOException 操作异常
-     */
+
     public long addUseSize(int id, String type, long size) throws IOException {
-        final String key = id + type;
-        initUseSize(key, id, type);
-        final long l = REMEMBER_MAP.get(key) + size;
-        REMEMBER_MAP.put(key, l);
-        return l;
+        return addUseSize(id, type, size, false);
     }
+
 
     /**
      * 手动指定用户空间的占用量
@@ -620,9 +610,49 @@ public abstract class FSAdapter implements Adapter {
      * @throws IOException 操作异常
      */
     public long diffUseSize(int id, String type, long size) throws IOException {
+        return diffUseSize(id, type, size, false);
+    }
+
+    /**
+     * 手动指定用户空间的占用量
+     *
+     * @param id            用户id
+     * @param type          文件类型
+     * @param size          要调整的空间占用大小
+     * @param notMustUpdate 若不是必须要修改的情况下，此数值为 true，这样的话，当我们再进行了初始化操作之后，这里不会继续修改，若初始化已经进行过，则进行修改
+     * @return 用户空间的存储占用大小 字节为单位
+     * @throws IOException 操作异常
+     */
+    public long addUseSize(int id, String type, long size, boolean notMustUpdate) throws IOException {
         final String key = id + type;
-        initUseSize(key, id, type);
-        final long l = REMEMBER_MAP.get(key) - size;
+        if (initUseSize(key, id, type) && notMustUpdate) {
+            // 代表第一次初始化 同时设置了不必须修改的情况下
+            return REMEMBER_MAP.get(key);
+        }
+        final Long l1 = REMEMBER_MAP.get(key);
+        final long l = l1 + size;
+        REMEMBER_MAP.put(key, l);
+        return l;
+    }
+
+    /**
+     * 手动指定用户空间的占用量
+     *
+     * @param id            用户id
+     * @param type          文件类型
+     * @param size          要调整的空间占用大小
+     * @param notMustUpdate 若不是必须要修改的情况下，此数值为 true，这样的话，当我们再进行了初始化操作之后，这里不会继续修改，若初始化已经进行过，则进行修改，简单来说就是，再第一次初始化之后，这里能否不修改，因为第一次初始化不一定是非要修改的
+     * @return 用户空间的存储占用大小 字节为单位
+     * @throws IOException 操作异常
+     */
+    public long diffUseSize(int id, String type, long size, boolean notMustUpdate) throws IOException {
+        final String key = id + type;
+        if (initUseSize(key, id, type) && notMustUpdate) {
+            // 代表第一次初始化 同时设置了不必须修改的情况下
+            return REMEMBER_MAP.get(key);
+        }
+        final Long l1 = REMEMBER_MAP.get(key);
+        final long l = l1 - size;
         REMEMBER_MAP.put(key, l);
         return l;
     }
@@ -633,16 +663,19 @@ public abstract class FSAdapter implements Adapter {
      * @param key  用户的 key
      * @param id   用户空间id
      * @param type 文件类型
+     * @return 如果此空间是第一次初始化，这里就直接返回 true
      * @throws IOException 操作异常
      */
-    private void initUseSize(String key, int id, String type) throws IOException {
+    private boolean initUseSize(String key, int id, String type) throws IOException {
         if (!REMEMBER_MAP.containsKey(key)) {
             // 如果这个路径没有初始化过 就进行一次计算
             final JSONObject jsonObject = new JSONObject();
             jsonObject.put("userId", id);
             jsonObject.put("type", type);
             REMEMBER_MAP.put(key, getUseSize(jsonObject));
+            return true;
         }
+        return false;
     }
 
     /**
