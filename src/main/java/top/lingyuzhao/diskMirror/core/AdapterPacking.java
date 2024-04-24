@@ -174,6 +174,6 @@ public class AdapterPacking implements Adapter {
 
     @Override
     public String version() {
-        return this.subAdapter.version();
+        return this + " → " + this.getSubAdapter().version();
     }
 }

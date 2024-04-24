@@ -19,8 +19,8 @@ public final class MAIN {
                 ConfigAdapter.class
         );
 
-        // 开始监听！
-        while (true) {
+        // 开始监听！ 这里代表的是监听三次 实际的项目中 您也可以使用循环逻辑实现监听
+        for (int i = 0; i < 3; i++) {
             // run 函数会阻塞线程进行监听！
             adapterPacking0.run();
         }

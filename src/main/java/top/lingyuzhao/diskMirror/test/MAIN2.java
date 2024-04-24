@@ -12,11 +12,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+// TCP 客户端适配器配置 在这里指定的就是 TCP 适配器所在的主机 和 元数据端口 文件端口
+@DiskMirrorConfig(
+        fsDefaultFS = "127.0.0.1:10001,10002"
+)
 public final class MAIN2 {
     public static void main(String[] args) throws IOException {
         System.out.println("开始发送数据！");
         // 实例化出 Tcp 客户端适配器
-        final Adapter adapter = DiskMirror.TCP_CLIENT_Adapter.getAdapter(ConfigTcpClient.class);
+        final Adapter adapter = DiskMirror.TCP_CLIENT_Adapter.getAdapter(MAIN2.class);
         // 直接将 TCP 客户端适配器中的 upload 方法进行调用
         final JSONObject jsonObject = new JSONObject();
         jsonObject.put("userId", 1);
@@ -54,13 +58,5 @@ public final class MAIN2 {
 
         // 查看版本
         System.out.println(adapter.version());
-    }
-
-    // TCP 客户端适配器配置 在这里指定的就是 TCP 适配器所在的主机 和 元数据端口 文件端口
-    @DiskMirrorConfig(
-            fsDefaultFS = "127.0.0.1:10001,10002"
-    )
-    public static final class ConfigTcpClient {
-
     }
 }

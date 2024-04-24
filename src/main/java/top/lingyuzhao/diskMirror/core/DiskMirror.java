@@ -36,7 +36,7 @@ public enum DiskMirror {
          */
         @Override
         protected String needDependent() {
-            return "        <dependency>\n" +
+            return "\n        <dependency>\n" +
                     "            <groupId>com.alibaba.fastjson2</groupId>\n" +
                     "            <artifactId>fastjson2</artifactId>\n" +
                     "            <version>x.x.x</version>\n" +
@@ -244,6 +244,9 @@ public enum DiskMirror {
      * @param adapterConfig 当前包装类中要包装的适配器的配置类，请注意，此配置类并非是 AdapterPacking 的配置类！
      *                      <p>
      *                      The configuration class of the adapter to be wrapped in the current wrapper class. Please note that this configuration class is not the configuration class of AdapterPacking!
+     * @return 一个包装类，能够直接调用其包装的适配器的方法，能够有效的实现将各种适配器对象接入到 FSAdapter 中。
+     * <p>
+     * A wrapper class that can directly call the methods of its wrapped adapters and effectively integrate various adapter objects into FSAdapters.
      */
     protected AdapterPacking getAdapterPackingInDM(DiskMirror diskMirror, Config config, Config adapterConfig) {
         throw new UnsupportedOperationException(this + " is an adapter, not a wrapper class. Please directly obtain the adapter object!");
@@ -295,19 +298,6 @@ public enum DiskMirror {
         throw new UnsupportedOperationException(configClass.getTypeName() + " Not find annotation: @DiskMirrorConfig");
     }
 
-    /**
-     * 构建一个适配器包装类，此类可以直接调用其所包装的适配器的方法，能够有效的实现将各种适配器对象接入到 FSAdapter 中。
-     * <p>
-     * Build an adapter wrapper class that can directly call the methods of the adapter it wraps, effectively integrating various adapter objects into FSAdapters.
-     *
-     * @param diskMirror    需要获取到的适配器对应的枚举对象！
-     *                      <p>
-     *                      The enumeration object corresponding to the adapter that needs to be obtained!
-     * @param config        当前适配器包装类的配置类！
-     * @param adapterConfig 当前包装类中要包装的适配器的配置类，请注意，此配置类并非是 AdapterPacking 的配置类！
-     *                      <p>
-     *                      The configuration class of the adapter to be wrapped in the current wrapper class. Please note that this configuration class is not the configuration class of AdapterPacking!
-     */
     public AdapterPacking getAdapterPacking(DiskMirror diskMirror, Config config, Config adapterConfig) {
         try {
             return this.getAdapterPackingInDM(diskMirror, config, adapterConfig);
@@ -319,20 +309,6 @@ public enum DiskMirror {
         }
     }
 
-
-    /**
-     * 构建一个适配器包装类，此类可以直接调用其所包装的适配器的方法，能够有效的实现将各种适配器对象接入到 FSAdapter 中。
-     * <p>
-     * Build an adapter wrapper class that can directly call the methods of the adapter it wraps, effectively integrating various adapter objects into FSAdapters.
-     *
-     * @param diskMirror        需要获取到的适配器对应的枚举对象！
-     *                          <p>
-     *                          The enumeration object corresponding to the adapter that needs to be obtained!
-     * @param configMain        当前适配器包装类的配置类！
-     * @param adapterConfigMain 当前包装类中要包装的适配器的配置类，请注意，此配置类并非是 AdapterPacking 的配置类！
-     *                          <p>
-     *                          The configuration class of the adapter to be wrapped in the current wrapper class. Please note that this configuration class is not the configuration class of AdapterPacking!
-     */
     public AdapterPacking getAdapterPacking(DiskMirror diskMirror, Class<?> configMain, Class<?> adapterConfigMain) {
         try {
             final DiskMirrorConfig annotation0 = configMain.getAnnotation(DiskMirrorConfig.class);

@@ -1253,8 +1253,8 @@ public final class MAIN {
                 ConfigAdapter.class
         );
 
-        // 开始监听！
-        while (true) {
+        // 开始监听！ 这里代表的是监听三次 实际的项目中 您也可以使用循环逻辑实现监听
+        for (int i = 0; i < 3; i++) {
             // run 函数会阻塞线程进行监听！
             adapterPacking0.run();
         }
@@ -1278,7 +1278,7 @@ public final class MAIN {
 
 #### TCP_CLIENT_Adapter 客户端
 
-在 1.2.1 客户端中，您可以向之前一样直接调用这些操作，实现有效的文件操作！
+在 1.2.1 客户端中，您可以向之前的所有适配器调用一样，直接调用这些函数操作，实现有效的文件操作！
 
 ```java
 package top.lingyuzhao.diskMirror.test;
@@ -1295,57 +1295,53 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+// TCP 客户端适配器配置 在这里指定的就是 TCP 适配器所在的主机 和 元数据端口 文件端口
+@DiskMirrorConfig(
+        fsDefaultFS = "127.0.0.1:10001,10002"
+)
 public final class MAIN2 {
-   public static void main(String[] args) throws IOException {
-      System.out.println("开始发送数据！");
-      // 实例化出 Tcp 客户端适配器
-      final Adapter adapter = DiskMirror.TCP_CLIENT_Adapter.getAdapter(ConfigTcpClient.class);
-      // 直接将 TCP 客户端适配器中的 upload 方法进行调用
-      final JSONObject jsonObject = new JSONObject();
-      jsonObject.put("userId", 1);
-      jsonObject.put("type", Type.Binary);
-      jsonObject.put("secure.key", 0);
-      jsonObject.put("fileName", "test1.jpg");
+    public static void main(String[] args) throws IOException {
+        System.out.println("开始发送数据！");
+        // 实例化出 Tcp 客户端适配器
+        final Adapter adapter = DiskMirror.TCP_CLIENT_Adapter.getAdapter(MAIN2.class);
+        // 直接将 TCP 客户端适配器中的 upload 方法进行调用
+        final JSONObject jsonObject = new JSONObject();
+        jsonObject.put("userId", 1);
+        jsonObject.put("type", Type.Binary);
+        jsonObject.put("secure.key", 0);
+        jsonObject.put("fileName", "test1.jpg");
 
-      // 删除名为 test1.jpg 的文件
-      final JSONObject remove = adapter.remove(jsonObject);
-      System.out.println(remove);
+        // 删除名为 test1.jpg 的文件
+        final JSONObject remove = adapter.remove(jsonObject);
+        System.out.println(remove);
 
-      // 再将 test1.jpg 上传
-      final FileInputStream fileInputStream = new FileInputStream("C:\\Users\\zhao\\Downloads\\arc.png");
-      final JSONObject upload = adapter.upload(fileInputStream, jsonObject);
-      System.out.println(upload);
+        // 再将 test1.jpg 上传
+        final FileInputStream fileInputStream = new FileInputStream("C:\\Users\\zhao\\Downloads\\arc.png");
+        final JSONObject upload = adapter.upload(fileInputStream, jsonObject);
+        System.out.println(upload);
 
-      // 下载文件
-      try (
-              final InputStream inputStream = adapter.downLoad(jsonObject);
-              final FileOutputStream outputStream = new FileOutputStream("./out.jpg")
-      ) {
-         IOUtils.copy(inputStream, outputStream, true);
-      }
+        // 下载文件
+        try (
+                final InputStream inputStream = adapter.downLoad(jsonObject);
+                final FileOutputStream outputStream = new FileOutputStream("./out.jpg")
+        ) {
+            IOUtils.copy(inputStream, outputStream, true);
+        }
 
-      // 把 test1.jpg 重命名为 test2.jpg
-      jsonObject.put("newName", "test2.jpg");
-      final JSONObject jsonObject1 = adapter.reName(jsonObject);
-      System.out.println(jsonObject1);
-      jsonObject.remove("newName");
+        // 把 test1.jpg 重命名为 test2.jpg
+        jsonObject.put("newName", "test2.jpg");
+        final JSONObject jsonObject1 = adapter.reName(jsonObject);
+        System.out.println(jsonObject1);
+        jsonObject.remove("newName");
 
-      // 查看文件结构
-      jsonObject.remove("fileName");
-      final JSONObject urls = adapter.getUrls(jsonObject);
-      System.out.println(urls);
+        // 查看文件结构
+        jsonObject.remove("fileName");
+        final JSONObject urls = adapter.getUrls(jsonObject);
+        System.out.println(urls);
 
-      // 查看版本
-      System.out.println(adapter.version());
-   }
-
-   // TCP 客户端适配器配置 在这里指定的就是 TCP 适配器所在的主机 和 元数据端口 文件端口
-   @DiskMirrorConfig(
-           fsDefaultFS = "127.0.0.1:10001,10002"
-   )
-   public static final class ConfigTcpClient {
-
-   }
+        // 查看版本
+        System.out.println(adapter.version());
+    }
 }
 ```
 
@@ -1363,9 +1359,9 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 
 ### 更新记录
 
-#### 2024-04-22 1.2.1 版本开始开发
+#### 2024-04-24 1.2.1 版本发布
 
-- 新增适配器包装类，它可以将任意的适配器对象进行包装，并将被包装的适配器对象的 `pathProcessor*` 方法自动实现，其余方法保持不变！
+- 新增适配器包装类，它可以将任意的适配器对象进行包装，并将方法自动实现为被包装的适配器对象，这样的适配器构造和拓展更加灵活！
 - 修复当程序启动之后，最先调用的是 `remove` 方法时，会导致 `useSize` 不能够正确统计的情况。
 - 新增 `TCP_Adapter` 和 `TCP_CLIENT_Adapter` 适配器，它们可以互相配合，实现通过 TCP 协议来进行文件数据的传输等效果！
 
