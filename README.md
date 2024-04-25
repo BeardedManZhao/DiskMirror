@@ -90,7 +90,6 @@ diskMirror 的处理方式能够将多种文件系统的操作统一成为一样
 | secure.key   | int     | diskMirror 允许您对于文件系统的操作设置密钥，如果您在启动的配置中设置了密钥，则您需要在该字段写入密钥          | 输入    |
 | fileName     | String  | 被落盘的文件名称 或者 您要操作的文件的路径（绝对路径）                                      | 输入&输出 |
 | useSize      | long    | 当前用户空间的某个类型的文件总共使用量，按照字节为单位                                       | 输出    |
-| streamSize   | long    | 当前操作的文件的大小，按照字节为单位，可能不会存在，当您涉及文件写入的时候才会存在。                        | 输出    |
 | userId       | int     | 落盘文件所在的空间id                                                       | 输入    |
 | type         | String  | 落盘文件所在的空间的类型                                                      | 输入    |
 | res          | String  | 落盘结果正常/错误信息                                                       | 输出    |
@@ -249,74 +248,6 @@ public final class MAIN {
 }
 ```
 
-从 1.2.2 版本开始，您可以使用 `` 函数来实时的获取到文件的上传进度！
-
-```java
-package top.lingyuzhao.diskMirror.test;
-
-import com.alibaba.fastjson2.JSONObject;
-import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
-import top.lingyuzhao.diskMirror.core.Adapter;
-import top.lingyuzhao.diskMirror.core.DiskMirror;
-import top.lingyuzhao.diskMirror.core.Type;
-import top.lingyuzhao.diskMirror.utils.ProgressBar;
-
-import java.io.IOException;
-
-@DiskMirrorConfig(
-        rootDir = "/DiskMirror/"
-)
-public final class MAIN2 {
-    public static void main(String[] args) throws IOException {
-        // 准备参数 把 url 放到参数中
-        final JSONObject jsonObject = new JSONObject();
-        jsonObject.put("url", "https://s01.oss.sonatype.org/content/repositories/releases/io/github/BeardedManZhao/diskMirror/1.2.1/diskMirror-1.2.1-javadoc.jar");
-        jsonObject.put("fileName", "diskMirror-1.2.1-javadoc.jar");
-        jsonObject.put("userId", 1);
-        jsonObject.put("type", Type.Binary);
-        // 准备适配器对象
-        final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(MAIN2.class);
-
-        // 使用一个线程进行转存记录的查看 因为我们要测试查看线程转存状态的小玩意，因此在这里就需要保持转存的同时调用 transferDepositStatus
-        new Thread(() -> {
-            try {
-                // 使用这个 确保转存操作已开始
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            show(adapter, jsonObject);
-        }).start();
-
-        // 开始进行转存
-        System.out.println("开始转存！");
-        final JSONObject jsonObject1 = adapter.transferDeposit(jsonObject);
-        // 打印正在上传的文件的数据
-        System.out.println("转存完毕！" + jsonObject1);
-        // 转存完毕再打印一下看看
-        show(adapter, jsonObject);
-    }
-
-    public static void show(Adapter adapter, JSONObject jsonObject) {
-        adapter.getAllProgressBar(jsonObject.getString("userId")).forEach((k, v) -> {
-            final ProgressBar v1 = (ProgressBar) v;
-            System.out.println("正在保存的文件：" + k + "\t文件目前保存的字节数：" + v1.getCount() + "\t文件总大小：" + v1.getMaxCount() + "\t文件保存进度：" + v1.getCount() / v1.getMaxCount() * 100 + "%");
-        });
-    }
-}
-```
-
-下面是运行结果，结果中很明显可以看到打印出来了文件的保存进度
-
-```
-开始转存！
-[dialogue][Wed Apr 24 16:02:56 CST 2024][WARNING]	The configuration file [G:\MyGithub\DiskMirror\.\conf\conf.properties] does not exist. Use the default configuration.
-正在保存的文件：diskMirror-1.2.1-javadoc.jar	文件目前保存的字节数：98304	文件总大小：214246.0	文件保存进度：45.88370377976718%
-转存完毕！{"fileName":"diskMirror-1.2.1-javadoc.jar","userId":1,"type":"Binary","useAgreement":true,"streamSize":214246,"res":"ok!!!!","url":"http://localhost:8080/1/Binary/diskMirror-1.2.1-javadoc.jar","useSize":12926374,"maxSize":134217728}
-
-进程已结束，退出代码为 0
-```
-
 #### 将链接中的数据写入
 
 这是一种针对文件上传操作的二开组件，其可以实现将一个 url 解析并写入盘镜的操作，它相对于文件流写入的方式具有一些标记的操作。
@@ -406,7 +337,7 @@ public final class MAIN {
     }
 
     public static void show(Adapter adapter, JSONObject jsonObject) {
-        adapter.transferDepositStatus(jsonObject).forEach((k, v) -> System.out.println("正在保存的文件：" + k + "\t文件对应的链接：" + v));
+        adapter.transferDepositStatus(jsonObject).forEach((k, v) -> System.out.println("正在保存的文件：k" + "\t文件对应的链接：" + v));
     }
 }
 ```
@@ -1427,10 +1358,6 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 ```
 
 ### 更新记录
-
-#### 2024-04-24 1.2.2 版本开始开发
-
-- 新增 `getAllProgressBar` 函数，能够实时的获取到当前文件上传进度！
 
 #### 2024-04-24 1.2.1 版本发布
 
