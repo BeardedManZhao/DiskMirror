@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.conf.Config;
 import top.lingyuzhao.diskMirror.utils.JsonUtils;
 import top.lingyuzhao.diskMirror.utils.PathGeneration;
+import top.lingyuzhao.diskMirror.utils.ProgressBar;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -66,6 +67,19 @@ public abstract class FSAdapter implements Adapter {
     public void setSpaceMaxSize(String spaceId, long maxSize, int sk) {
         Adapter.checkSK(this.config, sk);
         this.config.setSpaceMaxSize(spaceId, maxSize);
+    }
+
+    /**
+     * 获取某个空间的所有进度条，这些进度条代表的往往都是正在处于上传状态的文件的操作进度对象
+     * Retrieves all progress bars for a given space, typically representing ongoing upload operations for files within that space.
+     *
+     * @param id 指定的空间的 id
+     *           A JSON collection of progress bar objects, where the keys correspond to progress scales.
+     * @return 进度条对象的 json 集合 其中 key 是进度id value 是进度对象
+     * The unique identifier of the specified space.
+     */
+    public JSONObject getAllProgressBar(String id) {
+        return ProgressBar.getBySpaceId(id);
     }
 
     /**
