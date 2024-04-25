@@ -3,7 +3,6 @@ package top.lingyuzhao.diskMirror.core;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.conf.Config;
-import top.lingyuzhao.diskMirror.utils.ProgressBar;
 import top.lingyuzhao.utils.IOUtils;
 
 import java.io.*;
@@ -43,15 +42,9 @@ public final class LocalFSAdapter extends FSAdapter {
             throw new IOException("文件《" + jsonObject.getString("fileName") + "》已经存在!");
         }
         final Config config = this.getConfig();
-        final ProgressBar progressBar = new ProgressBar(jsonObject.getString("userId"), jsonObject.getString("fileName"));
-        final Long streamSize = jsonObject.getLong("streamSize");
-        progressBar.setMaxSize(streamSize);
         try (final BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(new FileOutputStream(file))) {
             // 然后获取到数据输出流 输出数据
-            IOUtils.copy(streamSize, inputStream, bufferedOutputStream, progressBar);
-        } finally {
-            progressBar.function3(0);
-            IOUtils.close(inputStream);
+            IOUtils.copy(inputStream, bufferedOutputStream, true);
         }
         // 返回结果
         jsonObject.put(config.getString(Config.RES_KEY), config.getString(Config.OK_VALUE));
