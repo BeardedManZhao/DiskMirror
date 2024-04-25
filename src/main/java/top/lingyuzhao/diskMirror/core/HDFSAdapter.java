@@ -5,6 +5,7 @@ import com.alibaba.fastjson2.JSONObject;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import top.lingyuzhao.diskMirror.conf.Config;
+import top.lingyuzhao.diskMirror.utils.ProgressBar;
 import top.lingyuzhao.utils.IOUtils;
 import top.lingyuzhao.utils.StrUtils;
 
@@ -44,9 +45,15 @@ public class HDFSAdapter extends FSAdapter {
         if (fileSystem.exists(path1)) {
             throw new IOException("文件《" + jsonObject.getString("fileName") + "》已经存在!");
         }
+        final ProgressBar progressBar = new ProgressBar(jsonObject.getString("userId"), jsonObject.getString("fileName"));
+        final Long streamSize = jsonObject.getLong("streamSize");
+        progressBar.setMaxSize(streamSize);
         try (final FSDataOutputStream fsDataOutputStream = fileSystem.create(path1)) {
             // 输出数据
-            IOUtils.copy(inputStream, fsDataOutputStream, true);
+            IOUtils.copy(streamSize, inputStream, fsDataOutputStream, progressBar);
+        } finally {
+            progressBar.function3(0);
+            IOUtils.close(inputStream);
         }
         // 返回结果
         jsonObject.put(config.getString(Config.RES_KEY), config.getString(Config.OK_VALUE));

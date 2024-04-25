@@ -5,58 +5,48 @@ import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
 import top.lingyuzhao.diskMirror.core.Adapter;
 import top.lingyuzhao.diskMirror.core.DiskMirror;
 import top.lingyuzhao.diskMirror.core.Type;
-import top.lingyuzhao.utils.IOUtils;
+import top.lingyuzhao.diskMirror.utils.ProgressBar;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
-// TCP 客户端适配器配置 在这里指定的就是 TCP 适配器所在的主机 和 元数据端口 文件端口
 @DiskMirrorConfig(
-        fsDefaultFS = "127.0.0.1:10001,10002"
+        rootDir = "/DiskMirror/"
 )
 public final class MAIN2 {
     public static void main(String[] args) throws IOException {
-        System.out.println("开始发送数据！");
-        // 实例化出 Tcp 客户端适配器
-        final Adapter adapter = DiskMirror.TCP_CLIENT_Adapter.getAdapter(MAIN2.class);
-        // 直接将 TCP 客户端适配器中的 upload 方法进行调用
+        // 准备参数 把 url 放到参数中
         final JSONObject jsonObject = new JSONObject();
+        jsonObject.put("url", "https://s01.oss.sonatype.org/content/repositories/releases/io/github/BeardedManZhao/diskMirror/1.2.1/diskMirror-1.2.1-javadoc.jar");
+        jsonObject.put("fileName", "diskMirror-1.2.1-javadoc.jar");
         jsonObject.put("userId", 1);
         jsonObject.put("type", Type.Binary);
-        jsonObject.put("secure.key", 0);
-        jsonObject.put("fileName", "test1.jpg");
+        // 准备适配器对象
+        final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(MAIN2.class);
 
-        // 删除名为 test1.jpg 的文件
-        final JSONObject remove = adapter.remove(jsonObject);
-        System.out.println(remove);
+        // 使用一个线程进行转存记录的查看 因为我们要测试查看线程转存状态的小玩意，因此在这里就需要保持转存的同时调用 transferDepositStatus
+        new Thread(() -> {
+            try {
+                // 使用这个 确保转存操作已开始
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            show(adapter, jsonObject);
+        }).start();
 
-        // 再将 test1.jpg 上传
-        final FileInputStream fileInputStream = new FileInputStream("C:\\Users\\zhao\\Downloads\\arc.png");
-        final JSONObject upload = adapter.upload(fileInputStream, jsonObject);
-        System.out.println(upload);
+        // 开始进行转存
+        System.out.println("开始转存！");
+        final JSONObject jsonObject1 = adapter.transferDeposit(jsonObject);
+        // 打印正在上传的文件的数据
+        System.out.println("转存完毕！" + jsonObject1);
+        // 转存完毕再打印一下看看
+        show(adapter, jsonObject);
+    }
 
-        // 下载文件
-        try (
-                final InputStream inputStream = adapter.downLoad(jsonObject);
-                final FileOutputStream outputStream = new FileOutputStream("./out.jpg")
-        ) {
-            IOUtils.copy(inputStream, outputStream, true);
-        }
-
-        // 把 test1.jpg 重命名为 test2.jpg
-        jsonObject.put("newName", "test2.jpg");
-        final JSONObject jsonObject1 = adapter.reName(jsonObject);
-        System.out.println(jsonObject1);
-        jsonObject.remove("newName");
-
-        // 查看文件结构
-        jsonObject.remove("fileName");
-        final JSONObject urls = adapter.getUrls(jsonObject);
-        System.out.println(urls);
-
-        // 查看版本
-        System.out.println(adapter.version());
+    public static void show(Adapter adapter, JSONObject jsonObject) {
+        adapter.getAllProgressBar(jsonObject.getString("userId")).forEach((k, v) -> {
+            final ProgressBar v1 = (ProgressBar) v;
+            System.out.println("正在保存的文件：" + k + "\t文件目前保存的字节数：" + v1.getCount() + "\t文件总大小：" + v1.getMaxCount() + "\t文件保存进度：" + v1.getCount() / v1.getMaxCount() * 100 + "%");
+        });
     }
 }
