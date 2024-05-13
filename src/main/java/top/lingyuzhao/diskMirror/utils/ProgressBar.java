@@ -7,8 +7,10 @@ import java.util.HashMap;
 
 /**
  * 进度条对象，用于描述文件上传进度的状态对象。
+ * <p>
+ * Progress bar object, used to describe the status object of file upload progress.
  *
- * @author zhao
+ * @author 赵凌宇 别名 zhao
  */
 public class ProgressBar extends ProgressFileNumber {
     private final static HashMap<String, JSONObject> hash = new HashMap<>();
@@ -29,6 +31,9 @@ public class ProgressBar extends ProgressFileNumber {
     }
 
     /**
+     * @param spaceId 要获取到的进度对应的空间id，此函数会将您指定的id 中的所有的文件进度对象提取出来！
+     *                <p>
+     *                To obtain the spatial ID corresponding to the progress, this function will extract all the file progress objects in the ID you specified!
      * @return 当前进度条对象所属空间的进度条对象集合
      * <p>
      * The collection of progress bar objects in the space to which the current progress bar object belongs

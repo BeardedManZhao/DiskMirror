@@ -1428,7 +1428,7 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 
 ### 更新记录
 
-#### 2024-04-24 1.2.2 版本开始开发
+#### 2024-04-24 1.2.2 版本发布
 
 - 新增 `getAllProgressBar` 函数，能够实时的获取到当前文件上传进度！
 

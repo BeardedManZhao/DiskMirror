@@ -85,6 +85,7 @@ public interface Adapter {
      *           A JSON collection of progress bar objects, where the keys correspond to progress scales.
      * @return 进度条对象的 json 集合 其中 key 是进度id value 是进度对象
      * The unique identifier of the specified space.
+     * 返回示例：{"diskMirror-1.2.1-javadoc.jar":{"count":98304,"maxCount":214246.0,"progressId":"diskMirror-1.2.1-javadoc.jar","spaceId":"1"}}
      */
     JSONObject getAllProgressBar(String id);
 
