@@ -8,7 +8,7 @@ import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
  * <p>
  * Here, you can easily obtain the adapter you need for the Panjing Portal class
  *
- * @author zhao lingyu
+ * @author zhao lingyu 此项目中使用的别名 zhao
  */
 public enum DiskMirror {
 

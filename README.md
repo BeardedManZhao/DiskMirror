@@ -1359,6 +1359,28 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 
 ### 更新记录
 
+#### 2024-04-24 1.2.2 版本发布
+
+- 新增 `getAllProgressBar` 函数，能够实时的获取到当前文件上传进度！
+
+```java
+package top.lingyuzhao.diskMirror.test;
+
+import com.alibaba.fastjson2.JSONObject;
+import top.lingyuzhao.diskMirror.core.Adapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+
+public final class MAIN2 {
+    public static void main(String[] args) {
+        System.out.println("开始发送数据！");
+        // 实例化出 Tcp 客户端适配器
+        final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(MAIN2.class);
+        final JSONObject allProgressBar = adapter.getAllProgressBar("1");
+        System.out.println(allProgressBar);
+    }
+}
+```
+
 #### 2024-04-24 1.2.1 版本发布
 
 - 新增适配器包装类，它可以将任意的适配器对象进行包装，并将方法自动实现为被包装的适配器对象，这样的适配器构造和拓展更加灵活！
