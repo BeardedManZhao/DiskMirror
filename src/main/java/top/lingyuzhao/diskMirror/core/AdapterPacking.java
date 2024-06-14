@@ -89,6 +89,11 @@ public class AdapterPacking implements Adapter {
     }
 
     @Override
+    public JSONObject getAllProgressBar(String id) {
+        return this.subAdapter.getAllProgressBar(id);
+    }
+
+    @Override
     public JSONObject writer(String data, String fileName, int userId, String type, int secureKey) throws IOException {
         return this.subAdapter.writer(data, fileName, userId, type, secureKey);
     }

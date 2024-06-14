@@ -10,6 +10,8 @@ diskMirror 的处理方式能够将多种文件系统的操作统一成为一样
 
 适配器在这里是用于进行文件传输的桥梁，能够让您将自己的数据源（例如您的后端服务器）与指定的数据终端（例如您的各类文件系统）进行连接，将数据提供给数据终端，减少了您手动开发IO代码的时间。
 
+例如您要开发一个涉及到数据上传或保存的网站，您的网站后端通常需要涉及到与文件系统之间的交互，而您可以使用盘镜完成您的大部分需求，例如上传之后返回 url 等操作，这会大大减少您开发IO代码的时间。
+
 在未来，我们将会提供更多的适配器选项，让适配器的数据终端具有更多的支持。
 
 ### 支持哪些适配器
@@ -40,7 +42,7 @@ diskMirror 的处理方式能够将多种文件系统的操作统一成为一样
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.2.1</version>
+        <version>1.2.2</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -1372,9 +1374,8 @@ import top.lingyuzhao.diskMirror.core.DiskMirror;
 
 public final class MAIN2 {
     public static void main(String[] args) {
-        System.out.println("开始发送数据！");
-        // 实例化出 Tcp 客户端适配器
         final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(MAIN2.class);
+        // 获取所有 1 号空间的文件 进度条对象
         final JSONObject allProgressBar = adapter.getAllProgressBar("1");
         System.out.println(allProgressBar);
     }

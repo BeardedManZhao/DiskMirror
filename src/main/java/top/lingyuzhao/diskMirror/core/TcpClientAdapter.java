@@ -3,6 +3,7 @@ package top.lingyuzhao.diskMirror.core;
 import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.conf.Config;
 import top.lingyuzhao.diskMirror.core.ioStream.AutoCloseableInputStream;
+import top.lingyuzhao.diskMirror.utils.ProgressBar;
 import top.lingyuzhao.utils.IOUtils;
 import top.lingyuzhao.utils.StrUtils;
 
@@ -49,10 +50,16 @@ public class TcpClientAdapter extends FSAdapter {
             final String s = metaI.readUTF();
             if (s.equals("ok")) {
                 metaO.writeLong(inputStream.available());
+                final ProgressBar progressBar = new ProgressBar(inJson.getString("userId"), inJson.getString("fileName"));
+                final Long streamSize = inJson.getLong("streamSize");
+                progressBar.setMaxSize(streamSize);
                 try (final Socket socket1 = new Socket((String) string[0], (Integer) string[2]);
                      final BufferedOutputStream fileO = new BufferedOutputStream(socket1.getOutputStream())) {
-                    IOUtils.copy(inputStream, fileO, true);
+                    IOUtils.copy(streamSize, inputStream, fileO, progressBar);
                     fileO.flush();
+                } finally {
+                    progressBar.function3(0);
+                    IOUtils.close(inputStream);
                 }
             }
             final String s1 = metaI.readUTF();
