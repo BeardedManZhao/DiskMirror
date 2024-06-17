@@ -183,10 +183,9 @@ public final class MAIN {
 您可以直接将你的数据流提供给盘镜，然后盘镜会自动的将数据落盘，并返回一个 url 和文件的信息给您。
 
 ```java
-package top.lingyuzhao.diskMirror.test;
 
 import com.alibaba.fastjson2.JSONObject;
-import top.lingyuzhao.diskMirror.conf.Config;
+import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
 import top.lingyuzhao.diskMirror.core.Adapter;
 import top.lingyuzhao.diskMirror.core.DiskMirror;
 import top.lingyuzhao.diskMirror.core.Type;
@@ -198,19 +197,19 @@ import java.io.InputStream;
 /**
  * @author zhao
  */
-public final class MAIN {
-    public static void main(String[] args) throws IOException {
-        // 实例化盘镜配置类 配置类中包含很多的配置项目 对于本地文件系统来说 可以按照下面的方式来进行配置实例化
-        final Config config = new Config();
+@DiskMirrorConfig(
         // 配置根目录 也是能够被盘镜 管理的目录，所有的管理操作只会在这个目录中生效，默认是/DiskMirror!
-        config.put(Config.ROOT_DIR, "/DiskMirror");
+        // rootDir = "/DiskMirror",
         // 配置所有的 url 中的协议前缀，这会影响 getUrls 的结果， 如果您只是在本地文件系统中获取这些数据 就是文件系统的协议前缀，也就是什么都不加
         // 如果您要在 hdfs 文件系统中获取这些数据 这就是 hdfs 的协议前缀
         // 如果您要在 web JS 或者通过 url 中获取这些数据 这就是 web 的 http 协议前缀
         // 在这里我们给定空字符串就是代表使用本地文件系统
-        config.put(Config.PROTOCOL_PREFIX, "");
+        protocolPrefix = ""
+)
+public final class MAIN {
+    public static void main(String[] args) throws IOException {
         // 开始构建盘镜 由于我们在这里使用的是本地文件系统 所以我们使用 DiskMirror.LocalFSAdapter.getAdapter(config) 来实例化 本地文件系统适配器
-        final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(config);
+        final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(MAIN.class);
         // 准备需要被操作的文件
         try (final FileInputStream fileInputStream = new FileInputStream("C:\\Users\\zhao\\Pictures\\arc.png")) {
             // 输出数据
@@ -240,7 +239,6 @@ public final class MAIN {
         return adapter.upload(inputStream, jsonObject);
     }
 }
-
 ```
 
 适配器的 upload 函数返回的结果如下所示
@@ -1367,6 +1365,66 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 ```
 
 ### 更新记录
+
+#### 2024-06-17 1.2.3 版本开始开发
+
+- 新增 `top.lingyuzhao.diskMirror.core.DiskMirrorRequest`
+  类，通过此类操作适配器将可以更简单且简洁的代码，例如下面的代码，效果和 [文件数据流写入方式](#文件数据流写入方式)
+  中完全一致，但是 `top.lingyuzhao.diskMirror.core.DiskMirrorRequest` 可以减少代码量。
+
+```java
+import top.lingyuzhao.diskMirror.core.DiskMirrorRequest;
+import top.lingyuzhao.diskMirror.core.Type;
+
+/**
+ * @author zhao
+ */
+public final class MAIN {
+    public static void main(String[] args) {
+        // 我们发现创建请求的时候 有时候会很繁琐，因此我们提供了快捷的创建请求的方法 就是下面这种，它的效果等同于手动操作 FastJson2
+        final DiskMirrorRequest diskMirrorRequest = DiskMirrorRequest.reName(1, Type.TEXT, "test.txt", "test2.txt");
+        System.out.println(diskMirrorRequest);
+    }
+}
+```
+
+```java
+import com.alibaba.fastjson2.JSONObject;
+import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
+import top.lingyuzhao.diskMirror.core.Adapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+import top.lingyuzhao.diskMirror.core.DiskMirrorRequest;
+import top.lingyuzhao.diskMirror.core.Type;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+
+/**
+ * @author zhao
+ */
+@DiskMirrorConfig(
+        // 设置不在 url 中使用协议 为了和上面的对比的例子保持一致
+        protocolPrefix = ""
+)
+public final class MAIN {
+    public static void main(String[] args) throws IOException {
+        // 开始构建盘镜 由于我们在这里使用的是本地文件系统 所以我们使用 DiskMirror.LocalFSAdapter.getAdapter(config) 来实例化 本地文件系统适配器
+        final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(MAIN.class);
+        // 准备需要被操作的文件
+        try (final FileInputStream fileInputStream = new FileInputStream("C:\\Users\\zhao\\Pictures\\arc.png")) {
+            // 输出数据
+            final JSONObject save = adapter.upload(
+                    fileInputStream,
+                    // 在这里我们进行了简化，不需要手动创建JSON对象的键值对，只需要使用这一行即可！
+                    DiskMirrorRequest.uploadRemove(1, Type.Binary, "arc.png")
+            );
+            // 打印结果
+            System.out.println(save);
+        }
+    }
+}
+
+```
 
 #### 2024-04-24 1.2.2 版本发布
 
