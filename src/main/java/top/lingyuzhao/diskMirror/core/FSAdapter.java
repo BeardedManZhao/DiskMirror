@@ -564,7 +564,7 @@ public abstract class FSAdapter implements Adapter {
     }
 
     @Override
-    public int setSpaceSk(String id) {
+    public int setSpaceSk(String id) throws IOException {
         return SkCheckModule.setUserSk(id);
     }
 

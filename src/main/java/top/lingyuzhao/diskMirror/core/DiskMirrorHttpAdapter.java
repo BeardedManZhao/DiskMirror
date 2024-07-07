@@ -36,7 +36,7 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
 
     private final CloseableHttpClient httpClient;
     private final HttpPost httpPost;
-    private final URI upload, remove, getUrls, mkdirs, reName, version, useSize;
+    private final URI upload, remove, getUrls, mkdirs, reName, version, useSize, setSpaceSk;
     private final String downLoad;
     private final String getSpaceMaxSizeURL;
 
@@ -71,6 +71,7 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
             useSize = new URI(url + "getUseSize");
             downLoad = url + "downLoad/";
             getSpaceMaxSizeURL = url + "getSpaceSize?";
+            setSpaceSk = new URI(url + "setSpaceSk");
         } catch (URISyntaxException e) {
             throw new UnsupportedOperationException("error url => " + url, e);
         }
@@ -322,6 +323,15 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
             string = "error → " + e;
         }
         return super.version() + "\n ↓↓↓ \n" + string;
+    }
+
+    @Override
+    public int setSpaceSk(String id) throws IOException {
+        final Object orDefault = this.request(DiskMirrorRequest.setSpaceSk(Integer.parseInt(id)), setSpaceSk).getOrDefault("res", 0);
+        if (orDefault instanceof Integer) {
+            return (int) orDefault;
+        }
+        throw new UnsupportedOperationException(orDefault.toString());
     }
 
     @Override

@@ -49,7 +49,7 @@ diskMirror 可以简化IO操作，降低开发难度，同时提供了多种部�
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.2.2</version>
+        <version>1.2.3</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>

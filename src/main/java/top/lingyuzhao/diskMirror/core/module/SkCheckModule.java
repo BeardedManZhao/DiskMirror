@@ -25,6 +25,11 @@ public class SkCheckModule extends VerificationModule {
 
     private final static SkCheckModule skCheckModule = new SkCheckModule();
 
+    /**
+     * 获取到当前校验模块的单例对象
+     *
+     * @return 当前校验模块的单例对象
+     */
     public static SkCheckModule getInstance() {
         return skCheckModule;
     }

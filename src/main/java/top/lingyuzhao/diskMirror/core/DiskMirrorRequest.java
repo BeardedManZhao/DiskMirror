@@ -32,10 +32,22 @@ public class DiskMirrorRequest extends JSONObject {
      * 关于此类的构造函数
      *
      * @param jsonObject 我们允许传入一个jsonObject，然后自动将jsonObject中的键值对构造成jsonObject
+     * @return 根据传入的jsonObject构造的 请求对象
      */
     public static DiskMirrorRequest createFrom(JSONObject jsonObject) {
         return new DiskMirrorRequest(jsonObject);
     }
+
+    /**
+     * 对于当前空间进行一个访问令牌的生成
+     *
+     * @param userId 需要被创建访问令牌的空间id
+     * @return 操作结果！
+     */
+    public static DiskMirrorRequest setSpaceSk(int userId) {
+        return new DiskMirrorRequest(6).setUserId(userId);
+    }
+
 
     /**
      * 创建 getUrls 请求
@@ -45,7 +57,7 @@ public class DiskMirrorRequest extends JSONObject {
      * @return 操作结果！
      */
     public static DiskMirrorRequest getUrls(int userId, Type type) {
-        return new DiskMirrorRequest(6).setUserId(userId).setType(type);
+        return setSpaceSk(userId).setType(type);
     }
 
     /**
@@ -53,6 +65,7 @@ public class DiskMirrorRequest extends JSONObject {
      *
      * @param userId 需要被获取到的空间的所属 id
      * @param type   需要被获取到的空间的类型
+     * @param fileName 需要被操作的文件的名称
      * @return 操作结果！
      */
     public static DiskMirrorRequest uploadRemove(int userId, Type type, String fileName) {
@@ -65,6 +78,8 @@ public class DiskMirrorRequest extends JSONObject {
      *
      * @param userId 需要被获取到的空间的所属 id
      * @param type   需要被获取到的空间的类型
+     * @param fileName 需要被操作的文件的名称
+     * @param newName 代表的是需要操作的文件的新名称
      * @return 操作结果！
      */
     public static DiskMirrorRequest reName(int userId, Type type, String fileName, String newName) {

@@ -168,7 +168,7 @@ public class AdapterPacking implements Adapter {
     }
 
     @Override
-    public int setSpaceSk(String id) {
+    public int setSpaceSk(String id) throws IOException {
         return this.subAdapter.setSpaceSk(id);
     }
 
