@@ -168,6 +168,11 @@ public class AdapterPacking implements Adapter {
     }
 
     @Override
+    public int setSpaceSk(String id) {
+        return this.subAdapter.setSpaceSk(id);
+    }
+
+    @Override
     public long getSpaceMaxSize(String id) {
         return this.subAdapter.getSpaceMaxSize(id);
     }

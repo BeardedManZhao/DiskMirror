@@ -2,6 +2,7 @@ package top.lingyuzhao.diskMirror.core;
 
 import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.conf.Config;
+import top.lingyuzhao.diskMirror.core.module.SkCheckModule;
 import top.lingyuzhao.diskMirror.utils.JsonUtils;
 import top.lingyuzhao.diskMirror.utils.PathGeneration;
 import top.lingyuzhao.diskMirror.utils.ProgressBar;
@@ -65,7 +66,7 @@ public abstract class FSAdapter implements Adapter {
      */
     @Override
     public void setSpaceMaxSize(String spaceId, long maxSize, int sk) {
-        Adapter.checkSK(this.config, sk);
+        SkCheckModule.checkSK(this.config, spaceId, sk);
         this.config.setSpaceMaxSize(spaceId, maxSize);
     }
 
@@ -562,6 +563,10 @@ public abstract class FSAdapter implements Adapter {
         return l;
     }
 
+    @Override
+    public int setSpaceSk(String id) {
+        return SkCheckModule.setUserSk(id);
+    }
 
     /**
      * 获取用户使用空间大小

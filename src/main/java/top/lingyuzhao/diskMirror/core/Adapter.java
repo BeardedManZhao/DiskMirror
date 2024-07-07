@@ -2,6 +2,7 @@ package top.lingyuzhao.diskMirror.core;
 
 import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.conf.Config;
+import top.lingyuzhao.diskMirror.core.module.VerificationModule;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,32 +26,7 @@ public interface Adapter {
         if (jsonObject == null) {
             throw new UnsupportedOperationException("您提供的 json 对象为空，diskMirror 拒绝了您的访问\nThe json object you provided is empty, and diskMirror has denied your access\nerror json = null");
         }
-        final Object orDefault = jsonObject.getOrDefault(Config.SECURE_KEY, 0);
-        if (orDefault instanceof Integer) {
-            checkSK(config, (int) orDefault);
-        } else {
-            checkSK(config, 0);
-        }
-    }
-
-    /**
-     * 检查函数 此函数会处于所有服务函数的第一行
-     *
-     * @param config 需要使用的适配器的配置类对象
-     * @param sk     需要被检查的 sk 参数
-     */
-    static void checkSK(Config config, int sk) {
-        if (config.getSecureKey() != sk) {
-            StringBuilder showData = new StringBuilder(String.valueOf(sk));
-            final int length = showData.length();
-            for (int i = 0; i < length; i++) {
-                showData.setCharAt(i, i - (i >> 1 << 1) == 0 ? showData.charAt(i) : '*');
-            }
-            throw new UnsupportedOperationException(
-                    "您提供的密钥错误，diskMirror 拒绝了您的访问\nThe key you provided is incorrect, and diskMirror has denied your access\nerror key = " +
-                            showData
-            );
-        }
+        VerificationModule.check(config, jsonObject);
     }
 
     /**
@@ -319,6 +295,14 @@ public interface Adapter {
      * @throws IOException 操作异常
      */
     long getUseSize(JSONObject jsonObject, String path) throws IOException;
+
+    /**
+     * 设置指定空间 id 的 sk 访问密钥 若无设置则使用默认密钥
+     *
+     * @param id 需要被设置的 空间 id
+     * @return 操作成功之后，在这里会返回密钥对应的结果，我们需要将此参数返回给客户端，由客户端去使用！
+     */
+    int setSpaceSk(String id);
 
     /**
      * 获取指定空间 id 的最大占用量，此函数的返回值是空间最大容量的字节数值。
