@@ -49,7 +49,7 @@ diskMirror 可以简化IO操作，降低开发难度，同时提供了多种部�
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.2.3</version>
+        <version>1.2.4</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -1366,7 +1366,15 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 
 ### 更新记录
 
-#### 2024-06-17 1.2.3 版本开始开发
+#### 2024-07-07 1.2.4 版本发布
+
+> 请注意 在 1.2.3 1.2.4 中所添加的 `DiskMirror.DiskMirrorHttpAdapter` 适配器中的 `setSpaceSk` 目前并不安全，因此这只是一个试验功能！
+> 其它适配器中的 `setSpaceSk` 操作安全可用！
+
+- 修复在 1.2.3 版本中对于 `DiskMirror.DiskMirrorHttpAdapter` 适配器中的 `setSpaceSk`
+  操作的已知问题（服务器返回的数据无法被客户端正常解析，但客户端的请求可以成功被服务器使用）进行了修复！
+
+#### 2024-06-17 1.2.3 版本发布
 
 - 新增 `top.lingyuzhao.diskMirror.core.DiskMirrorRequest`
   类，通过此类操作适配器将可以更简单且简洁的代码，例如下面的代码，效果和 [文件数据流写入方式](#文件数据流写入方式)
