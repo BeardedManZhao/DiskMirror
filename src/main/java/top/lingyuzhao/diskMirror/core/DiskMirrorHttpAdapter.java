@@ -12,11 +12,13 @@ import org.apache.http.util.EntityUtils;
 import top.lingyuzhao.diskMirror.conf.Config;
 import top.lingyuzhao.utils.IOUtils;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.Charset;
 
 /**
  * diskMirror 后端服务器的适配器，您可以直接通过此适配器操作远程的 diskMirror 后端服务器!
@@ -34,6 +36,7 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
      */
     private final static UnsupportedOperationException unsupportedOperationException = new UnsupportedOperationException("DiskMirrorHttpAdapter 不支持此函数操作!!! 这是因为 DiskMirror 中暂时没有对应的服务 或 此服务还未启用!!");
 
+    private final Charset charset;
     private final CloseableHttpClient httpClient;
     private final HttpPost httpPost;
     private final URI upload, remove, getUrls, mkdirs, reName, version, useSize, setSpaceSk;
@@ -72,6 +75,7 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
             downLoad = url + "downLoad/";
             getSpaceMaxSizeURL = url + "getSpaceSize?";
             setSpaceSk = new URI(url + "setSpaceSk");
+            charset = Charset.forName(config.getString(Config.CHAR_SET));
         } catch (URISyntaxException e) {
             throw new UnsupportedOperationException("error url => " + url, e);
         }
@@ -208,8 +212,7 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
             this.httpPost.setURI(this.upload);
             this.httpPost.setEntity(
                     MultipartEntityBuilder.create()
-                            .addTextBody("params", jsonObject.toString(), ContentType.APPLICATION_JSON.withCharset(this.config.getString(Config.CHAR_SET)))
-                            .addBinaryBody("file", inputStream)
+                            .addBinaryBody("params", jsonObject.toString().getBytes(this.charset), ContentType.APPLICATION_JSON.withCharset(this.charset), "params")                            .addBinaryBody("file", inputStream)
                             .setContentType(ContentType.MULTIPART_FORM_DATA)
                             .build()
             );
@@ -356,7 +359,7 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
         this.httpPost.setURI(conPath);
         this.httpPost.setEntity(
                 MultipartEntityBuilder.create()
-                        .addTextBody("params", jsonObject.toString(), ContentType.APPLICATION_JSON.withCharset(this.config.getString(Config.CHAR_SET)))
+                        .addBinaryBody("params", jsonObject.toString().getBytes(this.charset), ContentType.APPLICATION_JSON.withCharset(this.charset), "params")
                         .setContentType(ContentType.MULTIPART_FORM_DATA)
                         .build()
         );
