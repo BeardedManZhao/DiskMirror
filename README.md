@@ -1375,6 +1375,7 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 #### 2024-07-07 1.2.4 版本发布
 
 > 请注意 在 1.2.3 1.2.4 中所添加的 `DiskMirror.DiskMirrorHttpAdapter` 适配器中的 `setSpaceSk` 目前并不安全，因此这只是一个试验功能！
+> 因为服务器中的密钥设置服务对外暴露并不安全，因此需要一种有效的方案，后期会将此方案启用，并打开此服务！
 > 其它适配器中的 `setSpaceSk` 操作安全可用！
 
 - 修复在 1.2.3 版本中对于 `DiskMirror.DiskMirrorHttpAdapter` 适配器中的 `setSpaceSk`
