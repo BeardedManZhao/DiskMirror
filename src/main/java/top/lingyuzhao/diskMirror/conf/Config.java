@@ -1,6 +1,7 @@
 package top.lingyuzhao.diskMirror.conf;
 
 import com.alibaba.fastjson2.JSONObject;
+import top.lingyuzhao.diskMirror.core.module.ModuleManager;
 import top.lingyuzhao.diskMirror.utils.PathGeneration;
 
 import java.util.HashMap;
@@ -14,6 +15,11 @@ import java.util.HashMap;
  * @author zhao
  */
 public class Config extends JSONObject {
+
+    static {
+        ModuleManager.init();
+    }
+
     /**
      * 用于文件存储的路径 配置项的名称
      */

@@ -1369,7 +1369,7 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 
 ### 更新记录
 
-#### 2024-09-09 1.2.6 版本发布
+#### 2024-09-09 1.2.7 版本发布
 
 - 将 `SkCheckModule` 模块注册！融合到服务中。
 

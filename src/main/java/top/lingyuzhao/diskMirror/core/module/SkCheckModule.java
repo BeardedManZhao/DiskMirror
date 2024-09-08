@@ -14,7 +14,7 @@ import java.util.Random;
  *
  * @author zhao
  */
-public class SkCheckModule extends VerificationModule {
+public class SkCheckModule implements VerificationModule {
 
     /**
      * id 与 安全密钥 存储容器
@@ -22,10 +22,6 @@ public class SkCheckModule extends VerificationModule {
     private static final HashMap<String, Integer> USER_ID_SK = new HashMap<>();
 
     private static final Random RANDOM = new Random();
-
-    static {
-        registerModule(new SkCheckModule());
-    }
 
     /**
      * 设置id 与 安全密钥
@@ -77,6 +73,11 @@ public class SkCheckModule extends VerificationModule {
                             showData
             );
         }
+    }
+
+    @Override
+    public String message() {
+        return "负责请求信息中 安全密钥 的校验工作！";
     }
 
     /**

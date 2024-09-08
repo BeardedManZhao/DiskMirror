@@ -2,7 +2,7 @@ package top.lingyuzhao.diskMirror.core;
 
 import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.conf.Config;
-import top.lingyuzhao.diskMirror.core.module.VerificationModule;
+import top.lingyuzhao.diskMirror.core.module.ModuleManager;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,7 +26,7 @@ public interface Adapter {
         if (jsonObject == null) {
             throw new UnsupportedOperationException("您提供的 json 对象为空，diskMirror 拒绝了您的访问\nThe json object you provided is empty, and diskMirror has denied your access\nerror json = null");
         }
-        VerificationModule.check(config, jsonObject);
+        ModuleManager.check(config, jsonObject);
     }
 
     /**
