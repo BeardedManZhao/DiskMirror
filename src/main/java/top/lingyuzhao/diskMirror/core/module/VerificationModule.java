@@ -12,7 +12,6 @@ import top.lingyuzhao.diskMirror.exception.CheckException;
 public interface VerificationModule {
 
     /**
-     *
      * @return 当前模块的作用以及其描述！
      */
     String message();

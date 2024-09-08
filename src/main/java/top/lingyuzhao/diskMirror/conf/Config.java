@@ -16,67 +16,58 @@ import java.util.HashMap;
  */
 public class Config extends JSONObject {
 
-    static {
-        ModuleManager.init();
-    }
-
     /**
      * 用于文件存储的路径 配置项的名称
      */
     public final static String ROOT_DIR = "root.dir";
-
     /**
      * HDFS  主节点链接路径配置名称
      */
     public static final String FS_DEFAULT_FS = "fs.defaultFS";
-
     /**
      * 用于文件路径生成 的配置项的名称
      */
     public final static String GENERATION_RULES = "generation.rules";
-
     /**
      * 操作正确之后要返回的值
      */
     public final static String OK_VALUE = "ok.value";
-
     /**
      * 操作结果对应的 key
      */
     public final static String RES_KEY = "resK";
-
     /**
      * 协议前缀
      */
     public final static String PROTOCOL_PREFIX = "protocol.prefix";
-
     /**
      * 请求的url中的参数, 当读取请求时，如果您有一些参数的需求，可以通过此配置设置一个 json 对象，如：{"op":"OPEN"}
      */
     public final static String PARAMS = "params";
-
     /**
      * 用户 盘镜 空间配额，每个用户只能使用固定容量的盘镜配额空间！ 这里是以字节为单位的数值 默认值为 128MB
      */
     public final static String USER_DISK_MIRROR_SPACE_QUOTA = "user.disk.mirror.space.quota";
-
     /**
      * 盘镜服务中的安全密钥配置，此密钥对应的如果是字符串，则会转换为 hash 值 如果是数值 则会被直接做为密钥
      * 设置了密钥之后，则在访问盘镜服务时，需要在请求的数据包中添加（secure.key, xxx）
      */
     public final static String SECURE_KEY = "secure.key";
-
     /**
      * 盘镜 服务中 所有与字符编码相关的操作，要使用的字符编码集。
      * <p>
      * The character encoding set to be used for all operations related to character encoding in the disk mirror service.
      */
     public final static String CHAR_SET = "diskMirror.charset";
-
     /**
      * 用户 盘镜 空间配合映射表，通过此处的映射操作可以获取到指定用户的空间的使用量最大值。
      */
     private final static JSONObject SPACE_SIZE = new JSONObject();
+
+    static {
+        // 初始化模块管理器
+        ModuleManager.init();
+    }
 
     /**
      * Constructs an empty <tt>HashMap</tt> with the default initial capacity
