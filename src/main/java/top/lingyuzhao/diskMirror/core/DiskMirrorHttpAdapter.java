@@ -12,7 +12,6 @@ import org.apache.http.util.EntityUtils;
 import top.lingyuzhao.diskMirror.conf.Config;
 import top.lingyuzhao.utils.IOUtils;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -212,7 +211,7 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
             this.httpPost.setURI(this.upload);
             this.httpPost.setEntity(
                     MultipartEntityBuilder.create()
-                            .addBinaryBody("params", jsonObject.toString().getBytes(this.charset), ContentType.APPLICATION_JSON.withCharset(this.charset), "params")                            .addBinaryBody("file", inputStream)
+                            .addBinaryBody("params", jsonObject.toString().getBytes(this.charset), ContentType.APPLICATION_JSON.withCharset(this.charset), "params").addBinaryBody("file", inputStream)
                             .setContentType(ContentType.MULTIPART_FORM_DATA)
                             .build()
             );

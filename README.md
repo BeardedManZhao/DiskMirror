@@ -19,7 +19,8 @@ url 等操作，这会大大减少您开发IO代码的时间。
 
 ## 为什么要选择 diskMirror
 
-diskMirror 可以简化IO操作，降低开发难度，同时提供了多种部署方式，您可以使用 maven 在您的项目中使用代码的方式，或者使用 http 服务器部署，还可以使用 starter，部署方式很简单也很灵活！
+diskMirror 可以简化IO操作，降低开发难度，同时提供了多种部署方式，您可以使用 maven 在您的项目中使用代码的方式，或者使用 http
+服务器部署，还可以使用 starter，部署方式很简单也很灵活！
 
 ## 关于 diskMirror 的使用！
 
@@ -1368,6 +1369,10 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 
 ### 更新记录
 
+#### 2024-09-09 1.2.6 版本发布
+
+- 将 `SkCheckModule` 模块注册！融合到服务中。
+
 #### 2024-09-01 1.2.5 版本发布
 
 - 为  `DiskMirror.DiskMirrorHttpAdapter` 适配器增加了对于新版本服务器的支持！
@@ -1383,6 +1388,7 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 
 #### 2024-06-17 1.2.3 版本发布
 
+- 将安全密钥模块与diskMirror分离，后期会融合起来 在 1.2.6 版本中进行了融合！
 - 新增 `top.lingyuzhao.diskMirror.core.DiskMirrorRequest`
   类，通过此类操作适配器将可以更简单且简洁的代码，例如下面的代码，效果和 [文件数据流写入方式](#文件数据流写入方式)
   中完全一致，但是 `top.lingyuzhao.diskMirror.core.DiskMirrorRequest` 可以减少代码量。

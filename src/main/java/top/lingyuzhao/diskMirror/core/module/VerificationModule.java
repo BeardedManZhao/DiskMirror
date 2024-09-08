@@ -15,8 +15,13 @@ public abstract class VerificationModule {
 
     private final static ArrayList<VerificationModule> VERIFICATION_MODULES = new ArrayList<>();
 
-    public VerificationModule() {
-        VERIFICATION_MODULES.add(this);
+    /**
+     * 将一个模块注册到校验器
+     *
+     * @param module 需要被注册的模块对象
+     */
+    public static void registerModule(VerificationModule module) {
+        VERIFICATION_MODULES.add(module);
     }
 
     public static void check(Config config, JSONObject jsonObject) throws CheckException {

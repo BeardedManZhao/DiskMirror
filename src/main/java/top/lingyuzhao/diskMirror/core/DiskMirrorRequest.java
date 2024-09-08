@@ -63,8 +63,8 @@ public class DiskMirrorRequest extends JSONObject {
     /**
      * 创建 Upload 和 remove 请求
      *
-     * @param userId 需要被获取到的空间的所属 id
-     * @param type   需要被获取到的空间的类型
+     * @param userId   需要被获取到的空间的所属 id
+     * @param type     需要被获取到的空间的类型
      * @param fileName 需要被操作的文件的名称
      * @return 操作结果！
      */
@@ -76,10 +76,10 @@ public class DiskMirrorRequest extends JSONObject {
     /**
      * 创建 reName 请求
      *
-     * @param userId 需要被获取到的空间的所属 id
-     * @param type   需要被获取到的空间的类型
+     * @param userId   需要被获取到的空间的所属 id
+     * @param type     需要被获取到的空间的类型
      * @param fileName 需要被操作的文件的名称
-     * @param newName 代表的是需要操作的文件的新名称
+     * @param newName  代表的是需要操作的文件的新名称
      * @return 操作结果！
      */
     public static DiskMirrorRequest reName(int userId, Type type, String fileName, String newName) {
