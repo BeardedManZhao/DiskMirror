@@ -211,7 +211,8 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
             this.httpPost.setURI(this.upload);
             this.httpPost.setEntity(
                     MultipartEntityBuilder.create()
-                            .addBinaryBody("params", jsonObject.toString().getBytes(this.charset), ContentType.APPLICATION_JSON.withCharset(this.charset), "params").addBinaryBody("file", inputStream)
+                            .addBinaryBody("params", jsonObject.toString().getBytes(this.charset), ContentType.APPLICATION_JSON.withCharset(this.charset), "params")
+                            .addBinaryBody("file", inputStream, ContentType.MULTIPART_FORM_DATA, "file")
                             .setContentType(ContentType.MULTIPART_FORM_DATA)
                             .build()
             );
