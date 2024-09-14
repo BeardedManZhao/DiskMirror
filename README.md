@@ -52,7 +52,7 @@ diskMirror 可以简化IO操作，降低开发难度，同时提供了多种部�
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.2.7</version>
+        <version>1.2.8</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -1373,7 +1373,7 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 
 > 修复更新：https://github.com/BeardedManZhao/DiskMirror/issues/15
 
-- 将 `DiskMirror.DiskMirrorHttpAdapter` 中的 `upload` 功能修复！ 
+- 将 `DiskMirror.DiskMirrorHttpAdapter` 中的 `upload` 功能修复！
 
 #### 2024-09-09 1.2.7 版本发布
 
