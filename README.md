@@ -52,7 +52,7 @@ diskMirror 可以简化IO操作，降低开发难度，同时提供了多种部�
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.2.8</version>
+        <version>1.2.9</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -1368,6 +1368,68 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 ```
 
 ### 更新记录
+
+#### 2024-09-20 1.2.9 版本发布
+
+- 为 `DiskMirror.DiskMirrorHttpAdapter` 适配器增加了转存支持，目录创建支持。
+- 为 `DiskMirror.DiskMirrorHttpAdapter` 适配器的错误信息进行了优化，错误信息更详细。
+- 为 `DiskMirrorRequest` 请求类增加了转存支持，目录创建支持。
+- 为 `DiskMirror.DiskMirrorHttpAdapter` 适配器的返回结果新增了 `statusLine` 字段。
+
+```java
+import com.alibaba.fastjson2.JSONObject;
+import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
+import top.lingyuzhao.diskMirror.core.Adapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+import top.lingyuzhao.diskMirror.core.DiskMirrorRequest;
+import top.lingyuzhao.diskMirror.core.Type;
+
+import java.io.IOException;
+
+/**
+ * @author zhao
+ */
+@DiskMirrorConfig(fsDefaultFS = "http://localhost:8080")
+public final class MAIN {
+    public static void main(String[] args) {
+        // 获取到 Http 适配器对象
+        final Adapter adapter = DiskMirror.DiskMirrorHttpAdapter.getAdapter(MAIN.class);
+
+        new Thread(() -> {
+            // 转存一个文件 首先构建请求对象 TODO 此操作是同步的，因此我们需要将其放到线程中，实现异步调用 transferDepositStatus （如果不需要 transferDepositStatus 可以不使用线程）
+            final DiskMirrorRequest diskMirrorRequest = DiskMirrorRequest.transferDeposit(
+                    1, Type.Binary, "algorithmStar-1.42-javadoc.jar",
+                    // 下面是被转存的文件在互联网中的 http 地址
+                    "https://s01.oss.sonatype.org/content/repositories/releases/io/github/BeardedManZhao/algorithmStar/1.42/algorithmStar-1.42-javadoc.jar"
+            );
+            // 然后使用请求对象开始进行转存操作
+            final JSONObject jsonObject;
+            try {
+                System.out.println("转存开始");
+                jsonObject = adapter.transferDeposit(diskMirrorRequest);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            System.out.println(jsonObject);
+        }).start();
+
+        new Thread(() -> {
+            // TODO 由于转存文件的操作是阻塞的，因此我们如果期望获取到正在转存的数据结果 这里就需要使用一个线程来获取结果 在这里启动一个线程来获取转存信息
+            // 为了确保缓存开始了，我们等待1000ms 这个时间根据您自己的情况来调整
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            // 获取到转存的所有文件列表 首先构建请求对象
+            final DiskMirrorRequest transferDepositStatus = DiskMirrorRequest.transferDepositStatus(1, Type.Binary);
+            // 获取到所有的转存文件信息
+            final JSONObject mkdirs1 = adapter.transferDepositStatus(transferDepositStatus);
+            System.out.println(mkdirs1);
+        }).start();
+    }
+}
+```
 
 #### 2024-09-14 1.2.8 版本发布
 

@@ -22,6 +22,7 @@ public class DiskMirrorRequest extends JSONObject {
      */
     protected DiskMirrorRequest(Map map) {
         super(map);
+        this.setSk(0);
     }
 
     protected DiskMirrorRequest(int initialCapacity) {
@@ -72,6 +73,41 @@ public class DiskMirrorRequest extends JSONObject {
         return getUrls(userId, type).setFileName(fileName);
     }
 
+    /**
+     * 创建 Upload 和 remove 请求
+     *
+     * @param userId  需要被获取到的空间的所属 id
+     * @param type    需要被获取到的空间的类型
+     * @param dirName 需要被创建的文件夹名称
+     * @return 操作结果！
+     */
+    public static DiskMirrorRequest mkdirs(int userId, Type type, String dirName) {
+        return getUrls(userId, type).setDirName(dirName);
+    }
+
+    /**
+     * 创建 transferDeposit 请求
+     *
+     * @param userId 需要被操作到的空间的所属 id
+     * @param type   需要被操作到的空间的类型
+     * @return 操作结果！
+     */
+    public static DiskMirrorRequest transferDepositStatus(int userId, Type type) {
+        return getUrls(userId, type);
+    }
+
+    /**
+     * 创建 transferDeposit 请求
+     *
+     * @param userId   需要被操作到的空间的所属 id
+     * @param type     需要被操作到的空间的类型
+     * @param fileName 需要被操作的文件的名称，文件被转存成功后，要存储在哪个位置
+     * @param url      需要被操作的文件的 url
+     * @return 操作结果！
+     */
+    public static DiskMirrorRequest transferDeposit(int userId, Type type, String fileName, String url) {
+        return uploadRemove(userId, type, fileName).setUrl(url);
+    }
 
     /**
      * 创建 reName 请求
@@ -116,6 +152,28 @@ public class DiskMirrorRequest extends JSONObject {
      */
     public DiskMirrorRequest setFileName(String fileName) {
         this.put("fileName", fileName);
+        return this;
+    }
+
+    /**
+     * 设置当前的请求对象中 fileName
+     *
+     * @param fileName 代表的是需要操作的文件的名称
+     * @return 当前的请求对象
+     */
+    public DiskMirrorRequest setDirName(String fileName) {
+        this.put("dirName", fileName);
+        return this;
+    }
+
+    /**
+     * 设置当前的请求对象中 fileName
+     *
+     * @param url 请求对象中的 url 参数
+     * @return 当前的请求对象
+     */
+    public DiskMirrorRequest setUrl(String url) {
+        this.put("url", url);
         return this;
     }
 

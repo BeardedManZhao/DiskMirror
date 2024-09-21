@@ -258,7 +258,6 @@ public interface Adapter {
      * 查询当前用户转存状态
      *
      * @param jsonObject {
-     *                   fileName     文件目录名称
      *                   userId      空间id
      *                   type        文件类型,
      *                   secure.key  加密密钥

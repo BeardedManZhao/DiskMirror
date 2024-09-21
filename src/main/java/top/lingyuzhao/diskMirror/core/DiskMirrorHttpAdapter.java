@@ -3,6 +3,8 @@ package top.lingyuzhao.diskMirror.core;
 import com.alibaba.fastjson2.JSONException;
 import com.alibaba.fastjson2.JSONObject;
 import org.apache.http.HttpEntity;
+import org.apache.http.StatusLine;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
@@ -38,7 +40,7 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
     private final Charset charset;
     private final CloseableHttpClient httpClient;
     private final HttpPost httpPost;
-    private final URI upload, remove, getUrls, mkdirs, reName, version, useSize, setSpaceSk;
+    private final URI upload, remove, getUrls, mkdirs, reName, version, useSize, setSpaceSk, transferDeposit, transferDepositStatus;
     private final String downLoad;
     private final String getSpaceMaxSizeURL;
 
@@ -71,6 +73,8 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
             mkdirs = new URI(url + "mkdirs");
             reName = new URI(url + "reName");
             useSize = new URI(url + "getUseSize");
+            transferDeposit = new URI(url + "transferDeposit");
+            transferDepositStatus = new URI(url + "transferDepositStatus");
             downLoad = url + "downLoad/";
             getSpaceMaxSizeURL = url + "getSpaceSize?";
             setSpaceSk = new URI(url + "setSpaceSk");
@@ -80,17 +84,34 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
         }
     }
 
-    private JSONObject getJsonObject(String string, URI url) {
+    /**
+     * 根据情况将结果构建出来
+     *
+     * @param string       返回的数据
+     * @param url          请求的url
+     * @param statusLine   状态行
+     * @param checkOkValue 如果需要检查返回结果中的 okValue 则可以设置为 true 反之不需要
+     * @return 处理的结果
+     */
+    private JSONObject getJsonObject(String string, URI url, StatusLine statusLine, boolean checkOkValue) {
         try {
             final JSONObject jsonObject = JSONObject.parseObject(string);
             final String string1 = jsonObject.getString(config.getString(Config.RES_KEY));
-            if (string1.equals(config.getString(Config.OK_VALUE))) {
-                return jsonObject;
+            if (checkOkValue) {
+                if (string1.equals(config.getString(Config.OK_VALUE))) {
+                    jsonObject.put("statusLine", statusLine);
+                    return jsonObject;
+                } else {
+                    throw new JSONException(string1);
+                }
             } else {
-                throw new JSONException(string1);
+                jsonObject.put("statusLine", statusLine);
+                return jsonObject;
             }
         } catch (JSONException e) {
             throw new JSONException(url.toString() + ':' + string, e);
+        } catch (NullPointerException e) {
+            throw new UnsupportedOperationException("此操作可能未被支持，或无法连接到服务器！error url: " + url + "; status: " + statusLine, e);
         }
     }
 
@@ -216,11 +237,13 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
                             .setContentType(ContentType.MULTIPART_FORM_DATA)
                             .build()
             );
-            final HttpEntity entity = httpClient.execute(this.httpPost).getEntity();
-            final String string = EntityUtils.toString(entity);
-            IOUtils.close(inputStream);
-            EntityUtils.consume(entity);
-            return getJsonObject(string, this.upload);
+            try (final CloseableHttpResponse execute = httpClient.execute(this.httpPost)) {
+                final HttpEntity entity = execute.getEntity();
+                final String string = EntityUtils.toString(entity);
+                IOUtils.close(inputStream);
+                EntityUtils.consume(entity);
+                return getJsonObject(string, this.upload, execute.getStatusLine(), true);
+            }
         } else {
             throw new UnsupportedOperationException("您的参数中没有包含 fileName 或者 参数为 空，因此无法将您的请求交由后端服务器处理！\nYour parameter does not include fileName or is empty, so your request cannot be handed over to the backend server for processing!\nerror params => " + jsonObject);
         }
@@ -356,6 +379,19 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
      * @throws IOException 请求发送过程出现错误则返回此异常对象
      */
     protected JSONObject request(JSONObject jsonObject, URI conPath) throws IOException {
+        return request(jsonObject, conPath, true);
+    }
+
+    /**
+     * 统一的请求发送格式
+     *
+     * @param jsonObject 请求参数
+     * @param conPath    控制器处理服务路径
+     * @param check      是否检查返回结果中的okValue
+     * @return 从远程服务器获取的响应处理结果
+     * @throws IOException 请求发送过程出现错误则返回此异常对象
+     */
+    protected JSONObject request(JSONObject jsonObject, URI conPath, boolean check) throws IOException {
         this.httpPost.setURI(conPath);
         this.httpPost.setEntity(
                 MultipartEntityBuilder.create()
@@ -363,10 +399,12 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
                         .setContentType(ContentType.MULTIPART_FORM_DATA)
                         .build()
         );
-        final HttpEntity entity = httpClient.execute(this.httpPost).getEntity();
-        final String string = EntityUtils.toString(entity);
-        EntityUtils.consume(entity);
-        return getJsonObject(string, this.httpPost.getURI());
+        try (final CloseableHttpResponse execute = httpClient.execute(this.httpPost)) {
+            final HttpEntity entity = execute.getEntity();
+            final String string = EntityUtils.toString(entity);
+            EntityUtils.consume(entity);
+            return getJsonObject(string, this.httpPost.getURI(), execute.getStatusLine(), check);
+        }
     }
 
     /**
@@ -417,5 +455,34 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
         } catch (URISyntaxException | IOException e) {
             throw new UnsupportedOperationException(e);
         }
+    }
+
+    @Override
+    public JSONObject transferDeposit(JSONObject jsonObject) throws IOException {
+        return this.request(jsonObject, this.transferDeposit);
+    }
+
+    @Override
+    public JSONObject transferDeposit(JSONObject jsonObject, URL url) throws IOException {
+        return super.transferDeposit(DiskMirrorRequest.createFrom(jsonObject).setUrl(url.toString()));
+    }
+
+    @Override
+    public JSONObject transferDepositStatus(JSONObject jsonObject) {
+        try {
+            return this.request(jsonObject, this.transferDepositStatus, false);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void setSpaceMaxSize(String spaceId, long maxSize, int sk) {
+        throw unsupportedOperationException;
+    }
+
+    @Override
+    public JSONObject getAllProgressBar(String id) {
+        throw  unsupportedOperationException;
     }
 }
