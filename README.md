@@ -68,7 +68,7 @@ url 等操作，这会大大减少您开发IO代码的时间。
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.2.9</version>
+        <version>1.3.0</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -77,10 +77,11 @@ url 等操作，这会大大减少您开发IO代码的时间。
         <!--        <scope>provided</scope>-->
     </dependency>
     <!-- 从 disk Mirror 1.1.0 版本开始 请确保 zhao-utils 的版本 >= 1.0.20240121 -->
+    <!-- 从 disk Mirror 1.3.0 版本开始 请确保 zhao-utils 的版本 >= 1.0.20241026 -->
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>zhao-utils</artifactId>
-        <version>1.0.20240327</version>
+        <version>1.0.20241026</version>
         <!--        <scope>provided</scope>-->
     </dependency>
     <!-- 如果需要对接 HDFS 才导入 如果不需要就不导入此依赖 -->
@@ -125,6 +126,7 @@ url 等操作，这会大大减少您开发IO代码的时间。
 | urls         | array   | 一般来说，这个代表的是一个目录中包含的所有子文件/目录对象的列表，常常会在 [`getUrls`](#从适配器中读取数据) 中见到 | 输出    |
 | maxSize      | long    | 当前用户空间中某个类型的文件最大使用量，按照字节为单位                                       | 输出    |
 | useAgreement | boolean | 是否使用了协议前缀 如过此值不为 undefined/null 且 为 true 则代表使用了协议前缀 否则代表没有使用协议前缀  | 输出    |
+| suffix       | String  | 如果请求被 `HandleModule.ImageCompressModule` 处理过，则可能会包含此字段，字段值为文件的后缀名 | 输出    |
 
 接下来我们将演示如何使用 盘镜 进行一些基本的 CRUD 操作，能够实现在文件系统中的文件管理操作。
 
@@ -1384,6 +1386,61 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 ```
 
 ### 更新记录
+
+#### 2024-10-26 1.3.0 版本发布
+
+- 新增了处理模块，所有被装载到适配器的模块，都会在接收到文件数据流的时候被尝试调用（在模块可以处理的前提下，若模块无法处理，则不会被调用）
+- 新增了 `HandleModule.ImageCompressModule` 模块，用于对图片进行压缩，压缩模式默认为 `PalettePng.RGB_8`
+
+```java
+import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
+import top.lingyuzhao.diskMirror.core.Adapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+import top.lingyuzhao.diskMirror.core.DiskMirrorRequest;
+import top.lingyuzhao.diskMirror.core.Type;
+import top.lingyuzhao.diskMirror.core.module.HandleModule;
+import top.lingyuzhao.utils.PalettePng;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+
+/**
+ * @author zhao
+ */
+@DiskMirrorConfig()
+public final class MAIN {
+    public static void main(String[] args) throws IOException {
+        final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(MAIN.class);
+        // 修改压缩模式，这里我们使用的是 png RGB 8位 压缩 如果期望使用其他压缩模式可以自行修改
+        HandleModule.ImageCompressModule.setImageCompress(PalettePng.RGB_8);
+        // 将压缩处理器装到适配器中
+        adapter.addHandleModule(HandleModule.ImageCompressModule);
+        // 上传一个 png 图片~
+        try (final FileInputStream fileInputStream = new FileInputStream("C:\\Users\\zhao\\Downloads\\图片2.png")) {
+            final DiskMirrorRequest diskMirrorRequest = DiskMirrorRequest.uploadRemove(
+                    // 在这里的 fileName 如果是以 png 等格式结尾的话，则会经由 ImageCompressModule 进行压缩处理
+                    1, Type.Binary, "图片21.png"
+            );
+            System.out.println(
+                    adapter.upload(fileInputStream, diskMirrorRequest)
+            );
+        }
+
+        // 移除模块之后 将不会再压缩
+        adapter.deleteHandleModule(HandleModule.ImageCompressModule);
+        // 上传一个 png 图片~
+        try (final FileInputStream fileInputStream = new FileInputStream("C:\\Users\\zhao\\Downloads\\图片2.png")) {
+            final DiskMirrorRequest diskMirrorRequest = DiskMirrorRequest.uploadRemove(
+                    // 这里的 fileName 即使是 png 也不会被压缩 因为压缩模块被移除了
+                    1, Type.Binary, "图片211.png"
+            );
+            System.out.println(
+                    adapter.upload(fileInputStream, diskMirrorRequest)
+            );
+        }
+    }
+}
+```
 
 #### 2024-09-20 1.2.9 版本发布
 

@@ -2,6 +2,7 @@ package top.lingyuzhao.diskMirror.core;
 
 import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.conf.Config;
+import top.lingyuzhao.diskMirror.core.module.HandleModule;
 import top.lingyuzhao.diskMirror.core.module.ModuleManager;
 
 import java.io.IOException;
@@ -28,6 +29,20 @@ public interface Adapter {
         }
         ModuleManager.check(config, jsonObject);
     }
+
+    /**
+     * 将一个模块添加到处理模块中，此模块将会在接收到数据之后被调用！
+     *
+     * @param handler 需要被添加的处理模块，此模块将会在接收到数据之后被调用！
+     */
+    void addHandleModule(HandleModule handler);
+
+    /**
+     * 移除一个模块
+     *
+     * @param handler 需要被移除的处理模块
+     */
+    void deleteHandleModule(HandleModule handler);
 
     /**
      * 获取到适配器配置类对象

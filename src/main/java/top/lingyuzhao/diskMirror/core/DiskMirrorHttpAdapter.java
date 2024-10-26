@@ -483,6 +483,6 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
 
     @Override
     public JSONObject getAllProgressBar(String id) {
-        throw  unsupportedOperationException;
+        throw unsupportedOperationException;
     }
 }

@@ -2,6 +2,7 @@ package top.lingyuzhao.diskMirror.core;
 
 import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.conf.Config;
+import top.lingyuzhao.diskMirror.core.module.HandleModule;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -71,6 +72,16 @@ public class AdapterPacking implements Adapter {
      */
     public Adapter getSubAdapter() {
         return this.subAdapter;
+    }
+
+    @Override
+    public void addHandleModule(HandleModule handler) {
+        this.subAdapter.addHandleModule(handler);
+    }
+
+    @Override
+    public void deleteHandleModule(HandleModule handler) {
+        this.subAdapter.deleteHandleModule(handler);
     }
 
     @Override

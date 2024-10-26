@@ -2,6 +2,7 @@ package top.lingyuzhao.diskMirror.core;
 
 import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.conf.Config;
+import top.lingyuzhao.diskMirror.core.module.HandleModule;
 import top.lingyuzhao.diskMirror.core.module.SkCheckModule;
 import top.lingyuzhao.diskMirror.utils.JsonUtils;
 import top.lingyuzhao.diskMirror.utils.PathGeneration;
@@ -36,6 +37,7 @@ public abstract class FSAdapter implements Adapter {
      * 转存操作记录类
      */
     protected final HashMap<String, JSONObject> transferDepositMap = new HashMap<>();
+    private final HashMap<String, HandleModule> handleModules = new HashMap<>();
 
     /**
      * 构建一个适配器
@@ -335,7 +337,7 @@ public abstract class FSAdapter implements Adapter {
         }
         jsonObject.put("streamSize", inputSize);
         try {
-            final JSONObject jsonObject1 = pathProcessorUpload(path[2], path[3], jsonObject, inputStream);
+            final JSONObject jsonObject1 = pathProcessorUpload(path[2], path[3], jsonObject, this.handler(inputStream, jsonObject));
             jsonObject1.put("useSize", l);
             jsonObject1.put("maxSize", maxSize);
             return jsonObject1;
@@ -695,6 +697,49 @@ public abstract class FSAdapter implements Adapter {
             return true;
         }
         return false;
+    }
+
+    /**
+     * 将一个模块添加到处理模块中
+     *
+     * @param handler 需要被添加的处理模块，此模块将会在接收到数据之后被调用！
+     */
+    public void addHandleModule(HandleModule handler) {
+        this.handleModules.put(handler.name(), handler);
+    }
+
+    /**
+     * 处理模块，此函数会调用所有的处理模块，处理模块会返回一个处理之后的流，如果没有处理模块，则直接返回输入流
+     *
+     * @param inputStream 输入流
+     * @param inJson      输入流数据对应的 json 请求对象
+     * @return 处理之后的流
+     * @throws IOException 操作异常
+     */
+    public InputStream handler(InputStream inputStream, JSONObject inJson) throws IOException {
+        if (handleModules.isEmpty()) {
+            return inputStream;
+        }
+        InputStream handler = inputStream;
+        try {
+            for (HandleModule handleModule : handleModules.values()) {
+                if (!handleModule.isSupport(inJson)) {
+                    continue;
+                }
+                InputStream handlerTemp = handleModule.handler(handler, inJson);
+                handler.close();
+                handler = handlerTemp;
+            }
+        } catch (IOException e) {
+            handler.close();
+            throw e;
+        }
+        return handler;
+    }
+
+    @Override
+    public void deleteHandleModule(HandleModule handler) {
+        this.handleModules.remove(handler.name());
     }
 
     /**
