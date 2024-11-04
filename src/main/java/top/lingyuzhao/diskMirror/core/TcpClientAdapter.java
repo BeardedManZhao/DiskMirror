@@ -51,9 +51,9 @@ public class TcpClientAdapter extends FSAdapter {
             // 等待回复
             final String s = metaI.readUTF();
             if (s.equals("ok")) {
-                metaO.writeLong(inputStream.available());
-                final ProgressBar progressBar = new ProgressBar(inJson.getString("userId"), inJson.getString("fileName"));
                 final Long streamSize = inJson.getLong("streamSize");
+                metaO.writeLong(streamSize);
+                final ProgressBar progressBar = new ProgressBar(inJson.getString("userId"), inJson.getString("fileName"));
                 progressBar.setMaxSize(streamSize);
                 try (final Socket socket1 = new Socket((String) string[0], (Integer) string[2]);
                      final BufferedOutputStream fileO = new BufferedOutputStream(socket1.getOutputStream())) {
@@ -139,7 +139,7 @@ public class TcpClientAdapter extends FSAdapter {
     @Override
     public JSONObject upload(InputStream inputStream, JSONObject jsonObject, long streamSize) throws IOException {
         // 首先获取到使用的空间占用
-        jsonObject.put("streamSize", streamSize);
+        jsonObject.put("streamSize", streamSize < 0 ? inputStream.available() : streamSize);
         return this.pathProcessorUpload("", "", jsonObject, inputStream);
     }
 
