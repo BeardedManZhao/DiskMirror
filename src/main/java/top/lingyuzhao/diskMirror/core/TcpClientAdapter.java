@@ -11,7 +11,9 @@ import java.io.*;
 import java.net.Socket;
 
 /**
- * @author zhao
+ * 专门用来对接 tcp 适配器 服务端的客户端适配器！
+ *
+ * @author 赵凌宇
  */
 public class TcpClientAdapter extends FSAdapter {
 
@@ -104,9 +106,10 @@ public class TcpClientAdapter extends FSAdapter {
     protected InputStream pathProcessorDownLoad(String path, JSONObject inJson) throws IOException {
         final Socket socket = new Socket((String) string[0], (Integer) string[1]);
         final DataOutputStream metaO = new DataOutputStream(socket.getOutputStream());
+        final AutoCloseableInputStream autoCloseableInputStream = new AutoCloseableInputStream(socket);
         metaO.writeUTF("download");
         metaO.writeUTF(inJson.toString());
-        return new AutoCloseableInputStream(socket);
+        return autoCloseableInputStream;
     }
 
     @Override
@@ -135,6 +138,8 @@ public class TcpClientAdapter extends FSAdapter {
 
     @Override
     public JSONObject upload(InputStream inputStream, JSONObject jsonObject, long streamSize) throws IOException {
+        // 首先获取到使用的空间占用
+        jsonObject.put("streamSize", streamSize);
         return this.pathProcessorUpload("", "", jsonObject, inputStream);
     }
 

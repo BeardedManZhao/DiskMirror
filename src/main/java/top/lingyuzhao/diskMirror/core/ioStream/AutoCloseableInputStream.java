@@ -17,7 +17,11 @@ public class AutoCloseableInputStream extends InputStream implements AutoCloseab
     private final Socket socket;
 
     public AutoCloseableInputStream(Socket socket) throws IOException {
-        this.stream = new DataInputStream(socket.getInputStream());
+        this(socket, socket.getInputStream());
+    }
+
+    public AutoCloseableInputStream(Socket socket, InputStream inputStream) {
+        this.stream = new DataInputStream(inputStream);
         this.socket = socket;
     }
 

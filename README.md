@@ -68,7 +68,7 @@ url 等操作，这会大大减少您开发IO代码的时间。
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.3.0</version>
+        <version>1.3.1</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -1386,6 +1386,10 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 ```
 
 ### 更新记录
+
+#### 2024-11-04 1.3.1 版本发布
+
+- 修复 `TcpClientAdapter` 适配器中，调用 upload 操作会空指针的情况~
 
 #### 2024-10-26 1.3.0 版本发布
 
