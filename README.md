@@ -1527,6 +1527,41 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 
 ## 更新记录
 
+### 2024-11-27 1.3.4 版本发布
+
+- 为 `setSpaceSk` 方法进行了启用，我们将开始允许用户自定义加密密钥，这能够实现动态的密钥设置，数据将会更安全。
+
+```java
+import com.alibaba.fastjson2.JSONObject;
+import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
+import top.lingyuzhao.diskMirror.core.Adapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+import top.lingyuzhao.diskMirror.core.DiskMirrorRequest;
+import top.lingyuzhao.diskMirror.core.Type;
+
+import java.io.IOException;
+
+/**
+ * @author zhao
+ */
+@DiskMirrorConfig(fsDefaultFS = "https://xxxxxx")
+public final class MAIN {
+    public static void main(String[] args) throws IOException {
+        // 获取到链接服务器的客户端 http 适配器
+        final Adapter adapter = DiskMirror.DiskMirrorHttpAdapter.getAdapter(MAIN.class);
+        // 3457834578 是服务器的配置文件中的密钥 这个密钥不可外露 只有这个密钥可以修改任何用户空间的 sk
+        final int i = adapter.setSpaceSk("1", 3457834578);
+        // 这里的 i 就是更新之后的密钥了
+        System.out.println(i);
+        // 可以使用新密钥操作 TODO 假设服务器设置了 "SkCheckModule$read"
+        final JSONObject urls = adapter.getUrls(
+                DiskMirrorRequest.getUrls(1, Type.Binary).setSk(i)
+        );
+        System.out.println(urls);
+    }
+}
+```
+
 ### 2024-11-27 1.3.3 版本发布
 
 - 优化了验证模块的管理逻辑，移除了 `SkCheckModule`

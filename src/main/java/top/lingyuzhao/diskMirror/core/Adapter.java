@@ -330,7 +330,19 @@ public interface Adapter {
      * @return 操作成功之后，在这里会返回密钥对应的结果，我们需要将此参数返回给客户端，由客户端去使用！
      * @throws IOException 操作异常
      */
-    int setSpaceSk(String id) throws IOException;
+    default int setSpaceSk(String id) throws IOException {
+        return setSpaceSk(id, 0);
+    }
+
+    /**
+     * 设置指定空间 id 的 sk 访问密钥 若无设置则使用默认密钥
+     *
+     * @param id 需要被设置的 空间 id
+     * @param sk 调用此接口的密钥 此密钥应为来自 config.getSecureKey() 的返回值！！！
+     * @return 操作成功之后，在这里会返回密钥对应的结果，我们需要将此参数返回给客户端，由客户端去使用！
+     * @throws IOException 操作异常
+     */
+    int setSpaceSk(String id, int sk) throws IOException;
 
     /**
      * 获取指定空间 id 的最大占用量，此函数的返回值是空间最大容量的字节数值。

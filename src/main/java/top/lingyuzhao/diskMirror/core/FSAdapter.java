@@ -566,8 +566,12 @@ public abstract class FSAdapter implements Adapter {
     }
 
     @Override
-    public int setSpaceSk(String id) throws IOException {
-        return SkCheckModule.setUserSk(id);
+    public int setSpaceSk(String id, int sk) throws IOException {
+        // 与默认的 sk 一致，则算是通过 可以修改
+        if (config.getSecureKey() == sk) {
+            return SkCheckModule.setUserSk(id);
+        }
+        throw new IOException("密钥错误，无法修改！此密钥应为您的服务器配置文件中设置！");
     }
 
     /**
