@@ -23,11 +23,24 @@ public interface Adapter {
      * @param config     需要使用的适配器的配置类对象
      * @param jsonObject 需要被检查的 json 对象
      */
-    static void checkJsonObj(Config config, JSONObject jsonObject) {
+    static void checkJsonObjRead(Config config, JSONObject jsonObject) {
         if (jsonObject == null) {
             throw new UnsupportedOperationException("您提供的 json 对象为空，diskMirror 拒绝了您的访问\nThe json object you provided is empty, and diskMirror has denied your access\nerror json = null");
         }
-        ModuleManager.check(config, jsonObject);
+        ModuleManager.checkRead(config, jsonObject);
+    }
+
+    /**
+     * 检查函数 此函数会处于所有服务函数的第一行
+     *
+     * @param config     需要使用的适配器的配置类对象
+     * @param jsonObject 需要被检查的 json 对象
+     */
+    static void checkJsonObjWriter(Config config, JSONObject jsonObject) {
+        if (jsonObject == null) {
+            throw new UnsupportedOperationException("您提供的 json 对象为空，diskMirror 拒绝了您的访问\nThe json object you provided is empty, and diskMirror has denied your access\nerror json = null");
+        }
+        ModuleManager.checkWriter(config, jsonObject);
     }
 
     /**

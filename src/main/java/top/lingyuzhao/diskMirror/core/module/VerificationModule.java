@@ -12,9 +12,32 @@ import top.lingyuzhao.diskMirror.exception.CheckException;
 public interface VerificationModule {
 
     /**
+     * @return 当前模块的名称！
+     */
+    String name();
+
+    /**
      * @return 当前模块的作用以及其描述！
      */
     String message();
+
+    /**
+     * 是否在读操作 中生效
+     *
+     * @return true 表示在读操作中生效
+     */
+    default boolean isRead() {
+        return ModuleManager.checkIsRegisterRead(this.name());
+    }
+
+    /**
+     * 是否在写操作 中生效
+     *
+     * @return true 表示在写操作中生效
+     */
+    default boolean isWriter() {
+        return ModuleManager.checkIsRegisterWriter(this.name());
+    }
 
     void checkFun(Config config, JSONObject jsonObject) throws CheckException;
 }

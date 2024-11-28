@@ -1,7 +1,6 @@
 package top.lingyuzhao.diskMirror.conf;
 
 import com.alibaba.fastjson2.JSONObject;
-import top.lingyuzhao.diskMirror.core.module.ModuleManager;
 import top.lingyuzhao.diskMirror.utils.PathGeneration;
 
 import java.util.HashMap;
@@ -63,11 +62,6 @@ public class Config extends JSONObject {
      * 用户 盘镜 空间配合映射表，通过此处的映射操作可以获取到指定用户的空间的使用量最大值。
      */
     private final static JSONObject SPACE_SIZE = new JSONObject();
-
-    static {
-        // 初始化模块管理器
-        ModuleManager.init();
-    }
 
     /**
      * Constructs an empty <tt>HashMap</tt> with the default initial capacity

@@ -68,7 +68,7 @@ url 等操作，这会大大减少您开发IO代码的时间。
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.3.2</version>
+        <version>1.3.3</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -826,6 +826,146 @@ public final class MAIN {
 
 ---- 
 
+### 模块管理器
+
+在 1.3.3 版本中，我们对模块管理器进行了重大改进，使其更加灵活和高效。具体改进如下：
+模块分离：模块管理器现在独立出来，用户可以直接对其进行操作。
+读写校验模块：模块管理器中存储了读写操作的校验模块。每次请求到达时，系统会根据请求类型选择相应的读或写校验模块，并依次进行校验，直至所有校验通过。
+增强灵活性：与之前的版本相比，新的模块管理器不再局限于单一的 sk 校验模块，默认追加的校验模块也支持读写分流管控，大大提升了系统的灵活性和可配置性。
+接下来，我们将详细介绍如何使用请求校验模块。
+
+#### 将一个校验模块加入到校验模块管理器中
+
+```java
+import top.lingyuzhao.diskMirror.core.module.ModuleManager;
+import top.lingyuzhao.diskMirror.core.module.SkCheckModule;
+
+/**
+ * @author zhao
+ */
+public final class MAIN {
+    public static void main(String[] args) {
+        // 实例化 sk 校验模块
+        final SkCheckModule skCheckModule = new SkCheckModule(
+                // 分别是模块名，以及提示信息
+                "skCheck", "用于校验请求中的 sk 信息"
+        );
+
+        // 将 skCheckModule 注册到 读操作校验管理模块
+        ModuleManager.registerModuleRead(skCheckModule);
+        // 将 skCheckModule 注册到 写操作校验管理模块
+        ModuleManager.registerModuleWriter(skCheckModule);
+    }
+}
+```
+
+#### 将一个模块从校验器中取出
+
+```java
+import top.lingyuzhao.diskMirror.core.module.ModuleManager;
+import top.lingyuzhao.diskMirror.core.module.VerificationModule;
+
+/**
+ * @author zhao
+ */
+public final class MAIN {
+    public static void main(String[] args) {
+        // 尝试从模块管理器移除名为 skCheck 的模块！
+        final VerificationModule skCheck0 = ModuleManager.removeVerificationModuleRead("skCheck");
+        final VerificationModule skCheck1 = ModuleManager.removeVerificationModuleWriter("skCheck");
+        // 如果成功移除的话 这里会打印出数据 如果没有成功移除 这里是 null
+        System.out.println(skCheck0);
+        System.out.println(skCheck1);
+    }
+}
+```
+
+### 校验模块
+
+此模块是来处理请求的，其可以实现请求中的一些校验，例如校验请求中的参数。
+
+您可以根据自己的需求实现一个自己需要的校验模块，实现操作只需要继承 `Verification` 类即可！
+
+#### 查看校验模块是否支持读或写操作
+
+```java
+import top.lingyuzhao.diskMirror.core.module.ModuleManager;
+import top.lingyuzhao.diskMirror.core.module.SkCheckModule;
+
+/**
+ * @author zhao
+ */
+public final class MAIN {
+    public static void main(String[] args) {
+        final SkCheckModule skCheckModule = new SkCheckModule("test", "一个用来测试的模块");
+        // 这个时候都是 false 因为其没有被装载到模块管理器中
+        System.out.println(skCheckModule.isRead());
+        System.out.println(skCheckModule.isWriter());
+
+        // 将模块注册到读模块管理器中
+        ModuleManager.registerModuleRead(skCheckModule);
+
+        // 这个时候Read是 true 因为其被装载到读操作模块管理器中
+        System.out.println(skCheckModule.isRead());
+        System.out.println(skCheckModule.isWriter());
+    }
+}
+```
+
+#### 综合示例
+
+```java
+import com.alibaba.fastjson2.JSONObject;
+import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
+import top.lingyuzhao.diskMirror.core.Adapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+import top.lingyuzhao.diskMirror.core.DiskMirrorRequest;
+import top.lingyuzhao.diskMirror.core.Type;
+import top.lingyuzhao.diskMirror.core.module.ModuleManager;
+import top.lingyuzhao.diskMirror.core.module.SkCheckModule;
+import top.lingyuzhao.diskMirror.core.module.VerificationModule;
+
+import java.io.IOException;
+
+/**
+ * @author zhao
+ */
+@DiskMirrorConfig(
+        secureKey = 123456
+)
+public final class MAIN {
+    public static void main(String[] args) throws IOException {
+        // 准备一个适配器 这个时候虽然设置了密钥，但是由于密钥校验模块没被加载，因此密钥将会被忽略
+        final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(MAIN.class);
+        // 尝试进行 url 获取 TODO 这个时候请求中是没有密钥的 但可以成功获取到数据
+        final JSONObject urls = adapter.getUrls(DiskMirrorRequest.getUrls(1, Type.Binary));
+        System.out.println(urls);
+
+        // 实例化 sk 校验模块
+        final SkCheckModule skCheckModule = new SkCheckModule(
+                // 分别是模块名，以及提示信息
+                "skCheck", "用于校验请求中的 sk 信息"
+        );
+        // 装载验证模块
+        ModuleManager.registerModule(skCheckModule);
+
+        // 尝试进行 url 获取 TODO 现在这个时候是有密钥校验的，因此这个时候会出现错误
+        final JSONObject urls1 = adapter.getUrls(DiskMirrorRequest.getUrls(1, Type.Binary));
+        System.out.println(urls1);
+
+        // 移除模块 此操作会将注册的对象返回出来
+        final VerificationModule skCheck = ModuleManager.removeVerificationModuleRead("skCheck");
+        final VerificationModule skCheck1 = ModuleManager.removeVerificationModuleWriter("skCheck");
+        System.out.println("被取出的读操作模块：" + skCheck);
+        System.out.println("被取出的写操作模块：" + skCheck1);
+
+        // 尝试进行 url 获取 TODO 这个时候校验就消失了
+        final JSONObject urls2 = adapter.getUrls(DiskMirrorRequest.getUrls(1, Type.Binary));
+        System.out.println(urls2);
+    }
+}
+```
+
 ## 综合使用示例
 
 ### 本地文件系统 适配器使用示例
@@ -1385,13 +1525,20 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 进程已结束，退出代码为 0
 ```
 
-### 更新记录
+## 更新记录
 
-#### 2024-11-04 1.3.2 版本发布
+### 2024-11-27 1.3.3 版本发布
+
+- 优化了验证模块的管理逻辑，移除了 `SkCheckModule`
+  的默认添加，您可以手动使用 `ModuleManager.registerModule(new SkCheckModule())` 添加，且可以实现您自己的校验模块！
+
+- 优化了适配器模块的加载逻辑，使其能够更灵活的进行配置，并且能够更灵活的进行模块的加载！
+
+### 2024-11-04 1.3.2 版本发布
 
 - 修复 `TcpClientAdapter` 适配器中，调用 upload 操作会空指针 以及 只能上传 64KB数据的情况~
 
-#### 2024-10-26 1.3.0 版本发布
+### 2024-10-26 1.3.0 版本发布
 
 - 新增了处理模块，所有被装载到适配器的模块，都会在接收到文件数据流的时候被尝试调用（在模块可以处理的前提下，若模块无法处理，则不会被调用）
 - 新增了 `HandleModule.ImageCompressModule` 模块，用于对图片进行压缩，压缩模式默认为 `PalettePng.RGB_8`
@@ -1446,7 +1593,7 @@ public final class MAIN {
 }
 ```
 
-#### 2024-09-20 1.2.9 版本发布
+### 2024-09-20 1.2.9 版本发布
 
 - 为 `DiskMirror.DiskMirrorHttpAdapter` 适配器增加了转存支持，目录创建支持。
 - 为 `DiskMirror.DiskMirrorHttpAdapter` 适配器的错误信息进行了优化，错误信息更详细。

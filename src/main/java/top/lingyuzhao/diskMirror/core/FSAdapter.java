@@ -117,7 +117,7 @@ public abstract class FSAdapter implements Adapter {
      * "urls": [
      * {
      * "fileName": "fsdownload",
-     * "url": "http://localhost:8080/1024/Binary//fsdownload",
+     * "url": "https://localhost:8080/1024/Binary//fsdownload",
      * "lastModified": 1705762229601,
      * "size": 0,
      * "type": "Binary",
@@ -125,7 +125,7 @@ public abstract class FSAdapter implements Adapter {
      * "urls": [
      * {
      * "fileName": "myFile.png",
-     * "url": "http://localhost:8080/1024/Binary//fsdownload/myFile.png",
+     * "url": "https://localhost:8080/1024/Binary//fsdownload/myFile.png",
      * "lastModified": 1705762229664,
      * "size": 293172,
      * "type": "Binary",
@@ -135,7 +135,7 @@ public abstract class FSAdapter implements Adapter {
      * },
      * {
      * "fileName": "test.png",
-     * "url": "http://localhost:8080/1024/Binary//test.png",
+     * "url": "https://localhost:8080/1024/Binary//test.png",
      * "lastModified": 1702903450767,
      * "size": 493969,
      * "type": "Binary",
@@ -312,7 +312,7 @@ public abstract class FSAdapter implements Adapter {
     public JSONObject upload(InputStream inputStream, JSONObject jsonObject, long streamSize) throws IOException {
         // 首先获取到 文件的路径
         final Config config = this.getConfig();
-        Adapter.checkJsonObj(config, jsonObject);
+        Adapter.checkJsonObjWriter(config, jsonObject);
         final PathGeneration pathGeneration = (PathGeneration) config.get(Config.GENERATION_RULES);
         final String[] path = pathGeneration.function(
                 jsonObject
@@ -351,7 +351,7 @@ public abstract class FSAdapter implements Adapter {
     public InputStream downLoad(JSONObject jsonObject) throws IOException {
         // 首先获取到 文件的路径
         final Config config = this.getConfig();
-        Adapter.checkJsonObj(config, jsonObject);
+        Adapter.checkJsonObjRead(config, jsonObject);
         // 这里就是文件的路径了
         final String path = ((PathGeneration) config.get(Config.GENERATION_RULES)).function(
                 jsonObject
@@ -376,7 +376,7 @@ public abstract class FSAdapter implements Adapter {
     public JSONObject remove(JSONObject jsonObject) throws IOException {
         // 获取到路径
         final Config config = this.getConfig();
-        Adapter.checkJsonObj(config, jsonObject);
+        Adapter.checkJsonObjWriter(config, jsonObject);
         final String[] path = ((PathGeneration) config.get(Config.GENERATION_RULES)).function(
                 jsonObject
         );
@@ -408,7 +408,7 @@ public abstract class FSAdapter implements Adapter {
     public JSONObject reName(JSONObject jsonObject) throws IOException {
         // 获取到路径
         final Config config = this.getConfig();
-        Adapter.checkJsonObj(config, jsonObject);
+        Adapter.checkJsonObjWriter(config, jsonObject);
         // 这里就是父目录和子目录
         final String[] path = ((PathGeneration) config.get(Config.GENERATION_RULES)).function(
                 jsonObject
@@ -438,7 +438,7 @@ public abstract class FSAdapter implements Adapter {
     public JSONObject getUrls(JSONObject jsonObject) throws IOException {
         // 获取到路径
         final Config config = this.getConfig();
-        Adapter.checkJsonObj(config, jsonObject);
+        Adapter.checkJsonObjRead(config, jsonObject);
         final PathGeneration pathGeneration = (PathGeneration) config.get(Config.GENERATION_RULES);
         final String[] path = pathGeneration.function(
                 jsonObject
@@ -472,7 +472,7 @@ public abstract class FSAdapter implements Adapter {
     public JSONObject mkdirs(JSONObject jsonObject) throws IOException {
         // 获取到路径
         final Config config = this.getConfig();
-        Adapter.checkJsonObj(config, jsonObject);
+        Adapter.checkJsonObjWriter(config, jsonObject);
         final PathGeneration pathGeneration = (PathGeneration) config.get(Config.GENERATION_RULES);
         final String[] path = pathGeneration.function(
                 jsonObject
