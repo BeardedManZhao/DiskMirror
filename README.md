@@ -1527,6 +1527,10 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 
 ## 更新记录
 
+### 2024-11-28 1.3.5 版本发布
+
+- 为 https 适配器优化了 `setSpaceSk` 方法的返回值，便于排错。
+
 ### 2024-11-27 1.3.4 版本发布
 
 - 为 `setSpaceSk` 方法进行了启用，我们将开始允许用户自定义加密密钥，这能够实现动态的密钥设置，数据将会更安全。

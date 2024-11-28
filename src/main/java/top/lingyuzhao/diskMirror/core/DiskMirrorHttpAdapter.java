@@ -353,7 +353,7 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
 
     @Override
     public int setSpaceSk(String id, int sk) throws IOException {
-        final Object orDefault = this.request(DiskMirrorRequest.setSpaceSk(Integer.parseInt(id)).setSk(sk), setSpaceSk).getOrDefault(Config.SECURE_KEY, 0);
+        final Object orDefault = this.request(DiskMirrorRequest.setSpaceSk(Integer.parseInt(id)).setSk(sk), setSpaceSk).get(Config.SECURE_KEY);
         if (orDefault instanceof Integer) {
             return (int) orDefault;
         }
