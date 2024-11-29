@@ -1527,9 +1527,10 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 
 ## 更新记录
 
-### 2024-11-28 1.3.5 版本发布
+### 2024-11-29 1.3.5 版本发布
 
 - 为 https 适配器优化了 `setSpaceSk` 方法的返回值，便于排错。
+- 优化了 `DiskMirror` 的 `getVersion` 方法，使其更小且更清晰。
 
 ### 2024-11-27 1.3.4 版本发布
 

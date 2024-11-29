@@ -187,7 +187,7 @@ public enum DiskMirror {
      * <p>
      * The current version of the disk mirror library
      */
-    public final static String VERSION = "1.3.4";
+    public final static String VERSION = "1.3.5";
 
     /**
      * 获取到当前 盘镜 的版本 以及 适配器的名称
@@ -195,26 +195,20 @@ public enum DiskMirror {
      * @return 盘镜 适配器版本
      */
     public String getVersion() {
-        return "             'WWWKXXXXNWWNk,     ,kkd7               KWWb,                     \n" +
-                "             ;WWN3.....,lNWWk.                       KWWb,                     \n" +
-                "             ;WWNl        XWWk.  :XXk,   oKNNWNKo    KWWb,   dXXO:             \n" +
-                "             ;WWNl  ^  ^  3WWX7  7WWO7  0WWo:,:O0d,  KWWb, lNWKb:              \n" +
-                "             ;WWNl  -__-  :WWNl  7WWO7  0WWO,.       KWWbbXWKb:.               \n" +
-                "             ;WWNl        kWW03  7WWO7   lXWWWN0o.   KWWNWWW0;                 \n" +
-                "             ;WWNl       lWWNo,  7WWO7     .,7dWWN;  KWWOolWWN7                \n" +
-                "             'WWNo,..,'oXWWKo'   7WWO7 .lb:    XWNl. KWWb, .KWWk.              \n" +
-                "             ;WWWWWWWWWNKOo:.    7WWO7  oNWX0KWWKb:  KWWb,   bWWX'             \n" +
-                "              ,'''''''',,.        ,'',    ,;777;,.    '''.    .''',            \n" +
-                "KWWNWK,        ,WWNWWd.   ;33:                                                 \n" +
-                "KWWbWWO.       XWXkWWd.   ...    ...  .,,   ...  ,,.      .,,,,        ...  .,,\n" +
-                "KWWodWWd      OWNlOWWd.  .WWN7   KWW3OWNWl.:WWOlNWNO:  3KWWXXNWWXo.   ,WWX3XWNK\n" +
-                "KWWo.OWWo    oWWb;xWWd.  .WWXl   0WWXkl',, ;WWNKb:,,, XWWkl,..,oWWN'  ,WWNKd7,,\n" +
-                "KWWo  XWN7  ;WWx3 dWWd.  .WWXl   0WWO3     ;WWWl,    bWW03      OWWk, ,WWWo'   \n" +
-                "KWWo  ,NWK',NW0l  dWWd.  .WWXl   0WWd,     ;WWX3     kWWO:      dWMO: ,WWNl    \n" +
-                "KWWo   ;WWkKWXl.  dWWd.  .WWXl   0WWd.     ;WWK7     7WWX7      XWWd; ,WWN3    \n" +
-                "KWWo    lWWWNo,   dWWd.  .WWXl   0WWd.     ;WWK7      oWWX3,.,7XWWk3  ,WWN3    \n" +
-                "kXXo     dXXd:    oXXb.  .KX0l   xXXb.     'KXO7       .o0XNNNXKkl'   .KXKl    \n" +
-                this;
+        return
+                        "+--------------------------------------------------+\n" +
+                        "| https://github.com/BeardedManZhao/DiskMirror.git |\n" +
+                        "+--------------------------------------------------+\n" +
+                        "     \\   _     _  \n" +
+                        "      \\ (c).-.(c) \n" +
+                        "         / ._. \\  \n" +
+                        "       __\\( Y )/__\n" +
+                        "      (_.-/'-'\\-._) " + this + "\n" +
+                        "    ____  _      __   __  ____                 ____ \n" +
+                        "   / __ \\(_)____/ /__/  |/  (_)_____________  / __ \\\n" +
+                        "  / / / / / ___/ //_/ /|_/ / / ___/ ___/ __ \\/ /_/ /\n" +
+                        " / /_/ / (__  ) ,< / /  / / / /  / /  / /_/ / _, _/ \n" +
+                        "/_____/_/____/_/|_/_/  /_/_/_/  /_/   \\____/_/ |_|  \n";
     }
 
     /**
