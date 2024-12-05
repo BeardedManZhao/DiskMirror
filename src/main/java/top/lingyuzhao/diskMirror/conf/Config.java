@@ -127,18 +127,29 @@ public class Config extends JSONObject {
             if (isRead) {
                 config.getJSONObject(PARAMS).forEach((k, v) -> stringBuilder.append(k).append("=").append(v).append("&"));
             }
-            // 生成参数字符串
-            final String s = stringBuilder.length() == 0 ? "" : "?" + stringBuilder;
             // 开始构建[空间路径（无协议）, 空间路径（有协议）, 文件路径（无协议）, 文件路径（有协议）]
+            final String s3 = '/' + String.valueOf(userId) + '/' + type + '/';
             final String
-                    s1 = protocol + '/' + userId + '/' + type + '/',
-                    s2 = rootDir + '/' + userId + '/' + type + '/';
-            return new String[]{
-                    s2 + s,
-                    s1 + s,
-                    s2 + fn,
-                    s1 + fn + s,
-            };
+                    s1 = protocol + s3,
+                    s2 = rootDir + s3;
+            // 生成参数字符串
+            if (stringBuilder.length() > 0) {
+                final String s = "?" + stringBuilder;
+                return new String[]{
+                        s2 + s,
+                        s1 + s,
+                        s2 + fn,
+                        s1 + fn + s,
+                };
+            } else {
+                // s 是空 不需要!
+                return new String[]{
+                        s2,
+                        s1,
+                        s2 + fn,
+                        s1 + fn,
+                };
+            }
         };
     }
 

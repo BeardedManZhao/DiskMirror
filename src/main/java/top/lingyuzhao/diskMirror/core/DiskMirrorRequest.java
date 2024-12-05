@@ -43,7 +43,7 @@ public class DiskMirrorRequest extends JSONObject {
      * 对于当前空间进行一个访问令牌的生成
      *
      * @param userId 需要被创建访问令牌的空间id
-     * @return 操作结果！
+     * @return 请求对象！
      */
     public static DiskMirrorRequest setSpaceSk(int userId) {
         return new DiskMirrorRequest(6).setUserId(userId);
@@ -55,7 +55,7 @@ public class DiskMirrorRequest extends JSONObject {
      *
      * @param userId 需要被获取到的空间的所属 id
      * @param type   需要被获取到的空间的类型
-     * @return 操作结果！
+     * @return 请求对象！
      */
     public static DiskMirrorRequest getUrls(int userId, Type type) {
         return setSpaceSk(userId).setType(type);
@@ -67,10 +67,21 @@ public class DiskMirrorRequest extends JSONObject {
      * @param userId   需要被获取到的空间的所属 id
      * @param type     需要被获取到的空间的类型
      * @param fileName 需要被操作的文件的名称
-     * @return 操作结果！
+     * @return 请求对象！
      */
     public static DiskMirrorRequest uploadRemove(int userId, Type type, String fileName) {
         return getUrls(userId, type).setFileName(fileName);
+    }
+
+    /**
+     * 创建 download 请求
+     * @param userId 需要被获取文件 所属的 id
+     * @param type 需要被获取到的空间的类型
+     * @param fileName 需要被获取到的文件的名称
+     * @return 请求对象！
+     */
+    public static DiskMirrorRequest download(int userId, Type type, String fileName){
+        return uploadRemove(userId, type, fileName);
     }
 
     /**
@@ -79,7 +90,7 @@ public class DiskMirrorRequest extends JSONObject {
      * @param userId  需要被获取到的空间的所属 id
      * @param type    需要被获取到的空间的类型
      * @param dirName 需要被创建的文件夹名称
-     * @return 操作结果！
+     * @return 请求对象！
      */
     public static DiskMirrorRequest mkdirs(int userId, Type type, String dirName) {
         return getUrls(userId, type).setDirName(dirName);
@@ -90,7 +101,7 @@ public class DiskMirrorRequest extends JSONObject {
      *
      * @param userId 需要被操作到的空间的所属 id
      * @param type   需要被操作到的空间的类型
-     * @return 操作结果！
+     * @return 请求对象！
      */
     public static DiskMirrorRequest transferDepositStatus(int userId, Type type) {
         return getUrls(userId, type);
@@ -103,7 +114,7 @@ public class DiskMirrorRequest extends JSONObject {
      * @param type     需要被操作到的空间的类型
      * @param fileName 需要被操作的文件的名称，文件被转存成功后，要存储在哪个位置
      * @param url      需要被操作的文件的 url
-     * @return 操作结果！
+     * @return 请求对象！
      */
     public static DiskMirrorRequest transferDeposit(int userId, Type type, String fileName, String url) {
         return uploadRemove(userId, type, fileName).setUrl(url);
@@ -116,7 +127,7 @@ public class DiskMirrorRequest extends JSONObject {
      * @param type     需要被获取到的空间的类型
      * @param fileName 需要被操作的文件的名称
      * @param newName  代表的是需要操作的文件的新名称
-     * @return 操作结果！
+     * @return 请求对象！
      */
     public static DiskMirrorRequest reName(int userId, Type type, String fileName, String newName) {
         return uploadRemove(userId, type, fileName).setNewName(newName);
@@ -196,6 +207,16 @@ public class DiskMirrorRequest extends JSONObject {
      */
     public DiskMirrorRequest setSk(int sk) {
         this.put(Config.SECURE_KEY, sk);
+        return this;
+    }
+
+    /**
+     * 设置当前的请求期望的返回值是否需要带协议前缀，协议前缀一般会搭配外界服务器 如 ftp web 等，这能够让外界的服务器直接访问盘镜，但并不建议，因为那会绕过盘镜的下载模块！
+     * @param isUse 是否使用协议前缀，默认为 true
+     * @return 当前的请求对象
+     */
+    public DiskMirrorRequest setProtocolPrefix(boolean isUse) {
+        this.put(Config.PROTOCOL_PREFIX, isUse);
         return this;
     }
 }
