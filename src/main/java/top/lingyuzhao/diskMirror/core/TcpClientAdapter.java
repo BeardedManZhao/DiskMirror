@@ -73,14 +73,14 @@ public class TcpClientAdapter extends FSAdapter {
         }
     }
 
-    private JSONObject getResJsonObject(String mkdirs, JSONObject inJson) throws IOException {
+    private JSONObject getResJsonObject(String command, JSONObject inJson) throws IOException {
         try (
                 final Socket socket = new Socket((String) string[0], (Integer) string[1]);
                 final DataOutputStream metaO = new DataOutputStream(socket.getOutputStream());
                 final DataInputStream metaI = new DataInputStream(socket.getInputStream());
 
         ) {
-            metaO.writeUTF(mkdirs);
+            metaO.writeUTF(command);
             metaO.writeUTF(inJson.toString());
             final String s = metaI.readUTF();
             try {
@@ -97,7 +97,7 @@ public class TcpClientAdapter extends FSAdapter {
     }
 
     @Override
-    protected JSONObject pathProcessorMkdirs(String path, JSONObject inJson) throws IOException {
+    protected JSONObject pathProcessorMkDirs(String path, JSONObject inJson) throws IOException {
         return getResJsonObject("mkdirs", inJson);
     }
 
@@ -165,7 +165,7 @@ public class TcpClientAdapter extends FSAdapter {
 
     @Override
     public JSONObject mkdirs(JSONObject jsonObject) throws IOException {
-        return this.pathProcessorMkdirs("", jsonObject);
+        return this.pathProcessorMkDirs("", jsonObject);
     }
 
     @Override

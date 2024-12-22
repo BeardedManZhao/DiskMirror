@@ -196,7 +196,7 @@ public enum DiskMirror {
      */
     public String getVersion() {
         return
-                        "+--------------------------------------------------+\n" +
+                "+--------------------------------------------------+\n" +
                         "| https://github.com/BeardedManZhao/DiskMirror.git |\n" +
                         "+--------------------------------------------------+\n" +
                         "     \\   _     _  \n" +

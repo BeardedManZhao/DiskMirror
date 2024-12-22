@@ -147,7 +147,7 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
      * @return {"res": 创建结果}
      */
     @Override
-    protected JSONObject pathProcessorMkdirs(String path, JSONObject inJson) {
+    protected JSONObject pathProcessorMkDirs(String path, JSONObject inJson) {
         throw unsupportedOperationException;
     }
 

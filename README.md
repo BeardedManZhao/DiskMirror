@@ -74,7 +74,7 @@ url 等操作，这会大大减少您开发IO代码的时间。
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.3.5</version>
+        <version>1.3.6</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -1533,8 +1533,10 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 
 ## 更新记录
 
-### 2024-12-05 开始开发新版本【未发布】
 
+### 2024-12-06 1.3.6 版本发布
+
+- 修复 TCP 客户端适配器中的 `downLoad` 方法，返回空数据流的问题。
 - 性能优化 以及 注释优化
 
 ### 2024-11-29 1.3.5 版本发布

@@ -75,12 +75,13 @@ public class DiskMirrorRequest extends JSONObject {
 
     /**
      * 创建 download 请求
-     * @param userId 需要被获取文件 所属的 id
-     * @param type 需要被获取到的空间的类型
+     *
+     * @param userId   需要被获取文件 所属的 id
+     * @param type     需要被获取到的空间的类型
      * @param fileName 需要被获取到的文件的名称
      * @return 请求对象！
      */
-    public static DiskMirrorRequest download(int userId, Type type, String fileName){
+    public static DiskMirrorRequest download(int userId, Type type, String fileName) {
         return uploadRemove(userId, type, fileName);
     }
 
@@ -212,6 +213,7 @@ public class DiskMirrorRequest extends JSONObject {
 
     /**
      * 设置当前的请求期望的返回值是否需要带协议前缀，协议前缀一般会搭配外界服务器 如 ftp web 等，这能够让外界的服务器直接访问盘镜，但并不建议，因为那会绕过盘镜的下载模块！
+     *
      * @param isUse 是否使用协议前缀，默认为 true
      * @return 当前的请求对象
      */

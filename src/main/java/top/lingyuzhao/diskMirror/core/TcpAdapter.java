@@ -2,13 +2,9 @@ package top.lingyuzhao.diskMirror.core;
 
 import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.conf.Config;
-import top.lingyuzhao.utils.IOUtils;
 import top.lingyuzhao.utils.StrUtils;
 
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -50,48 +46,77 @@ public class TcpAdapter extends AdapterPacking {
     }
 
     /**
+     * 拷贝流
+     *
+     * @param inputStream  需要被拷贝的数据输入流
+     * @param outputStream 目标数据输出流
+     * @throws IOException 拷贝错误时抛出的异常
+     */
+    protected static void copy(InputStream inputStream, OutputStream outputStream) throws IOException {
+        final byte[] buffer = new byte[20480];
+        int n;
+        if (inputStream != null) {
+            while (-1 != (n = inputStream.read(buffer))) {
+                outputStream.write(buffer, 0, n);
+            }
+        }
+    }
+
+    /**
      * 开始进行监听处理
      *
      * @throws IOException 处理错误时弹出的数据
      */
-    public void run() throws IOException {
+    public void run() throws IOException, RuntimeException {
         try (final Socket accept = serverSocket.accept();
              final DataInputStream inputStream = new DataInputStream(accept.getInputStream());
              final DataOutputStream outputStream = new DataOutputStream(accept.getOutputStream())
         ) {
-            final String s1 = inputStream.readUTF();
+            // 读取两次 因为客户端也是直接发送两次的
+            final String command = inputStream.readUTF();
+            final String inJson = inputStream.readUTF();
+            JSONObject parse;
+            try {
+                parse = JSONObject.parse(inJson);
+            } catch (Exception e) {
+                throw new IOException("客户端请求元数据格式错误：" + inJson, e);
+            }
             // 判断元数据类型
-            if (!"upload".equals(s1)) {
-                switch (s1) {
+            if (!"upload".equals(command)) {
+                // 从这个下面之后 不可读取
+                switch (command) {
                     case "getUrls":
-                        outputStream.writeUTF(getUrls(JSONObject.parse(inputStream.readUTF())).toString());
+                        outputStream.writeUTF(getUrls(parse).toString());
                         break;
                     case "remove":
-                        outputStream.writeUTF(remove(JSONObject.parse(inputStream.readUTF())).toString());
+                        outputStream.writeUTF(remove(parse).toString());
                         break;
                     case "reName":
-                        outputStream.writeUTF(reName(JSONObject.parse(inputStream.readUTF())).toString());
+                        outputStream.writeUTF(reName(parse).toString());
                         break;
                     case "mkdirs":
-                        outputStream.writeUTF(mkdirs(JSONObject.parse(inputStream.readUTF())).toString());
+                        outputStream.writeUTF(mkdirs(parse).toString());
                         break;
                     case "useSize":
-                        outputStream.writeLong(getUseSize(JSONObject.parse(inputStream.readUTF())));
+                        outputStream.writeLong(getUseSize(parse));
                         break;
                     case "download":
-                        IOUtils.copy(downLoad(JSONObject.parse(inputStream.readUTF())), outputStream, true);
+                        try (InputStream inputStream1 = downLoad(parse)) {
+                            copy(inputStream1, outputStream);
+                        } catch (IOException e) {
+                            throw new IOException("下载文件时发生错误！", e);
+                        }
                         break;
                     case "transferDeposit":
-                        outputStream.writeUTF(transferDeposit(JSONObject.parse(inputStream.readUTF())).toString());
+                        outputStream.writeUTF(transferDeposit(parse).toString());
                         break;
                     case "transferDepositStatus":
-                        outputStream.writeUTF(transferDepositStatus(JSONObject.parse(inputStream.readUTF())).toString());
+                        outputStream.writeUTF(transferDepositStatus(parse).toString());
                         break;
                 }
                 return;
             }
-            // 获取到元数据信息
-            final String s = inputStream.readUTF();
+            // 这里代表是 upload 是特有的
             try {
                 // 回复情况
                 outputStream.writeUTF("ok");
@@ -100,16 +125,18 @@ public class TcpAdapter extends AdapterPacking {
                 try (final Socket accept1 = fileServerSocket.accept();
                      final BufferedInputStream inputStream1 = new BufferedInputStream(accept1.getInputStream())) {
                     // 开始上传文件
-                    final String string = upload(inputStream1, JSONObject.parse(s), size).toString();
+                    final String string = upload(inputStream1, parse, size).toString();
                     // 最后返回结果
                     outputStream.writeUTF(string);
                     outputStream.flush();
                 }
             } catch (NullPointerException e) {
-                throw new RuntimeException("内部执行错误！", e);
+                throw new IOException("回复执行错误！", e);
             } catch (Exception e) {
                 outputStream.writeUTF(e.toString());
             }
+        } catch (Exception e) {
+            throw new IOException("内部执行错误！", e);
         }
     }
 }

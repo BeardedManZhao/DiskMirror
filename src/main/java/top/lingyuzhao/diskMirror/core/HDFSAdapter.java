@@ -115,7 +115,7 @@ public class HDFSAdapter extends FSAdapter {
      * @throws IOException 操作异常
      */
     @Override
-    protected JSONObject pathProcessorMkdirs(String path, JSONObject inJson) throws IOException {
+    protected JSONObject pathProcessorMkDirs(String path, JSONObject inJson) throws IOException {
         inJson.put(config.getString(Config.RES_KEY), fileSystem.mkdirs(new Path(path)) ? config.getString(Config.OK_VALUE) : "创建失败，可能文件目录已经存在，或者无法连接到 HDFS 服务器");
         return inJson;
     }

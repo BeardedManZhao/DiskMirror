@@ -108,7 +108,7 @@ public final class LocalFSAdapter extends FSAdapter {
      * @return {"res": 创建结果}
      */
     @Override
-    protected JSONObject pathProcessorMkdirs(String path, JSONObject inJson) {
+    protected JSONObject pathProcessorMkDirs(String path, JSONObject inJson) {
         inJson.put(config.getString(Config.RES_KEY), new File(path).mkdirs() ? config.getString(Config.OK_VALUE) : "文件目录创建失败，可能文件目录已经存在了!!!");
         return inJson;
     }

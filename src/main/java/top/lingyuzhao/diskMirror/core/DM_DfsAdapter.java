@@ -110,7 +110,7 @@ public class DM_DfsAdapter extends FSAdapter {
     }
 
     @Override
-    protected JSONObject pathProcessorMkdirs(String path, JSONObject inJson) {
+    protected JSONObject pathProcessorMkDirs(String path, JSONObject inJson) {
         throw unsupportedOperationException;
     }
 

@@ -156,7 +156,7 @@ public abstract class FSAdapter implements Adapter {
      * @return {"res": 创建结果}
      * @throws IOException 操作异常
      */
-    protected abstract JSONObject pathProcessorMkdirs(String path, JSONObject inJson) throws IOException;
+    protected abstract JSONObject pathProcessorMkDirs(String path, JSONObject inJson) throws IOException;
 
     /**
      * 路径处理器 接收一个路径 返回此数据的数据流对象
@@ -479,7 +479,7 @@ public abstract class FSAdapter implements Adapter {
         );
         // 直接开始创建
         jsonObject.put("useSize", this.getUseSize(jsonObject, path[0]));
-        return pathProcessorMkdirs(path[2], jsonObject);
+        return pathProcessorMkDirs(path[2], jsonObject);
     }
 
     /**
