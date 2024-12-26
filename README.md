@@ -74,7 +74,7 @@ url 等操作，这会大大减少您开发IO代码的时间。
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.3.7</version>
+        <version>1.3.8</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -1533,7 +1533,7 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 
 ## 更新记录
 
-### 2024-12-26 1.3.7 版本发布
+### 2024-12-26 1.3.8 版本发布
 
 - 新增配置项目 `IS_NOT_OVER_WRITE` 以及 `@DiskMirrorConfig(isNotOverWrite = false)`, 可以通过设置此项目来配置 是否允许覆盖同名文件！
 - 将一些频繁从 config 获取的数据，改用 final 类全局变量存储，提高性能。

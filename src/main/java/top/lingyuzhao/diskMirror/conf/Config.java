@@ -84,7 +84,7 @@ public class Config extends JSONObject {
         super.put(CHAR_SET, "UTF-8");
         super.put(IS_NOT_OVER_WRITE, true);
         // 默认的路径生成逻辑  由 <空间id，文件名称> 生成 文件路径
-        super.put(GENERATION_RULES, getPathGeneration(this));
+        super.put(GENERATION_RULES, getPathGeneration());
     }
 
     /**
@@ -105,7 +105,7 @@ public class Config extends JSONObject {
         super.put(CHAR_SET, config.charSet());
         super.put(IS_NOT_OVER_WRITE, config.isNotOverWrite());
         // 默认的路径生成逻辑  由 <空间id，文件名称> 生成 文件路径
-        super.put(GENERATION_RULES, getPathGeneration(this));
+        super.put(GENERATION_RULES, getPathGeneration());
     }
 
     public Config(HashMap<String, Object> hashMap) {
@@ -115,12 +115,11 @@ public class Config extends JSONObject {
     /**
      * 获取路径生成逻辑实现函数
      *
-     * @param config 需要用于的配置类
      * @return 路径生成逻辑实现函数 函数处理之后的返回结果应为：[空间路径（无协议）, 空间路径（有协议）, 文件路径（无协议）, 文件路径（有协议）]
      */
-    protected static PathGeneration getPathGeneration(Config config) {
-        final String protocol = config.getString(PROTOCOL_PREFIX);
-        final String rootDir = (String) config.get(ROOT_DIR);
+    protected PathGeneration getPathGeneration() {
+        final String protocol = this.getString(PROTOCOL_PREFIX);
+        final String rootDir = (String) this.get(ROOT_DIR);
         return jsonObject -> {
             final int userId = jsonObject.getIntValue("userId");
             final String type = jsonObject.get("type").toString();
@@ -131,7 +130,7 @@ public class Config extends JSONObject {
             // 生产参数
             final StringBuilder stringBuilder = new StringBuilder();
             if (isRead) {
-                config.getJSONObject(PARAMS).forEach((k, v) -> stringBuilder.append(k).append("=").append(v).append("&"));
+                this.getJSONObject(PARAMS).forEach((k, v) -> stringBuilder.append(k).append("=").append(v).append("&"));
             }
             // 开始构建[空间路径（无协议）, 空间路径（有协议）, 文件路径（无协议）, 文件路径（有协议）]
             final String s3 = '/' + String.valueOf(userId) + '/' + type + '/';
@@ -157,6 +156,20 @@ public class Config extends JSONObject {
                 };
             }
         };
+    }
+
+    @Override
+    public Object put(String key, Object value) {
+        Object put = super.put(key, value);
+        switch (key) {
+            case ROOT_DIR:
+            case PROTOCOL_PREFIX:
+                // 这个情况需要刷新 path 生成器
+                super.put(GENERATION_RULES, getPathGeneration());
+            default:
+                // 继续返回结果即可
+                return put;
+        }
     }
 
     /**
