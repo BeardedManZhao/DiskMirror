@@ -42,7 +42,7 @@ public class HDFSAdapter extends FSAdapter {
     protected JSONObject pathProcessorUpload(String path, String path_res, JSONObject jsonObject, InputStream inputStream) throws IOException {
         // 首先获取到 HDFS 中的数据流
         final Path path1 = new Path(config.get(Config.FS_DEFAULT_FS) + path);
-        if (fileSystem.exists(path1)) {
+        if (this.isNotOverWrite && fileSystem.exists(path1)) {
             throw new IOException("文件《" + jsonObject.getString("fileName") + "》已经存在!");
         }
         final ProgressBar progressBar = new ProgressBar(jsonObject.getString("userId"), jsonObject.getString("fileName"));
@@ -56,7 +56,7 @@ public class HDFSAdapter extends FSAdapter {
             IOUtils.close(inputStream);
         }
         // 返回结果
-        jsonObject.put(config.getString(Config.RES_KEY), config.getString(Config.OK_VALUE));
+        jsonObject.put(this.resK, this.resOkValue);
         jsonObject.put("url", path_res);
         return jsonObject;
     }
@@ -71,7 +71,6 @@ public class HDFSAdapter extends FSAdapter {
 
 
     protected JSONObject pathProcessorGetUrls(String path, String path_res, JSONObject jsonObject, String paramStr) throws IOException {
-        final String res_key = config.getString(Config.RES_KEY);
         final Path path1 = new Path(path);
         RemoteIterator<FileStatus> iterator = fileSystem.exists(path1) ? fileSystem.listStatusIterator(path1) : null;
         final JSONArray urls = jsonObject.putArray("urls");
@@ -97,12 +96,12 @@ public class HDFSAdapter extends FSAdapter {
                     jsonObject1.put("isDir", true);
                     jsonObject1.putAll(this.pathProcessorGetUrls(filePath_HDFS, fnNoParam, jsonObject1.clone(), paramStr));
                     jsonObject1.remove("useSize");
-                    jsonObject1.remove(res_key);
+                    jsonObject1.remove(this.resK);
                 }
             }
         }
         jsonObject.put("useSize", this.getUseSize(jsonObject, path));
-        jsonObject.put(res_key, config.getString(Config.OK_VALUE));
+        jsonObject.put(this.resK, this.resOkValue);
         return jsonObject;
     }
 
@@ -116,7 +115,7 @@ public class HDFSAdapter extends FSAdapter {
      */
     @Override
     protected JSONObject pathProcessorMkDirs(String path, JSONObject inJson) throws IOException {
-        inJson.put(config.getString(Config.RES_KEY), fileSystem.mkdirs(new Path(path)) ? config.getString(Config.OK_VALUE) : "创建失败，可能文件目录已经存在，或者无法连接到 HDFS 服务器");
+        inJson.put(this.resK, fileSystem.mkdirs(new Path(path)) ? this.resOkValue : "创建失败，可能文件目录已经存在，或者无法连接到 HDFS 服务器");
         return inJson;
     }
 
@@ -131,12 +130,12 @@ public class HDFSAdapter extends FSAdapter {
             final Path path1 = new Path(path);
             if (!fileSystem.exists(path1)) {
                 // 如果不存在就代表不需要删除
-                inJson.put(config.getString(Config.RES_KEY), "删除失败!!!文件不存在!");
+                inJson.put(this.resK, "删除失败!!!文件不存在!");
             }
             inJson.put("useSize", this.diffUseSize(inJson.getIntValue("userId"), inJson.getString("type"), rDelete(path1), true));
-            inJson.put(config.getString(Config.RES_KEY), config.getString(Config.OK_VALUE));
+            inJson.put(this.resK, this.resOkValue);
         } catch (IOException e) {
-            inJson.put(config.getString(Config.RES_KEY), "删除失败:" + e);
+            inJson.put(this.resK, "删除失败:" + e);
             throw new RuntimeException(e);
         }
         return inJson;
@@ -161,7 +160,7 @@ public class HDFSAdapter extends FSAdapter {
         Path oldPath = new Path(path + inJson.getString("fileName"));  //旧的路径
         Path newPath = new Path(path + inJson.getString("newName"));  //新的路径
         if (fileSystem.rename(oldPath, newPath)) {
-            inJson.put(config.getString(Config.RES_KEY), config.getString(Config.OK_VALUE));
+            inJson.put(this.resK, this.resOkValue);
         } else {
             inJson.put(config.getString(Config.RES_KEY), "重命名失败，请稍后再试!!!（可能是您重命名之后的文件路径的父目录不存在）");
         }

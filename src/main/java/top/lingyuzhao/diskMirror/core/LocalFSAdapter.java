@@ -26,7 +26,6 @@ public final class LocalFSAdapter extends FSAdapter {
      */
     public LocalFSAdapter(Config config) {
         super(config);
-
     }
 
     @Override
@@ -34,15 +33,14 @@ public final class LocalFSAdapter extends FSAdapter {
         final File file = new File(path);
         final File parentFile = file.getParentFile();
         if (!parentFile.exists()) {
-            final boolean mkdirs = parentFile.mkdirs();
-            if (!mkdirs) {
+            final boolean mkDirs = parentFile.mkdirs();
+            if (!mkDirs) {
                 jsonObject.put("res", "文件目录：" + parentFile.getPath() + " 已尝试创建，但是创建操作失败了!!!");
             }
         }
-        if (file.exists()) {
+        if (this.isNotOverWrite && file.exists()) {
             throw new IOException("文件《" + jsonObject.getString("fileName") + "》已经存在!");
         }
-        final Config config = this.getConfig();
         final ProgressBar progressBar = new ProgressBar(jsonObject.getString("userId"), jsonObject.getString("fileName"));
         final Long streamSize = jsonObject.getLong("streamSize");
         progressBar.setMaxSize(streamSize);
@@ -54,7 +52,7 @@ public final class LocalFSAdapter extends FSAdapter {
             IOUtils.close(inputStream);
         }
         // 返回结果
-        jsonObject.put(config.getString(Config.RES_KEY), config.getString(Config.OK_VALUE));
+        jsonObject.put(this.resK, this.resOkValue);
         jsonObject.put("url", path_res);
         return jsonObject;
     }
@@ -67,9 +65,7 @@ public final class LocalFSAdapter extends FSAdapter {
             return jsonObject;
         }
         // 获取到协议前缀
-        final Config config = this.getConfig();
         final JSONArray urls = jsonObject.putArray("urls");
-        final String res_key = config.getString(Config.RES_KEY);
         // 获取到文件所在空间类型
         for (File file : files) {
             final JSONObject jsonObject1 = urls.addObject();
@@ -85,13 +81,13 @@ public final class LocalFSAdapter extends FSAdapter {
                 jsonObject1.put("isDir", true);
                 jsonObject1.putAll(this.pathProcessorGetUrls(file, filePath, jsonObject1.clone(), type));
                 jsonObject1.remove("useSize");
-                jsonObject1.remove(res_key);
+                jsonObject1.remove(this.resK);
             } else {
                 jsonObject1.put("isDir", false);
             }
         }
         jsonObject.put("useSize", this.getUseSize(jsonObject, path.getPath()));
-        jsonObject.put(res_key, config.getString(Config.OK_VALUE));
+        jsonObject.put(this.resK, this.resOkValue);
         return jsonObject;
     }
 
@@ -109,7 +105,7 @@ public final class LocalFSAdapter extends FSAdapter {
      */
     @Override
     protected JSONObject pathProcessorMkDirs(String path, JSONObject inJson) {
-        inJson.put(config.getString(Config.RES_KEY), new File(path).mkdirs() ? config.getString(Config.OK_VALUE) : "文件目录创建失败，可能文件目录已经存在了!!!");
+        inJson.put(this.resK, new File(path).mkdirs() ? this.resOkValue : "文件目录创建失败，可能文件目录已经存在了!!!");
         return inJson;
     }
 
@@ -120,26 +116,25 @@ public final class LocalFSAdapter extends FSAdapter {
 
     @Override
     protected JSONObject pathProcessorRemove(String path, JSONObject jsonObject) throws IOException {
-        final Config config = this.getConfig();
         // 开始进行删除操作
         final File file = new File(path);
         if (!file.exists()) {
-            jsonObject.put(config.getString(Config.RES_KEY), "删除失败!!!文件不存在!");
+            jsonObject.put(this.resK, "删除失败!!!文件不存在!");
             return jsonObject;
         }
         if (file.isDirectory()) {
             // 如果是文件夹就使用文件夹的删除方法
             jsonObject.put("useSize", this.diffUseSize(jsonObject.getIntValue("userId"), jsonObject.getString("type"), rDelete(file), true));
-            jsonObject.put(config.getString(Config.RES_KEY), config.getString(Config.OK_VALUE));
+            jsonObject.put(this.resK, this.resOkValue);
             return jsonObject;
         }
         final long length = file.length();
         if (file.delete()) {
             // 删除成功
             jsonObject.put("useSize", this.diffUseSize(jsonObject.getIntValue("userId"), jsonObject.getString("type"), length, true));
-            jsonObject.put(config.getString(Config.RES_KEY), config.getString(Config.OK_VALUE));
+            jsonObject.put(this.resK, this.resOkValue);
         } else {
-            jsonObject.put(config.getString(Config.RES_KEY), "删除失败!!!");
+            jsonObject.put(this.resK, "删除失败!!!");
         }
         return jsonObject;
     }
@@ -159,16 +154,15 @@ public final class LocalFSAdapter extends FSAdapter {
      */
     @Override
     protected JSONObject pathProcessorReName(String path, JSONObject inJson) {
-        System.out.println(inJson);
         final String fileName = inJson.getString("fileName");
         final File file = new File(path + fileName);
         if (!file.exists()) {
-            inJson.put(config.getString(Config.RES_KEY), "重命名失败，文件《" + fileName + "》不存在!");
+            inJson.put(this.resK, "重命名失败，文件《" + fileName + "》不存在!");
         } else {
             if (file.renameTo(new File(path + inJson.getString("newName")))) {
-                inJson.put(config.getString(Config.RES_KEY), config.getString(Config.OK_VALUE));
+                inJson.put(this.resK, this.resOkValue);
             } else {
-                inJson.put(config.getString(Config.RES_KEY), "重命名失败，请稍后再试!!!（可能是您重命名之后的文件路径的父目录不存在）");
+                inJson.put(this.resK, "重命名失败，请稍后再试!!!（可能是您重命名之后的文件路径的父目录不存在）");
             }
         }
         return inJson;
@@ -233,7 +227,11 @@ public final class LocalFSAdapter extends FSAdapter {
         }
         // 递归删除目录及其内容
         long bytesDeleted = 0;
-        for (File file : file1.listFiles()) {
+        File[] files = file1.listFiles();
+        if (files == null) {
+            return 0;
+        }
+        for (File file : files) {
             if (file.isDirectory()) {
                 bytesDeleted += rDelete(file);
             } else {

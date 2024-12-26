@@ -75,4 +75,9 @@ public @interface DiskMirrorConfig {
      * The character encoding set to be used for all operations related to character encoding in the disk mirror service.
      */
     String charSet() default "UTF-8";
+
+    /**
+     * @return 是否不允许覆盖写入模式 默认为 true 代表不允许覆盖写入 如果有重复文件会报错！
+     */
+    boolean isNotOverWrite() default true;
 }

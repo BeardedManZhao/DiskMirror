@@ -11,15 +11,19 @@ import java.io.IOException;
 /**
  * @author zhao
  */
-@DiskMirrorConfig(fsDefaultFS = "casaos703.lingyuzhao.top:10001,10002")
+@DiskMirrorConfig(isNotOverWrite = false)
 public class MAIN {
     public static void main(String[] args) throws IOException {
-        Adapter adapter = DiskMirror.TCP_CLIENT_Adapter.getAdapter(MAIN.class);
-        JSONObject urls = adapter.getUrls(DiskMirrorRequest.getUrls(10000002, Type.Binary));
+        Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(MAIN.class);
+        JSONObject urls = adapter.getUrls(DiskMirrorRequest.getUrls(1, Type.Binary));
         System.out.println(urls);
 
-        try (FileInputStream fileInputStream = new FileInputStream("C:\\Users\\zhao\\Pictures\\Screenshots\\屏幕截图 2024-12-15 183521.png")) {
-            adapter.upload(fileInputStream, DiskMirrorRequest.uploadRemove(10000002, Type.Binary, "/message/welcome2.png"));
+        try (FileInputStream fileInputStream = new FileInputStream("C:\\Users\\zhao\\Downloads\\14.png")) {
+            adapter.upload(fileInputStream, DiskMirrorRequest.uploadRemove(1, Type.Binary, "/message/welcome2.png"));
+        }
+
+        try (FileInputStream fileInputStream = new FileInputStream("C:\\Users\\zhao\\Downloads\\15.png")) {
+            adapter.upload(fileInputStream, DiskMirrorRequest.uploadRemove(1, Type.Binary, "/message/welcome2.png"));
         }
     }
 }

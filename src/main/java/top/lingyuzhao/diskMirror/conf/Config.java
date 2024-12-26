@@ -59,6 +59,10 @@ public class Config extends JSONObject {
      */
     public final static String CHAR_SET = "diskMirror.charset";
     /**
+     * 是否不允许覆盖写入
+     */
+    public final static String IS_NOT_OVER_WRITE = "is.not.over.write";
+    /**
      * 用户 盘镜 空间配合映射表，通过此处的映射操作可以获取到指定用户的空间的使用量最大值。
      */
     private final static JSONObject SPACE_SIZE = new JSONObject();
@@ -78,6 +82,7 @@ public class Config extends JSONObject {
         super.putObject(PARAMS);
         super.put(SECURE_KEY, 0);
         super.put(CHAR_SET, "UTF-8");
+        super.put(IS_NOT_OVER_WRITE, true);
         // 默认的路径生成逻辑  由 <空间id，文件名称> 生成 文件路径
         super.put(GENERATION_RULES, getPathGeneration(this));
     }
@@ -98,6 +103,7 @@ public class Config extends JSONObject {
         super.put(PARAMS, JSONObject.parse(config.params()));
         super.put(SECURE_KEY, config.secureKey());
         super.put(CHAR_SET, config.charSet());
+        super.put(IS_NOT_OVER_WRITE, config.isNotOverWrite());
         // 默认的路径生成逻辑  由 <空间id，文件名称> 生成 文件路径
         super.put(GENERATION_RULES, getPathGeneration(this));
     }
@@ -113,16 +119,16 @@ public class Config extends JSONObject {
      * @return 路径生成逻辑实现函数 函数处理之后的返回结果应为：[空间路径（无协议）, 空间路径（有协议）, 文件路径（无协议）, 文件路径（有协议）]
      */
     protected static PathGeneration getPathGeneration(Config config) {
+        final String protocol = config.getString(PROTOCOL_PREFIX);
+        final String rootDir = (String) config.get(ROOT_DIR);
         return jsonObject -> {
             final int userId = jsonObject.getIntValue("userId");
             final String type = jsonObject.get("type").toString();
             final String fileName = jsonObject.getString("fileName");
+            // 确保文件名不为空
             final String fn = fileName != null ? fileName : "未命名_" + System.currentTimeMillis();
             boolean isRead = (boolean) jsonObject.getOrDefault("useAgreement", true);
-            // 如果连接需要读取 同时 具有前部协议 则 在这里去掉 路径前缀 使用 协议前缀替代 反之加上路径前缀
-            final String protocol = config.getString(PROTOCOL_PREFIX);
-            final String rootDir = (String) config.get(ROOT_DIR);
-            // 生成参数
+            // 生产参数
             final StringBuilder stringBuilder = new StringBuilder();
             if (isRead) {
                 config.getJSONObject(PARAMS).forEach((k, v) -> stringBuilder.append(k).append("=").append(v).append("&"));

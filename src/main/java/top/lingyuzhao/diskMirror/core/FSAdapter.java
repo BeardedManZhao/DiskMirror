@@ -37,6 +37,18 @@ public abstract class FSAdapter implements Adapter {
      * 转存操作记录类
      */
     protected final HashMap<String, JSONObject> transferDepositMap = new HashMap<>();
+    /**
+     * 是否禁止覆盖上传
+     */
+    protected final boolean isNotOverWrite;
+    /**
+     * 返回结果需要的key 和 值
+     */
+    protected final String resK, resOkValue;
+    /**
+     * 路径生成器
+     */
+    protected final PathGeneration pathGeneration;
     private final HashMap<String, HandleModule> handleModules = new HashMap<>();
 
     /**
@@ -46,6 +58,10 @@ public abstract class FSAdapter implements Adapter {
      */
     public FSAdapter(Config config) {
         this.config = config;
+        resK = config.getString(Config.RES_KEY);
+        resOkValue = config.getString(Config.OK_VALUE);
+        isNotOverWrite = config.getBoolean(Config.IS_NOT_OVER_WRITE);
+        pathGeneration = (PathGeneration) config.get(Config.GENERATION_RULES);
     }
 
     /**
@@ -313,7 +329,6 @@ public abstract class FSAdapter implements Adapter {
         // 首先获取到 文件的路径
         final Config config = this.getConfig();
         Adapter.checkJsonObjWriter(config, jsonObject);
-        final PathGeneration pathGeneration = (PathGeneration) config.get(Config.GENERATION_RULES);
         final String[] path = pathGeneration.function(
                 jsonObject
         );
@@ -353,7 +368,7 @@ public abstract class FSAdapter implements Adapter {
         final Config config = this.getConfig();
         Adapter.checkJsonObjRead(config, jsonObject);
         // 这里就是文件的路径了
-        final String path = ((PathGeneration) config.get(Config.GENERATION_RULES)).function(
+        final String path = pathGeneration.function(
                 jsonObject
         )[2];
         // 直接调用抽象逻辑
@@ -377,7 +392,7 @@ public abstract class FSAdapter implements Adapter {
         // 获取到路径
         final Config config = this.getConfig();
         Adapter.checkJsonObjWriter(config, jsonObject);
-        final String[] path = ((PathGeneration) config.get(Config.GENERATION_RULES)).function(
+        final String[] path = pathGeneration.function(
                 jsonObject
         );
         jsonObject.put("maxSize", config.getSpaceMaxSize(jsonObject.getString("userId")));
@@ -410,7 +425,7 @@ public abstract class FSAdapter implements Adapter {
         final Config config = this.getConfig();
         Adapter.checkJsonObjWriter(config, jsonObject);
         // 这里就是父目录和子目录
-        final String[] path = ((PathGeneration) config.get(Config.GENERATION_RULES)).function(
+        final String[] path = pathGeneration.function(
                 jsonObject
         );
         jsonObject.put("useSize", getUseSize(jsonObject, path[0]));
@@ -439,7 +454,6 @@ public abstract class FSAdapter implements Adapter {
         // 获取到路径
         final Config config = this.getConfig();
         Adapter.checkJsonObjRead(config, jsonObject);
-        final PathGeneration pathGeneration = (PathGeneration) config.get(Config.GENERATION_RULES);
         final String[] path = pathGeneration.function(
                 jsonObject
         );
@@ -473,7 +487,6 @@ public abstract class FSAdapter implements Adapter {
         // 获取到路径
         final Config config = this.getConfig();
         Adapter.checkJsonObjWriter(config, jsonObject);
-        final PathGeneration pathGeneration = (PathGeneration) config.get(Config.GENERATION_RULES);
         final String[] path = pathGeneration.function(
                 jsonObject
         );
@@ -586,7 +599,7 @@ public abstract class FSAdapter implements Adapter {
     @Override
     public long getUseSize(JSONObject jsonObject) throws IOException {
         // 如果需要计算就先在这里判断是否包含文件名字 如果包含就去除文件名字
-        return getUseSize(jsonObject, ((PathGeneration) config.get(Config.GENERATION_RULES)).function(
+        return getUseSize(jsonObject, pathGeneration.function(
                 jsonObject
         )[0]);
     }
