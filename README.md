@@ -74,7 +74,7 @@ url 等操作，这会大大减少您开发IO代码的时间。
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.3.8</version>
+        <version>1.3.9</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -589,6 +589,41 @@ public final class MAIN {
         jsonObject.put("type", Type.Binary);
         final JSONObject remove = adapter.remove(jsonObject);
         System.out.println(remove);
+    }
+}
+```
+
+新版本建议使用下面的操作，他们更加简单，提示更丰富！性能与之前无异。
+
+```java
+import com.alibaba.fastjson2.JSONObject;
+import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
+import top.lingyuzhao.diskMirror.core.Adapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+import top.lingyuzhao.diskMirror.core.DiskMirrorRequest;
+import top.lingyuzhao.diskMirror.core.Type;
+import top.lingyuzhao.diskMirror.core.filter.FileMatchManager;
+
+import java.io.IOException;
+
+/**
+ * @author zhao
+ */
+// 这个注解就可以代替 Config 但 如果坚持使用 Config 则可以忽略此注解
+@DiskMirrorConfig
+public class MAIN {
+    public static void main(String[] args) throws IOException {
+        // 获取到Adapter
+        Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(MAIN.class);
+        // 开始执行删除任务
+        JSONObject jsonObject = adapter.remove(
+                // 构建删除请求对象 这里我们的删除操作是要作用在 1024 空间 Binary类型下的 arc.png 文件
+                DiskMirrorRequest.uploadRemove(1024, Type.Binary, "arc.png")
+                        // 如果 message 是文件 则 filter 不生效 而是直接删除
+                        // 在这里使用的是时间过滤器，要求删除 1分钟之前的文件
+                        .setFilter(FileMatchManager.ALLOW_ALL, null)
+        );
+        System.out.println(jsonObject);
     }
 }
 ```
@@ -1532,6 +1567,18 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 ```
 
 ## 更新记录
+
+### 2024-12-29 1.3.9 版本开始开发
+
+- 新增 `remove` 操作 ` filter ` 请求参数，其可以实现删除指定的文件，下面是参数列表。
+
+| 过滤器名称           | 使用语法示例                          | 解释                                        |
+|-----------------|---------------------------------|-------------------------------------------|
+| ALLOW_ALL       | `ALLOW_ALL`                     | 本次操作的文件是所有文件                              |
+| FILE_NAME_MATCH | `FILE_NAME_MATCH:zhao.*`        | 只有匹配 `zhao.*` 的文件才会被操作                    |
+| FILE_TIME_MATCH | `FILE_TIME_MATCH:1720598323221` | 只有最后一次修改时间是在 `1720598323221`ms 之前的文件才会被操作 |
+
+- 优化本地文件适配器中删除不存在文件会报错的情况，本次改为，若删除不存在的文件，则不会有信息，而是直接视作删除成功。
 
 ### 2024-12-26 1.3.8 版本发布
 

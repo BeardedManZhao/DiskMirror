@@ -5,9 +5,13 @@ import com.alibaba.fastjson2.JSONObject;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import top.lingyuzhao.diskMirror.conf.Config;
+import top.lingyuzhao.diskMirror.core.filter.FileMatchManager;
 import top.lingyuzhao.diskMirror.utils.ProgressBar;
+import top.lingyuzhao.utils.ASClass;
 import top.lingyuzhao.utils.IOUtils;
 import top.lingyuzhao.utils.StrUtils;
+import top.lingyuzhao.utils.dataContainer.KeyValue;
+import top.lingyuzhao.utils.transformation.Transformation;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -132,7 +136,16 @@ public class HDFSAdapter extends FSAdapter {
                 // 如果不存在就代表不需要删除
                 inJson.put(this.resK, "删除失败!!!文件不存在!");
             }
-            inJson.put("useSize", this.diffUseSize(inJson.getIntValue("userId"), inJson.getString("type"), rDelete(path1), true));
+            final long useSize;
+            {
+                final Object o = inJson.get("filter_class");
+                if (o == FileMatchManager.ALLOW_ALL) {
+                    useSize = this.rDelete(path1);
+                } else {
+                    useSize = this.rDelete(path1, ASClass.transform(o));
+                }
+            }
+            inJson.put("useSize", this.diffUseSize(inJson.getIntValue("userId"), inJson.getString("type"), useSize, true));
             inJson.put(this.resK, this.resOkValue);
         } catch (IOException e) {
             inJson.put(this.resK, "删除失败:" + e);
@@ -211,13 +224,54 @@ public class HDFSAdapter extends FSAdapter {
      * @param path 需要被删除的文件目录
      * @throws IOException 删除操作出现异常
      */
-    private long rDelete(Path path) throws IOException {
+    private long rDelete(final Path path) throws IOException {
         final ContentSummary contentSummary = fileSystem.getContentSummary(path);
         final long used = contentSummary.getLength();
         if (fileSystem.delete(path, true)) {
             return used;
         }
         return 0;
+    }
+
+    /**
+     * 递归删除一个目录 并将删除的字节数值返回
+     *
+     * @param path   需要被删除的文件目录
+     * @param filter 删除过滤器 如果返回 true 则删除，否则不删除
+     * @throws IOException 删除操作出现异常
+     */
+    private long rDelete(final Path path, final Transformation<KeyValue<Long, String>, Boolean> filter) throws IOException {
+        long used = 0;
+        if (!fileSystem.exists(path)) {
+            return 0;
+        }
+
+        // 如果是一个文件或者满足过滤条件的文件/目录，则直接删除
+        final FileStatus fileStatus = fileSystem.getFileStatus(path);
+        if (!fileStatus.isDirectory()) {
+            return rDelete(path);
+        }
+
+        // 递归删除目录及其内容
+        long okCount = 0, allCount = 0;
+        // 如果是目录，需要递归处理其内容
+        final RemoteIterator<FileStatus> statusIterator = fileSystem.listStatusIterator(path);
+        while (statusIterator.hasNext()) {
+            ++allCount;
+            final FileStatus status = statusIterator.next();
+            final Path path1 = status.getPath();
+            final KeyValue<Long, String> longStringKeyValue = new KeyValue<>(status.getModificationTime(), path1.getName());
+            if (filter.function(longStringKeyValue)) {
+                ++okCount;
+                used += rDelete(path1, filter);
+            }
+        }
+        if (allCount != okCount) {
+            return used;
+        }
+        // 然后删除自己
+        fileSystem.delete(path, false); // false 表示不递归删除
+        return used;
     }
 
     /**

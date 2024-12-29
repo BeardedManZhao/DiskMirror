@@ -157,7 +157,8 @@ public interface Adapter {
      *                   fileName  文件名称
      *                   userId      空间id
      *                   type        文件类型,
-     *                   secure.key  加密密钥
+     *                   secure.key  加密密钥,
+     *                   filter      过滤器，用于过滤文件，默认为空，表示不过滤 这样删除的就会是整个目录
      *                   }
      * @return {res: 删除结果}
      * @throws IOException 操作异常

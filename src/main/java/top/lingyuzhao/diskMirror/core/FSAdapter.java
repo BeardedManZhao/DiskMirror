@@ -2,11 +2,13 @@ package top.lingyuzhao.diskMirror.core;
 
 import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.conf.Config;
+import top.lingyuzhao.diskMirror.core.filter.FileMatchManager;
 import top.lingyuzhao.diskMirror.core.module.HandleModule;
 import top.lingyuzhao.diskMirror.core.module.SkCheckModule;
 import top.lingyuzhao.diskMirror.utils.JsonUtils;
 import top.lingyuzhao.diskMirror.utils.PathGeneration;
 import top.lingyuzhao.diskMirror.utils.ProgressBar;
+import top.lingyuzhao.utils.StrUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -396,7 +398,24 @@ public abstract class FSAdapter implements Adapter {
                 jsonObject
         );
         jsonObject.put("maxSize", config.getSpaceMaxSize(jsonObject.getString("userId")));
-        return this.pathProcessorRemove(path[2], jsonObject);
+        // 检查是否要使用过滤器
+        final Object o = jsonObject.get("filter");
+        if (o == null) {
+            // 代表不需要过滤器 所以直接装载默认的过滤器
+            jsonObject.put("filter_class", FileMatchManager.ALLOW_ALL.getOrNew(null));
+        } else {
+            // 出现这情况 就需要获取过滤器了 第一个元素是过滤器类型  第二个元素是过滤器参数
+            final String[] strings = StrUtils.splitBy(o.toString(), ':', 2);
+            if (strings.length != 2) {
+                strings[1] = "";
+            }
+            // 把过滤器装载
+            jsonObject.put("filter_class", FileMatchManager.valueOf(strings[0]).getOrNew(strings[1]));
+        }
+        final JSONObject jsonObject1 = this.pathProcessorRemove(path[2], jsonObject);
+        // 确保返回的时候无异常 将删除过滤器去除
+        jsonObject1.remove("filter_class");
+        return jsonObject1;
     }
 
     /**

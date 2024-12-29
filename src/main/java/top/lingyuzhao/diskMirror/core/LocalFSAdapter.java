@@ -4,7 +4,10 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.conf.Config;
 import top.lingyuzhao.diskMirror.utils.ProgressBar;
+import top.lingyuzhao.utils.ASClass;
 import top.lingyuzhao.utils.IOUtils;
+import top.lingyuzhao.utils.dataContainer.KeyValue;
+import top.lingyuzhao.utils.transformation.Transformation;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -119,16 +122,17 @@ public final class LocalFSAdapter extends FSAdapter {
         // 开始进行删除操作
         final File file = new File(path);
         if (!file.exists()) {
-            jsonObject.put(this.resK, "删除失败!!!文件不存在!");
+            jsonObject.put(this.resK, "删除失败!!!文件不存在! ");
             return jsonObject;
         }
         if (file.isDirectory()) {
             // 如果是文件夹就使用文件夹的删除方法
-            jsonObject.put("useSize", this.diffUseSize(jsonObject.getIntValue("userId"), jsonObject.getString("type"), rDelete(file), true));
+            jsonObject.put("useSize", this.diffUseSize(jsonObject.getIntValue("userId"), jsonObject.getString("type"), this.rDelete(file, ASClass.transform(jsonObject.get("filter_class"))), true));
             jsonObject.put(this.resK, this.resOkValue);
             return jsonObject;
         }
         final long length = file.length();
+
         if (file.delete()) {
             // 删除成功
             jsonObject.put("useSize", this.diffUseSize(jsonObject.getIntValue("userId"), jsonObject.getString("type"), length, true));
@@ -207,14 +211,15 @@ public final class LocalFSAdapter extends FSAdapter {
     /**
      * 递归删除一个目录 并将删除的字节数值返回
      *
-     * @param file1 需要被删除的文件目录
+     * @param file1  需要被删除的文件目录
+     * @param filter 过滤器 如果返回 true 才会被删除
      * @return 删除的字节数值
      * @throws IOException 删除操作出现异常
      */
-    public long rDelete(File file1) throws IOException {
+    public long rDelete(final File file1, final Transformation<KeyValue<Long, String>, Boolean> filter) throws IOException {
         // 判断路径是否存在
         if (!file1.exists()) {
-            throw new IOException("Directory does not exist.");
+            return 0;
         }
         // 判断路径是否为目录
         if (!file1.isDirectory()) {
@@ -231,17 +236,29 @@ public final class LocalFSAdapter extends FSAdapter {
         if (files == null) {
             return 0;
         }
+        int okCount = 0;
         for (File file : files) {
             if (file.isDirectory()) {
-                bytesDeleted += rDelete(file);
+                bytesDeleted += rDelete(file, filter);
+                ++okCount;
             } else {
-                final long length = file.length();
-                if (file.delete()) {
-                    bytesDeleted += length;
-                } else {
-                    throw new IOException("Failed to delete file: " + file.getName());
+                // 判断是否需要删除
+                final KeyValue<Long, String> longStringKeyValue = new KeyValue<>(file.lastModified(), file.getName());
+                // 判断是否需要删除
+                if (filter.function(longStringKeyValue)) {
+                    ++okCount;
+                    // 删除文件
+                    final long length = file.length();
+                    if (file.delete()) {
+                        bytesDeleted += length;
+                    } else {
+                        throw new IOException("Failed to delete file: " + file.getName());
+                    }
                 }
             }
+        }
+        if (okCount != files.length) {
+            return bytesDeleted;
         }
         // 然后删除自己
         if (file1.delete()) {

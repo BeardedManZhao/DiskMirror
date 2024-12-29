@@ -2,6 +2,7 @@ package top.lingyuzhao.diskMirror.core;
 
 import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.conf.Config;
+import top.lingyuzhao.diskMirror.core.filter.FileMatchManager;
 
 import java.util.Map;
 
@@ -219,6 +220,18 @@ public class DiskMirrorRequest extends JSONObject {
      */
     public DiskMirrorRequest setProtocolPrefix(boolean isUse) {
         this.put(Config.PROTOCOL_PREFIX, isUse);
+        return this;
+    }
+
+    /**
+     * 设置当前的请求对象中 filter
+     *
+     * @param filter 当前请求中要使用的过滤器，只有满足此过滤器的才可以被操作！
+     * @param match  匹配模式 不同过滤器有不同实现
+     * @return 当前的请求对象
+     */
+    public DiskMirrorRequest setFilter(FileMatchManager filter, String match) {
+        this.put("filter", filter.name() + ':' + match);
         return this;
     }
 }
