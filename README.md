@@ -75,7 +75,7 @@ url 等操作，这会大大减少您开发IO代码的时间。
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.3.9</version>
+        <version>1.4.0</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -1569,7 +1569,33 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 
 ## 更新记录
 
-### 2024-12-29 1.3.9 版本开始开发
+### 2025-01-05 1.4.0 稳定版本发布
+
+- 经过长时间的迭代和使用，此版本的目前修正了所有的 bug，并且进行了一些优化。
+- 为 http 适配器中的 download 操作不支持中文的问题。下面是一个示例！
+```java
+@DiskMirrorConfig(
+        fsDefaultFS = "https://xxx.com",
+        // 设置下载时 要使用的字符集 用于进行 url 编码等操作！
+        charSet = "UTF-8"
+)
+public final class MAIN {
+    public static void main(String[] args) {
+        Adapter adapter = DiskMirror.DiskMirrorHttpAdapter.getAdapter(MAIN.class);
+        try (
+                final InputStream inputStream = adapter.downLoad(
+                        // 这里是一个带有中文的路径
+                        DiskMirrorRequest.uploadRemove(-999999999, Type.Binary, "/111.31.150.102/share/2025_01_05/12月7日.mp4")
+                );
+                final FileOutputStream fileOutputStream = new FileOutputStream("C:\\Users\\zhao\\Desktop\\fsdownload\\e.mp4")
+        ) {
+            IOUtils.copy(inputStream, fileOutputStream, true);
+        }
+    }
+}
+```
+
+### 2024-12-29 1.3.9 版本发布
 
 - 新增 `remove` 操作 ` filter ` 请求参数，其可以实现删除指定的文件，下面是参数列表。
 

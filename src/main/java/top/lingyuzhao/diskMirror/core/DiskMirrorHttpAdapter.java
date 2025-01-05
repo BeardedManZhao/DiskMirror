@@ -19,6 +19,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
 
 /**
@@ -363,11 +364,12 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
     @Override
     public InputStream downLoad(JSONObject jsonObject) throws IOException {
         // 开远程的数据流
-        String path = this.downLoad + jsonObject.getString("userId") +
-                '/' + jsonObject.getString("type") +
-                "?fileName=" + jsonObject.getString("fileName") +
-                "&sk=" + jsonObject.getOrDefault("secure.key", 0);
-        return requestGetStream(new URL(path));
+        return requestGetStream(new URL(
+                this.downLoad + jsonObject.getString("userId") +
+                        '/' + jsonObject.getString("type") +
+                        "?fileName=" + URLEncoder.encode(jsonObject.getString("fileName"), this.charset.name()) +
+                        "&sk=" + jsonObject.getOrDefault("secure.key", 0)
+        ));
     }
 
     /**
