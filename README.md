@@ -620,7 +620,7 @@ public class MAIN {
         JSONObject jsonObject = adapter.remove(
                 // 构建删除请求对象 这里我们的删除操作是要作用在 1024 空间 Binary类型下的 arc.png 文件
                 DiskMirrorRequest.uploadRemove(1024, Type.Binary, "arc.png")
-                        // 如果 message 是文件 则 filter 不生效 而是直接删除
+                        // 如果 arc.png 是文件 则 filter 不生效 而是直接删除
                         // 在这里使用的是允许所有，要求删除所有文件
                         .setFilter(FileMatchManager.ALLOW_ALL, null")
         );
