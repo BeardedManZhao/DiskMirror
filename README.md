@@ -621,8 +621,8 @@ public class MAIN {
                 // 构建删除请求对象 这里我们的删除操作是要作用在 1024 空间 Binary类型下的 arc.png 文件
                 DiskMirrorRequest.uploadRemove(1024, Type.Binary, "arc.png")
                         // 如果 message 是文件 则 filter 不生效 而是直接删除
-                        // 在这里使用的是时间过滤器，要求删除最后一次修改位于 1720598323221时间戳 之前的文件
-                        .setFilter(FileMatchManager.FILE_TIME_MATCH, "1720598323221")
+                        // 在这里使用的是允许所有，要求删除所有文件
+                        .setFilter(FileMatchManager.ALLOW_ALL, null")
         );
         System.out.println(jsonObject);
     }
