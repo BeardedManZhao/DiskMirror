@@ -1,6 +1,6 @@
 ![logo](https://github.com/user-attachments/assets/0b05e34b-96e3-44ec-8a69-bb9b82059a07)
 
-[<img src="https://api.gitsponsors.com/api/badge/img?id=729754597" height="20">](https://api.gitsponsors.com/api/badge/link?p=Kb4oezU+2A832W0+VM9ivoS6xqt+Upo2BeKFJzCbqUgxbxiizpjLccUh16tfPeNgeZGftRDs2hIZbh3HPvMdy4ZxWT7oWw6rXw0SEDspbPtLSQ9k8XHMJgUKx2ZZkbm7JEE2J6/EWhChVLW5J6/zdA==)
+[<img src="https://api.gitsponsors.com/api/badge/img?id=729754597" height="20">](https://api.gitsponsors.com/api/badge/link?p=Kb4oezU+2A832W0+VM9ivjADnHekHcp3XbfbuoHa8RTBVo9kXlcWASHs6MuoXAtTvfnZdJUUW2DpGzmFGSp7FEEe2SAe2Z9lgGgucBdQvlU3gWvKqUeif4zMz6138lzPZsctY5fRwr0KhdEcvynrUA==)
 
 # DiskMirror 
 盘镜（DiskMirror）是一款开源文件系统管理框架，旨在通过提供一系列适配器来简化不同存储系统间的文件操作。无论是本地文件系统、Hadoop分布式文件系统（HDFS），还是自定义的远程存储解决方案，盘镜都能帮助开发者轻松地进行统一管理和操作。通过减少重复编码工作量，提高开发效率，盘镜为现代应用提供了灵活且高效的文件存储解决方案。
