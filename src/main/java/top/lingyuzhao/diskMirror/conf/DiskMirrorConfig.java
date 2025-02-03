@@ -80,4 +80,20 @@ public @interface DiskMirrorConfig {
      * @return 是否不允许覆盖写入模式 默认为 true 代表不允许覆盖写入 如果有重复文件会报错！
      */
     boolean isNotOverWrite() default true;
+
+    /**
+     * @return 当进行一些空间配置的时候 要使用的映射器，映射器是用来将配置保存起来的工具。
+     */
+    String useSpaceConfigMode() default "HashMapper";
+
+    /**
+     * @return 如果要使用 redis 配置映射器，那么这个属性就是 redis 的链接地址，格式为 ip:port:db
+     * 默认为 127.0.0.1:6379:0
+     */
+    String redisHostPortDB() default "127.0.0.1:6379:0";
+
+    /**
+     * @return redis 的密码，默认为 ‘-’
+     */
+    String redisPassword() default "-";
 }

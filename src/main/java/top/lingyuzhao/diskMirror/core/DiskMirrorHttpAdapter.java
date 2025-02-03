@@ -44,6 +44,7 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
     private final URI upload, remove, getUrls, mkdirs, reName, version, useSize, setSpaceSk, transferDeposit, transferDepositStatus;
     private final String downLoad;
     private final String getSpaceMaxSizeURL;
+    private final URI setSpaceMaxSize;
 
     /**
      * 构建一个适配器
@@ -78,6 +79,7 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
             transferDepositStatus = new URI(url + "transferDepositStatus");
             downLoad = url + "downLoad/";
             getSpaceMaxSizeURL = url + "getSpaceSize?";
+            setSpaceMaxSize = new URI(url + "setSpaceSize");
             setSpaceSk = new URI(url + "setSpaceSk");
             charset = Charset.forName(config.getString(Config.CHAR_SET));
         } catch (URISyntaxException e) {
@@ -425,14 +427,13 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
     }
 
     /**
-     * 设置指定空间的最大使用量
+     * 设置指定空间的最大使用量，只要没出现错误，就代表设置成功了
      *
      * @param spaceId 指定空间的 id
-     * @param maxSize 指定空间的最大使用量
      */
     @Override
-    public void setSpaceMaxSize(String spaceId, long maxSize) {
-        throw unsupportedOperationException;
+    public void setSpaceMaxSize(String spaceId, long newSize) {
+        this.setSpaceMaxSize(spaceId, newSize, 0);
     }
 
     /**
@@ -479,8 +480,12 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
     }
 
     @Override
-    public void setSpaceMaxSize(String spaceId, long maxSize, int sk) {
-        throw unsupportedOperationException;
+    public void setSpaceMaxSize(String spaceId, long newSize, int sk) {
+        try {
+            this.request(DiskMirrorRequest.setSpaceSize(Integer.parseInt(spaceId), newSize).setSk(sk), setSpaceMaxSize);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

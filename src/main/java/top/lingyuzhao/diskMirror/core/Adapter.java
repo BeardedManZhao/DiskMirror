@@ -78,7 +78,7 @@ public interface Adapter extends Closeable {
      *
      * @param spaceId 指定空间的 id
      * @param maxSize 指定空间的最大使用量
-     * @param sk      安全密钥
+     * @param sk      安全密钥 （设计对空间的操作 必须要使用系统sk 而非空间sk）
      */
     void setSpaceMaxSize(String spaceId, long maxSize, int sk);
 
@@ -364,7 +364,9 @@ public interface Adapter extends Closeable {
      * 关闭适配器
      */
     @Override
-    void close();
+    default void close() {
+        this.getConfig().clear();
+    }
 
     /**
      * @return 当前适配器对应的版本号

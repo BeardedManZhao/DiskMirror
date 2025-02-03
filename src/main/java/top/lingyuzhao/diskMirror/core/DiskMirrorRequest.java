@@ -50,6 +50,16 @@ public class DiskMirrorRequest extends JSONObject {
         return new DiskMirrorRequest(6).setUserId(userId);
     }
 
+    /**
+     * 对于当前空间进行一个访问令牌的生成
+     *
+     * @param userId  需要被创建访问令牌的空间id
+     * @param newSize 需要被设置的空间大小
+     * @return 请求对象！
+     */
+    public static DiskMirrorRequest setSpaceSize(int userId, long newSize) {
+        return new DiskMirrorRequest(6).setUserId(userId).setNewSize(newSize);
+    }
 
     /**
      * 创建 getUrls 请求
@@ -198,6 +208,17 @@ public class DiskMirrorRequest extends JSONObject {
      */
     public DiskMirrorRequest setNewName(String newName) {
         this.put("newName", newName);
+        return this;
+    }
+
+    /**
+     * 设置当前的请求对象中 newSize
+     *
+     * @param newSize 代表的是赋予此空间的新的大小
+     * @return 当前的请求对象
+     */
+    public DiskMirrorRequest setNewSize(long newSize) {
+        this.put("newSize", newSize);
         return this;
     }
 

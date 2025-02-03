@@ -86,8 +86,12 @@ public abstract class FSAdapter implements Adapter {
      */
     @Override
     public void setSpaceMaxSize(String spaceId, long maxSize, int sk) {
-        SkCheckModule.checkSK(this.config, spaceId, sk);
-        this.config.setSpaceMaxSize(spaceId, maxSize);
+        // 与默认的 sk 一致，则算是通过 可以修改
+        if (config.getSecureKey() == sk) {
+            this.config.setSpaceMaxSize(spaceId, maxSize);
+            return;
+        }
+        throw new UnsupportedOperationException("您提供的密钥错误，diskMirror 拒绝了您的访问");
     }
 
     /**
@@ -776,14 +780,6 @@ public abstract class FSAdapter implements Adapter {
     @Override
     public void deleteHandleModule(HandleModule handler) {
         this.handleModules.remove(handler.name());
-    }
-
-    /**
-     * 关闭适配器
-     */
-    @Override
-    public void close() {
-
     }
 
     /**

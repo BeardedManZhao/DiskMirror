@@ -82,7 +82,12 @@ url 等操作，这会大大减少您开发IO代码的时间。
         <groupId>com.alibaba.fastjson2</groupId>
         <artifactId>fastjson2</artifactId>
         <version>2.0.25</version>
-        <!--        <scope>provided</scope>-->
+    </dependency>
+    <!-- 从 disk Mirror 1.4.2 版本开始，此依赖为必选依赖，它的作用是为 diskMirror 对于一些空间的存储使用 redis 能够避免 HashMapper 存储配置数据冲突的情况 -->
+    <dependency>
+        <groupId>redis.clients</groupId>
+        <artifactId>jedis</artifactId>
+        <version>4.0.1</version>
     </dependency>
     <!-- 从 disk Mirror 1.1.0 版本开始 请确保 zhao-utils 的版本 >= 1.0.20240121 -->
     <!-- 从 disk Mirror 1.3.0 版本开始 请确保 zhao-utils 的版本 >= 1.0.20241026 -->
@@ -1009,6 +1014,50 @@ public final class MAIN {
 }
 ```
 
+### 空间设置映射器
+
+在上面描述的一些对于某个空间单独的设置操作，其是存储在 `HashMapper` 中的，事实上，您还可以指定一个空间设置映射器，其是存储在其它平台，在这里我们会演示！
+
+> 您如果不设置，则会使用默认的 HashMapper 进行存储
+
+#### 使用 redis 进行空间配置信息的存储
+
+```java
+import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
+import top.lingyuzhao.diskMirror.core.Adapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+
+/**
+ * @author zhao
+ */
+@DiskMirrorConfig(
+        // 设置默认的空间大小，这个空间设置会作用在所有的空间中
+        userDiskMirrorSpaceQuota = 1024,
+        // 设置存储空间配置使用redis存储（如 空间的大小，空间的sk）
+        useSpaceConfigMode = "JedisMapper",
+        // 设置redis的配置
+        redisHostPortDB = "redis.lingyuzhao.top:46379:0",
+        redisPassword = "38243824"
+)
+public final class MAIN {
+    public static void main(String[] args) {
+        try (final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(MAIN.class)) {
+            // 直接获取就是默认的配置
+            long spaceMaxSize = adapter.getSpaceMaxSize("1");
+            System.out.println(spaceMaxSize);
+
+            // 我们可以为某个空间单独设置这个最大使用量
+            adapter.setSpaceMaxSize("1", 1024 * 1024 * 1024);
+            // 再获取就是1024 * 1024 * 1024
+            spaceMaxSize = adapter.getSpaceMaxSize("1");
+            System.out.println(spaceMaxSize);
+
+            System.out.println(adapter.getSpaceMaxSize("2"));
+        }
+    }
+}
+```
+
 ## 综合使用示例
 
 ### 本地文件系统 适配器使用示例
@@ -1571,64 +1620,9 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 ## 更新记录
 
 
-### 2025-02-03 1.4.1 版本发布
+### 2025-02-03 1.4.2 版本发布
 
-- 特定空间配置的配置存储方式支持自定义，只需要实现`top.lingyuzhao.diskMirror.conf.ConfigMapper`就可以实现指定的空间的配置设置，这样的配置将会被优先调用!
-
-```java
-import com.alibaba.fastjson2.JSONObject;
-import top.lingyuzhao.diskMirror.conf.ConfigMapper;
-import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
-import top.lingyuzhao.diskMirror.conf.SpaceConfig;
-import top.lingyuzhao.diskMirror.core.Adapter;
-import top.lingyuzhao.diskMirror.core.DiskMirror;
-import top.lingyuzhao.utils.dataContainer.KeyValue;
-
-import java.util.Iterator;
-
-/**
- * @author zhao
- */
-@DiskMirrorConfig(
-        // 设置默认的空间大小，这个空间设置会作用在所有的空间中
-        userDiskMirrorSpaceQuota = 1024
-)
-public final class MAIN {
-    public static void main(String[] args) {
-        try (final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(MAIN.class)) {
-            adapter.getConfig().getSpaceConfig().setConfigMapper(
-                    new ConfigMapper() {
-                        @Override
-                        public void set(String spaceId, JSONObject value) {
-                            // 这里是将一个空间的配置信息存储起来的逻辑
-                        }
-
-                        @Override
-                        public Iterator<KeyValue<String, JSONObject>> iterator() {
-                            // 这里返回迭代器，其中 KeyValue 的 key 为空间 id，value 为空间配置
-                            return null;
-                        }
-
-                        @Override
-                        public JSONObject function(String s) {
-                            // 这里是用来获取到某个空间的配置信息的，如果没有配置信息，则返回 null
-                            return null;
-                        }
-
-                        /**
-                         * 释放资源
-                         */
-                        @Override
-                        public void close() {
-                            // 可以在这里做一些释放资源以及保存配置文件的操作
-                            ConfigMapper.super.close();
-                        }
-                    }
-            );
-        }
-    }
-}
-```
+- 支持使用 redis 存储空间单独的配置信息，这种配置信息会单独存储在 redis，默认是基于 hashMapper
 
 ### 2025-01-05 1.4.0 稳定版本发布
 

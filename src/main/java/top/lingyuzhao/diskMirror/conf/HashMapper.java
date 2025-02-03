@@ -3,6 +3,7 @@ package top.lingyuzhao.diskMirror.conf;
 import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.utils.dataContainer.KeyValue;
 
+import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -46,6 +47,7 @@ public class HashMapper implements ConfigMapper {
      * @return an Iterator.
      */
     @Override
+    @Nonnull
     public Iterator<KeyValue<String, JSONObject>> iterator() {
         return this.hashMap.keySet().stream().map(key -> new KeyValue<>(key, hashMap.get(key))).iterator();
     }

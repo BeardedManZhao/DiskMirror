@@ -57,7 +57,8 @@ public class SkCheckModule extends Verification {
      * @param sk      需要被检查的 sk 参数
      */
     public static void checkSK(Config config, String spaceId, int sk) {
-        if (getUserSk(spaceId, config) != sk) {
+        // 在这里会进行两个 sk 的校验 如果两个都失败了，则抛出异常
+        if (getUserSk(spaceId, config) != sk && sk != config.getSecureKey()) {
             StringBuilder showData = new StringBuilder(String.valueOf(sk));
             final int length = showData.length();
             for (int i = 0; i < length; i++) {

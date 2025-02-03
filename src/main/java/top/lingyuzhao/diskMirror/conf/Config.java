@@ -3,6 +3,7 @@ package top.lingyuzhao.diskMirror.conf;
 import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.utils.PathGeneration;
 
+import java.io.IOException;
 import java.util.HashMap;
 
 
@@ -63,7 +64,22 @@ public class Config extends JSONObject {
      */
     public final static String IS_NOT_OVER_WRITE = "is.not.over.write";
 
-    private final SpaceConfig spaceConfig = new SpaceConfig(this);
+    /**
+     * 使用 配置数据的存储操作 时需要的映射器
+     */
+    public final static String USE_SPACE_CONFIG_MODE = "use.space.config.mode";
+
+    /**
+     * redis 配置项
+     */
+    public final static String REDIS_HOST_PORT_DB = "redis.host:port:DB";
+
+    /**
+     * redis 密码
+     */
+    public final static String REDIS_PASSWORD = "redis.password";
+
+    private final SpaceConfig spaceConfig;
 
     /**
      * Constructs an empty <tt>HashMap</tt> with the default initial capacity
@@ -83,6 +99,10 @@ public class Config extends JSONObject {
         super.put(IS_NOT_OVER_WRITE, true);
         // 默认的路径生成逻辑  由 <空间id，文件名称> 生成 文件路径
         super.put(GENERATION_RULES, getPathGeneration());
+        super.put(USE_SPACE_CONFIG_MODE, "HashMapper");
+        super.put(REDIS_PASSWORD, "-");
+        super.put(REDIS_HOST_PORT_DB, "127.0.0.1:6379:0");
+        spaceConfig = new SpaceConfig(this);
     }
 
     /**
@@ -104,10 +124,16 @@ public class Config extends JSONObject {
         super.put(IS_NOT_OVER_WRITE, config.isNotOverWrite());
         // 默认的路径生成逻辑  由 <空间id，文件名称> 生成 文件路径
         super.put(GENERATION_RULES, getPathGeneration());
+        super.put(USE_SPACE_CONFIG_MODE, config.useSpaceConfigMode());
+        super.put(REDIS_PASSWORD, config.redisPassword());
+        super.put(REDIS_HOST_PORT_DB, config.redisHostPortDB());
+        // 初始化 space config 对象
+        spaceConfig = new SpaceConfig(this);
     }
 
     public Config(HashMap<String, Object> hashMap) {
         super(hashMap);
+        spaceConfig = new SpaceConfig(this);
     }
 
     /**
@@ -186,7 +212,7 @@ public class Config extends JSONObject {
      * @return 指定空间的最大使用量 字节数
      */
     public long getSpaceMaxSize(String spaceId) {
-        return (long) this.spaceConfig.getSpaceConfigByKey(spaceId, Config.USER_DISK_MIRROR_SPACE_QUOTA);
+        return ((Number) this.spaceConfig.getSpaceConfigByKey(spaceId, Config.USER_DISK_MIRROR_SPACE_QUOTA)).longValue();
     }
 
     /**
@@ -195,7 +221,7 @@ public class Config extends JSONObject {
      * @param spaceId 指定空间的 id
      * @param maxSize 指定空间的最大使用量
      */
-    public void setSpaceMaxSize(String spaceId, long maxSize) {
+    public void setSpaceMaxSize(String spaceId, Long maxSize) {
         this.spaceConfig.setSpaceConfigByKey(spaceId, Config.USER_DISK_MIRROR_SPACE_QUOTA, maxSize);
     }
 
@@ -221,6 +247,19 @@ public class Config extends JSONObject {
             this.put(SECURE_KEY, k);
         } else {
             throw new UnsupportedOperationException("您在 setSecureKey 设置密钥的时候，参数只能是字符串或数值。\nWhen setting the key in setSecureKey, the parameters can only be strings or numerical values.\nerror type = " + k.getClass().getName());
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void clear() {
+        super.clear();
+        try {
+            this.spaceConfig.close();
+        } catch (IOException ignored) {
+
         }
     }
 }

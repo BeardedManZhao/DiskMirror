@@ -20,6 +20,15 @@ public interface ConfigMapper extends Transformation<String, JSONObject>, Iterab
     void set(String spaceId, JSONObject value);
 
     /**
+     * 重新保存配置信息 有时候在外界进行了一些需要永久保存的配置 此方法会被调用
+     *
+     * @param spaceId 需要被立刻保存设置的空间 id
+     */
+    default void reSave(String spaceId) {
+
+    }
+
+    /**
      * 复制一个配置信息 到另一个实现中 通常是用来切换 mapper 实现的时候需要调用
      *
      * @param configMapper 需要被复制的配置信息
