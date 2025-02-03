@@ -1,32 +1,28 @@
 import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
 import top.lingyuzhao.diskMirror.core.Adapter;
 import top.lingyuzhao.diskMirror.core.DiskMirror;
-import top.lingyuzhao.diskMirror.core.DiskMirrorRequest;
-import top.lingyuzhao.diskMirror.core.Type;
-import top.lingyuzhao.utils.IOUtils;
-
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * @author zhao
  */
 @DiskMirrorConfig(
-        fsDefaultFS = "https://diskmirror.lingyuzhao.top/DiskMirrorBackEnd",
-        // 设置下载时 要使用的字符集 用于进行 url 编码等操作！
-        charSet = "UTF-8"
+        // 设置默认的空间大小，这个空间设置会作用在所有的空间中
+        userDiskMirrorSpaceQuota = 1024
 )
 public final class MAIN {
-    public static void main(String[] args) throws IOException {
-        Adapter adapter = DiskMirror.DiskMirrorHttpAdapter.getAdapter(MAIN.class);
-        try (
-                final InputStream inputStream = adapter.downLoad(
-                        DiskMirrorRequest.uploadRemove(-999999999, Type.Binary, "/111.31.150.102/share/2025_01_05/12月7日.mp4")
-                );
-                final FileOutputStream fileOutputStream = new FileOutputStream("C:\\Users\\zhao\\Desktop\\fsdownload\\e.mp4")
-        ) {
-            IOUtils.copy(inputStream, fileOutputStream, true);
+    public static void main(String[] args) {
+        try (final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(MAIN.class)) {
+            // 直接获取就是默认的配置
+            long spaceMaxSize = adapter.getSpaceMaxSize("1");
+            System.out.println(spaceMaxSize);
+
+            // 我们可以为某个空间单独设置这个最大使用量
+            adapter.setSpaceMaxSize("1", 1024 * 1024 * 1024);
+            // 再获取就是1024 * 1024 * 1024
+            spaceMaxSize = adapter.getSpaceMaxSize("1");
+            System.out.println(spaceMaxSize);
+
+            System.out.println(adapter.getSpaceMaxSize("2"));
         }
     }
 }

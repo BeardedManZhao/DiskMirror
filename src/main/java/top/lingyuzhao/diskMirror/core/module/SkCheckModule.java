@@ -4,7 +4,6 @@ import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.conf.Config;
 import top.lingyuzhao.diskMirror.exception.CheckException;
 
-import java.util.HashMap;
 import java.util.Random;
 
 /**
@@ -15,11 +14,6 @@ import java.util.Random;
  * @author zhao
  */
 public class SkCheckModule extends Verification {
-
-    /**
-     * id 与 安全密钥 存储容器
-     */
-    private static final HashMap<String, Integer> USER_ID_SK = new HashMap<>();
 
     private static final Random RANDOM = new Random();
 
@@ -32,14 +26,15 @@ public class SkCheckModule extends Verification {
      * 设置id 与 安全密钥
      *
      * @param userId 被设置的空间 id
+     * @param config 配置对象
      * @return 设置成功之后的结果！
      */
-    public static int setUserSk(String userId) {
+    public static int setUserSk(String userId, Config config) {
         if (userId == null) {
             throw new NullPointerException("userId cannot be null");
         }
         final int i = RANDOM.nextInt(Integer.MAX_VALUE);
-        USER_ID_SK.put(userId, i);
+        config.getSpaceConfig().setSpaceConfigByKey(userId, Config.SECURE_KEY, i);
         return i;
     }
 
@@ -51,12 +46,7 @@ public class SkCheckModule extends Verification {
      * @return 操作结果
      */
     public static int getUserSk(String userId, Config config) {
-        final Integer i = USER_ID_SK.get(userId);
-        if (i == null) {
-            return config.getSecureKey();
-        } else {
-            return i;
-        }
+        return (int) config.getSpaceConfig().getSpaceConfigByKey(userId, Config.SECURE_KEY);
     }
 
     /**

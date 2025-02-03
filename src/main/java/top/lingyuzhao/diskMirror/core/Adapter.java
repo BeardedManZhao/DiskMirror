@@ -5,6 +5,7 @@ import top.lingyuzhao.diskMirror.conf.Config;
 import top.lingyuzhao.diskMirror.core.module.HandleModule;
 import top.lingyuzhao.diskMirror.core.module.ModuleManager;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -15,7 +16,7 @@ import java.util.function.Consumer;
  * <p>
  * The interface of the adapter object, through which operations can be carried out on corresponding file system devices, and instances of this class can also be used to manage file system devices
  */
-public interface Adapter {
+public interface Adapter extends Closeable {
 
     /**
      * 检查函数 此函数会处于所有服务函数的第一行
@@ -362,6 +363,7 @@ public interface Adapter {
     /**
      * 关闭适配器
      */
+    @Override
     void close();
 
     /**

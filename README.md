@@ -76,7 +76,7 @@ url 等操作，这会大大减少您开发IO代码的时间。
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.4.0</version>
+        <version>1.4.1</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -623,7 +623,7 @@ public class MAIN {
                 DiskMirrorRequest.uploadRemove(1024, Type.Binary, "arc.png")
                         // 如果 arc.png 是文件 则 filter 不生效 而是直接删除
                         // 在这里使用的是允许所有，要求删除所有文件
-                        .setFilter(FileMatchManager.ALLOW_ALL, null")
+                        .setFilter(FileMatchManager.ALLOW_ALL, null)
         );
         System.out.println(jsonObject);
     }
@@ -1569,6 +1569,66 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 ```
 
 ## 更新记录
+
+
+### 2025-02-03 1.4.1 版本发布
+
+- 特定空间配置的配置存储方式支持自定义，只需要实现`top.lingyuzhao.diskMirror.conf.ConfigMapper`就可以实现指定的空间的配置设置，这样的配置将会被优先调用!
+
+```java
+import com.alibaba.fastjson2.JSONObject;
+import top.lingyuzhao.diskMirror.conf.ConfigMapper;
+import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
+import top.lingyuzhao.diskMirror.conf.SpaceConfig;
+import top.lingyuzhao.diskMirror.core.Adapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+import top.lingyuzhao.utils.dataContainer.KeyValue;
+
+import java.util.Iterator;
+
+/**
+ * @author zhao
+ */
+@DiskMirrorConfig(
+        // 设置默认的空间大小，这个空间设置会作用在所有的空间中
+        userDiskMirrorSpaceQuota = 1024
+)
+public final class MAIN {
+    public static void main(String[] args) {
+        try (final Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(MAIN.class)) {
+            adapter.getConfig().getSpaceConfig().setConfigMapper(
+                    new ConfigMapper() {
+                        @Override
+                        public void set(String spaceId, JSONObject value) {
+                            // 这里是将一个空间的配置信息存储起来的逻辑
+                        }
+
+                        @Override
+                        public Iterator<KeyValue<String, JSONObject>> iterator() {
+                            // 这里返回迭代器，其中 KeyValue 的 key 为空间 id，value 为空间配置
+                            return null;
+                        }
+
+                        @Override
+                        public JSONObject function(String s) {
+                            // 这里是用来获取到某个空间的配置信息的，如果没有配置信息，则返回 null
+                            return null;
+                        }
+
+                        /**
+                         * 释放资源
+                         */
+                        @Override
+                        public void close() {
+                            // 可以在这里做一些释放资源以及保存配置文件的操作
+                            ConfigMapper.super.close();
+                        }
+                    }
+            );
+        }
+    }
+}
+```
 
 ### 2025-01-05 1.4.0 稳定版本发布
 

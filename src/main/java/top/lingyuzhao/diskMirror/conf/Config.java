@@ -62,10 +62,8 @@ public class Config extends JSONObject {
      * 是否不允许覆盖写入
      */
     public final static String IS_NOT_OVER_WRITE = "is.not.over.write";
-    /**
-     * 用户 盘镜 空间配合映射表，通过此处的映射操作可以获取到指定用户的空间的使用量最大值。
-     */
-    private final static JSONObject SPACE_SIZE = new JSONObject();
+
+    private final SpaceConfig spaceConfig = new SpaceConfig(this);
 
     /**
      * Constructs an empty <tt>HashMap</tt> with the default initial capacity
@@ -173,17 +171,22 @@ public class Config extends JSONObject {
     }
 
     /**
+     * 获取到空间配置对象，此空间配置对象 是可以针对某一个空间来进行配置的，它配置的优先级更高！
+     *
+     * @return 获取到空间配置对象
+     */
+    public SpaceConfig getSpaceConfig() {
+        return spaceConfig;
+    }
+
+    /**
      * 获取到指定空间的最大使用量
      *
      * @param spaceId 指定空间的 id
      * @return 指定空间的最大使用量 字节数
      */
     public long getSpaceMaxSize(String spaceId) {
-        final Long longValue = SPACE_SIZE.getLong(spaceId);
-        if (longValue == null) {
-            return this.getLongValue(USER_DISK_MIRROR_SPACE_QUOTA);
-        }
-        return longValue;
+        return (long) this.spaceConfig.getSpaceConfigByKey(spaceId, Config.USER_DISK_MIRROR_SPACE_QUOTA);
     }
 
     /**
@@ -193,7 +196,7 @@ public class Config extends JSONObject {
      * @param maxSize 指定空间的最大使用量
      */
     public void setSpaceMaxSize(String spaceId, long maxSize) {
-        SPACE_SIZE.put(spaceId, maxSize);
+        this.spaceConfig.setSpaceConfigByKey(spaceId, Config.USER_DISK_MIRROR_SPACE_QUOTA, maxSize);
     }
 
     /**
