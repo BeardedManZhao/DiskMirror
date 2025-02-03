@@ -1620,7 +1620,7 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 ## 更新记录
 
 
-### 2025-02-03 1.4.2 版本发布
+### 2025-02-03 1.4.3 版本发布
 
 - 支持使用 redis 存储空间单独的配置信息，这种配置信息会单独存储在 redis，默认是基于 hashMapper
 

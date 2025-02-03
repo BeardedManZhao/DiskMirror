@@ -19,7 +19,10 @@ public class JedisMapper implements ConfigMapper {
     private final static String KEY = "DiskMirror.SpaceConfig";
     private final Jedis jedis;
 
-    private final CacheUtils cacheUtils = CacheUtils.getCacheUtils("RedisMapper", 60 * 60 * 24);
+    /**
+     * 缓存工具 设置有效期为 60 分钟
+     */
+    private final CacheUtils cacheUtils = CacheUtils.getCacheUtils("RedisMapper", 60 * 60 * 1000);
 
     public JedisMapper(Jedis jedis) {
         this.jedis = jedis;

@@ -35,6 +35,7 @@ public class SpaceConfig implements Closeable {
                 jedis.auth(config.getString(Config.REDIS_PASSWORD));
                 jedis.select(Integer.parseInt(strings[2]));
                 this.configMapper = new JedisMapper(jedis);
+                break;
             default:
                 throw new RuntimeException("配置映射模式错误，没有找到您期望的映射器：" + config.getString(Config.USE_SPACE_CONFIG_MODE));
         }
@@ -76,6 +77,10 @@ public class SpaceConfig implements Closeable {
         configMapper.reSave(spaceId);
     }
 
+    /**
+     * 设置配置映射器 您可以将一个新的配置映射器赋值给当前的配置映射器
+     * @param configMapper 新的配置映射器
+     */
     public void setConfigMapper(ConfigMapper configMapper) {
         // 将当前的mapper 拷贝到新的 mapper
         this.configMapper.copy(configMapper);
