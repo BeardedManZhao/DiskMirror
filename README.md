@@ -76,14 +76,14 @@ url 等操作，这会大大减少您开发IO代码的时间。
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.4.1</version>
+        <version>1.4.4</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
         <artifactId>fastjson2</artifactId>
         <version>2.0.25</version>
     </dependency>
-    <!-- 从 disk Mirror 1.4.2 版本开始，此依赖为必选依赖，它的作用是为 diskMirror 对于一些空间的存储使用 redis 能够避免 HashMapper 存储配置数据冲突的情况 -->
+    <!-- 从 disk Mirror 1.4.3 版本开始，此依赖为必选依赖，它的作用是为 diskMirror 对于一些空间的存储使用 redis 能够避免 HashMapper 存储配置数据冲突的情况 -->
     <dependency>
         <groupId>redis.clients</groupId>
         <artifactId>jedis</artifactId>
@@ -1620,7 +1620,7 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 ## 更新记录
 
 
-### 2025-02-03 1.4.3 版本发布
+### 2025-02-04 1.4.4 版本发布
 
 - 支持使用 redis 存储空间单独的配置信息，这种配置信息会单独存储在 redis，默认是基于 hashMapper
 

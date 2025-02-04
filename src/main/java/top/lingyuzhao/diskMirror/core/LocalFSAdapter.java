@@ -79,7 +79,7 @@ public final class LocalFSAdapter extends FSAdapter {
             jsonObject1.put("lastModified", file.lastModified());
             jsonObject1.put("size", file.length());
             jsonObject1.put("type", type);
-            // 查看当前的是否是一个目录 如果是目录就继续获取到字目录
+            // 查看当前的是否是一个目录 如果是目录就继续获取到子目录
             if (file.isDirectory()) {
                 jsonObject1.put("isDir", true);
                 jsonObject1.putAll(this.pathProcessorGetUrls(file, filePath, jsonObject1.clone(), type));
