@@ -9,6 +9,8 @@ import top.lingyuzhao.diskMirror.utils.JsonUtils;
 import top.lingyuzhao.diskMirror.utils.PathGeneration;
 import top.lingyuzhao.diskMirror.utils.ProgressBar;
 import top.lingyuzhao.utils.StrUtils;
+import top.lingyuzhao.utils.dataContainer.KeyValue;
+import top.lingyuzhao.utils.transformation.Transformation;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -193,8 +195,11 @@ public abstract class FSAdapter implements Adapter {
     /**
      * 路径处理器 接收一个路径 输出结果对象  需要注意的是 您需要在这里设置返回的 useSize
      *
-     * @param path   路径对象
-     * @param inJson 文件输入的 json 对象
+     * @param path             路径对象
+     * @param inJson           文件输入的 json 对象
+     * @param fileMatchManager 文件匹配管理器
+     * @param filter           删除文件的过滤器 只有允许的文件才能删除
+     * @param allowDirNoDelete 是否允许目录不全部删除，如果允许 则在最后删除文件的时候不需要做校验 不需要报错
      * @return {
      * res : 结果
      * userId:文件所属用户id,
@@ -202,7 +207,7 @@ public abstract class FSAdapter implements Adapter {
      * }
      * @throws IOException 操作异常
      */
-    protected abstract JSONObject pathProcessorRemove(String path, JSONObject inJson) throws IOException;
+    protected abstract JSONObject pathProcessorRemove(String path, JSONObject inJson, FileMatchManager fileMatchManager, Transformation<KeyValue<Long, String>, Boolean> filter, boolean allowDirNoDelete) throws IOException;
 
     /**
      * 路径处理器 接收一个路径 输出结果对象，这里不强制在返回的地方设置 useSize，会自动获取数据量，当然 如果您希望从自己的算法中获取 useSize 您可以进行设置
@@ -403,10 +408,12 @@ public abstract class FSAdapter implements Adapter {
         );
         jsonObject.put("maxSize", config.getSpaceMaxSize(jsonObject.getString("userId")));
         // 检查是否要使用过滤器
+        final FileMatchManager fileMatchManager;
         final Object o = jsonObject.get("filter");
         if (o == null) {
             // 代表不需要过滤器 所以直接装载默认的过滤器
-            jsonObject.put("filter_class", FileMatchManager.ALLOW_ALL.getOrNew(null));
+            fileMatchManager = FileMatchManager.ALLOW_ALL;
+            return this.pathProcessorRemove(path[2], jsonObject, fileMatchManager, fileMatchManager.getOrNew(null), false);
         } else {
             // 出现这情况 就需要获取过滤器了 第一个元素是过滤器类型  第二个元素是过滤器参数
             final String[] strings = StrUtils.splitBy(o.toString(), ':', 2);
@@ -414,12 +421,9 @@ public abstract class FSAdapter implements Adapter {
                 strings[1] = "";
             }
             // 把过滤器装载
-            jsonObject.put("filter_class", FileMatchManager.valueOf(strings[0]).getOrNew(strings[1]));
+            fileMatchManager = FileMatchManager.valueOf(strings[0]);
+            return this.pathProcessorRemove(path[2], jsonObject, fileMatchManager, fileMatchManager.getOrNew(strings[1]), fileMatchManager.allowDirNoDelete());
         }
-        final JSONObject jsonObject1 = this.pathProcessorRemove(path[2], jsonObject);
-        // 确保返回的时候无异常 将删除过滤器去除
-        jsonObject1.remove("filter_class");
-        return jsonObject1;
     }
 
     /**

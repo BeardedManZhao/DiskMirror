@@ -3,8 +3,8 @@ package top.lingyuzhao.diskMirror.core;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.conf.Config;
+import top.lingyuzhao.diskMirror.core.filter.FileMatchManager;
 import top.lingyuzhao.diskMirror.utils.ProgressBar;
-import top.lingyuzhao.utils.ASClass;
 import top.lingyuzhao.utils.IOUtils;
 import top.lingyuzhao.utils.dataContainer.KeyValue;
 import top.lingyuzhao.utils.transformation.Transformation;
@@ -118,7 +118,7 @@ public final class LocalFSAdapter extends FSAdapter {
     }
 
     @Override
-    protected JSONObject pathProcessorRemove(String path, JSONObject jsonObject) throws IOException {
+    protected JSONObject pathProcessorRemove(String path, JSONObject jsonObject, FileMatchManager fileMatchManager, Transformation<KeyValue<Long, String>, Boolean> filter, boolean allowDirNoDelete) throws IOException {
         // 开始进行删除操作
         final File file = new File(path);
         if (!file.exists()) {
@@ -127,7 +127,7 @@ public final class LocalFSAdapter extends FSAdapter {
         }
         if (file.isDirectory()) {
             // 如果是文件夹就使用文件夹的删除方法
-            jsonObject.put("useSize", this.diffUseSize(jsonObject.getIntValue("userId"), jsonObject.getString("type"), this.rDelete(file, ASClass.transform(jsonObject.get("filter_class"))), true));
+            jsonObject.put("useSize", this.diffUseSize(jsonObject.getIntValue("userId"), jsonObject.getString("type"), this.rDelete(file, filter, allowDirNoDelete)));
             jsonObject.put(this.resK, this.resOkValue);
             return jsonObject;
         }
@@ -211,12 +211,13 @@ public final class LocalFSAdapter extends FSAdapter {
     /**
      * 递归删除一个目录 并将删除的字节数值返回
      *
-     * @param file1  需要被删除的文件目录
-     * @param filter 过滤器 如果返回 true 才会被删除
+     * @param file1            需要被删除的文件目录
+     * @param filter           过滤器 如果返回 true 才会被删除
+     * @param allowDirNoDelete 是否允许目录不被完全删除
      * @return 删除的字节数值
      * @throws IOException 删除操作出现异常
      */
-    public long rDelete(final File file1, final Transformation<KeyValue<Long, String>, Boolean> filter) throws IOException {
+    public long rDelete(final File file1, final Transformation<KeyValue<Long, String>, Boolean> filter, final boolean allowDirNoDelete) throws IOException {
         // 判断路径是否存在
         if (!file1.exists()) {
             return 0;
@@ -236,17 +237,14 @@ public final class LocalFSAdapter extends FSAdapter {
         if (files == null) {
             return 0;
         }
-        int okCount = 0;
         for (File file : files) {
             if (file.isDirectory()) {
-                bytesDeleted += rDelete(file, filter);
-                ++okCount;
+                bytesDeleted += rDelete(file, filter, allowDirNoDelete);
             } else {
                 // 判断是否需要删除
                 final KeyValue<Long, String> longStringKeyValue = new KeyValue<>(file.lastModified(), file.getName());
                 // 判断是否需要删除
                 if (filter.function(longStringKeyValue)) {
-                    ++okCount;
                     // 删除文件
                     final long length = file.length();
                     if (file.delete()) {
@@ -257,11 +255,8 @@ public final class LocalFSAdapter extends FSAdapter {
                 }
             }
         }
-        if (okCount != files.length) {
-            return bytesDeleted;
-        }
         // 然后删除自己
-        if (file1.delete()) {
+        if (file1.delete() || allowDirNoDelete) {
             return bytesDeleted + file1.length();
         } else {
             throw new IOException("Failed to delete directory: " + file1.getName());

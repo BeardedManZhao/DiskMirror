@@ -4,15 +4,12 @@ import com.alibaba.fastjson2.JSONObject;
 import redis.clients.jedis.Jedis;
 import top.lingyuzhao.utils.StrUtils;
 
-import java.io.Closeable;
-import java.io.IOException;
-
 /**
  * 用户配置模块
  *
  * @author 赵凌宇
  */
-public class SpaceConfig implements Closeable {
+public class SpaceConfig {
 
     private final Config config;
     private ConfigMapper configMapper = new HashMapper();
@@ -78,33 +75,23 @@ public class SpaceConfig implements Closeable {
     }
 
     /**
-     * 设置配置映射器 您可以将一个新的配置映射器赋值给当前的配置映射器
-     * @param configMapper 新的配置映射器
+     * @return 当前的配置映射器
      */
-    public void setConfigMapper(ConfigMapper configMapper) {
-        // 将当前的mapper 拷贝到新的 mapper
-        this.configMapper.copy(configMapper);
-        // 关掉旧 mapper
-        configMapper.close();
-        // 将新的 mapper 赋值给当前的 mapper
-        this.configMapper = configMapper;
+    public ConfigMapper getConfigMapper() {
+        return configMapper;
     }
 
     /**
-     * Closes this stream and releases any system resources associated
-     * with it. If the stream is already closed then invoking this
-     * method has no effect.
+     * 设置配置映射器 您可以将一个新的配置映射器赋值给当前的配置映射器
      *
-     * <p> As noted in {@link AutoCloseable#close()}, cases where the
-     * close may fail require careful attention. It is strongly advised
-     * to relinquish the underlying resources and to internally
-     * <em>mark</em> the {@code Closeable} as closed, prior to throwing
-     * the {@code IOException}.
-     *
-     * @throws IOException if an I/O error occurs
+     * @param configMapper 新的配置映射器
      */
-    @Override
-    public void close() throws IOException {
+    public void setConfigMapper(ConfigMapper configMapper) {
+        // 将当前的mapper数据 拷贝到新的 mapper
+        this.configMapper.copyTo(configMapper);
+        // 关掉旧 mapper
         this.configMapper.close();
+        // 将新的 mapper 赋值给当前的 mapper
+        this.configMapper = configMapper;
     }
 }

@@ -3,9 +3,11 @@ package top.lingyuzhao.diskMirror.core;
 import com.alibaba.fastjson2.JSONException;
 import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.conf.Config;
+import top.lingyuzhao.diskMirror.core.filter.FileMatchManager;
 import top.lingyuzhao.diskMirror.utils.JsonUtils;
 import top.lingyuzhao.utils.StrUtils;
 import top.lingyuzhao.utils.dataContainer.KeyValue;
+import top.lingyuzhao.utils.transformation.Transformation;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -120,7 +122,7 @@ public class DM_DfsAdapter extends FSAdapter {
     }
 
     @Override
-    protected JSONObject pathProcessorRemove(String path, JSONObject inJson) {
+    protected JSONObject pathProcessorRemove(String path, JSONObject inJson, FileMatchManager fileMatchManager, Transformation<KeyValue<Long, String>, Boolean> filter, boolean allowDirNoDelete) {
         throw unsupportedOperationException;
     }
 

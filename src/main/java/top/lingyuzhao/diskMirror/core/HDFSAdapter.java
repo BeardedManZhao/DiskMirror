@@ -7,7 +7,6 @@ import org.apache.hadoop.fs.*;
 import top.lingyuzhao.diskMirror.conf.Config;
 import top.lingyuzhao.diskMirror.core.filter.FileMatchManager;
 import top.lingyuzhao.diskMirror.utils.ProgressBar;
-import top.lingyuzhao.utils.ASClass;
 import top.lingyuzhao.utils.IOUtils;
 import top.lingyuzhao.utils.StrUtils;
 import top.lingyuzhao.utils.dataContainer.KeyValue;
@@ -129,7 +128,7 @@ public class HDFSAdapter extends FSAdapter {
     }
 
     @Override
-    protected JSONObject pathProcessorRemove(String path, JSONObject inJson) {
+    protected JSONObject pathProcessorRemove(String path, JSONObject inJson, FileMatchManager fileMatchManager, Transformation<KeyValue<Long, String>, Boolean> filter, boolean allowDirNoDelete) {
         try {
             final Path path1 = new Path(path);
             if (!fileSystem.exists(path1)) {
@@ -138,11 +137,10 @@ public class HDFSAdapter extends FSAdapter {
             }
             final long useSize;
             {
-                final Object o = inJson.get("filter_class");
-                if (o == FileMatchManager.ALLOW_ALL) {
+                if (fileMatchManager == FileMatchManager.ALLOW_ALL) {
                     useSize = this.rDelete(path1);
                 } else {
-                    useSize = this.rDelete(path1, ASClass.transform(o));
+                    useSize = this.rDelete(path1, filter);
                 }
             }
             inJson.put("useSize", this.diffUseSize(inJson.getIntValue("userId"), inJson.getString("type"), useSize, true));

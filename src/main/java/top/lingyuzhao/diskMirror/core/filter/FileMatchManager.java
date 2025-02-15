@@ -13,7 +13,7 @@ public enum FileMatchManager {
     /**
      * 允许所有文件通过！
      */
-    ALLOW_ALL(file -> Boolean.TRUE) {
+    ALLOW_ALL(file -> Boolean.TRUE, false) {
         @Override
         public Transformation<KeyValue<Long, String>, Boolean> getOrNew(String match) {
             return this.filter;
@@ -22,7 +22,7 @@ public enum FileMatchManager {
     /**
      * 文件名 正则匹配
      */
-    FILE_NAME_MATCH(null) {
+    FILE_NAME_MATCH(null, true) {
         @Override
         public Transformation<KeyValue<Long, String>, Boolean> getOrNew(String match) {
             return FileNameMatchFilter.getInstance(match);
@@ -32,7 +32,7 @@ public enum FileMatchManager {
     /**
      * 文件时间戳 阈值匹配
      */
-    FILE_TIME_MATCH(null) {
+    FILE_TIME_MATCH(null, true) {
         @Override
         public Transformation<KeyValue<Long, String>, Boolean> getOrNew(String match) {
             return new FileTimeMatchFilter(Long.parseLong(match));
@@ -41,8 +41,11 @@ public enum FileMatchManager {
 
     protected final Transformation<KeyValue<Long, String>, Boolean> filter;
 
-    FileMatchManager(Transformation<KeyValue<Long, String>, Boolean> filter) {
+    protected final boolean allowDirNoDelete;
+
+    FileMatchManager(Transformation<KeyValue<Long, String>, Boolean> filter, boolean allowDirNoDelete) {
         this.filter = filter;
+        this.allowDirNoDelete = allowDirNoDelete;
     }
 
     /**
@@ -52,4 +55,11 @@ public enum FileMatchManager {
      * @return 创建出来的或直接获取到的 过滤器 输入的 key 是文件 size value 是文件名
      */
     public abstract Transformation<KeyValue<Long, String>, Boolean> getOrNew(String match);
+
+    /**
+     * @return 是否允许目录在删除后有剩余文件，如果允许则在最后删除目录不成功的时候不会报错
+     */
+    public boolean allowDirNoDelete() {
+        return this.allowDirNoDelete;
+    }
 }

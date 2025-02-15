@@ -4,7 +4,6 @@ import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.utils.PathGeneration;
 import top.lingyuzhao.utils.IOUtils;
 
-import java.io.IOException;
 import java.util.HashMap;
 
 
@@ -80,7 +79,7 @@ public class Config extends JSONObject {
      */
     public final static String REDIS_PASSWORD = "redis.password";
 
-    private SpaceConfig spaceConfig;
+    private final SpaceConfig spaceConfig;
 
     /**
      * Constructs an empty <tt>HashMap</tt> with the default initial capacity
@@ -103,7 +102,7 @@ public class Config extends JSONObject {
         super.put(USE_SPACE_CONFIG_MODE, "HashMapper");
         super.put(REDIS_PASSWORD, "-");
         super.put(REDIS_HOST_PORT_DB, "127.0.0.1:6379:0");
-        loadSpaceConfig();
+        this.spaceConfig = new SpaceConfig(this);
     }
 
     /**
@@ -129,21 +128,23 @@ public class Config extends JSONObject {
         super.put(REDIS_PASSWORD, config.redisPassword());
         super.put(REDIS_HOST_PORT_DB, config.redisHostPortDB());
         // 初始化 space config 对象
-        loadSpaceConfig();
+        this.spaceConfig = new SpaceConfig(this);
     }
 
     public Config(HashMap<String, Object> hashMap) {
         this();
         this.putAll(hashMap);
-        loadSpaceConfig();
+        this.loadSpaceConfig();
     }
 
     /**
      * 重新加载space config 对象 适用于在进行了一些 配置修改之后，需要重新加载 space config 对象
      */
     public void loadSpaceConfig() {
-        IOUtils.close(spaceConfig);
-        spaceConfig = new SpaceConfig(this);
+        // 这种情况就有可能其中存储了数据了 不能直接覆盖
+        SpaceConfig spaceConfig1 = new SpaceConfig(this);
+        // 将新的 space config 对象赋值给当前的 space config 对象 使用这个可以将配置一并迁移！
+        spaceConfig.setConfigMapper(spaceConfig1.getConfigMapper());
     }
 
     /**
@@ -266,10 +267,6 @@ public class Config extends JSONObject {
     @Override
     public void clear() {
         super.clear();
-        try {
-            this.spaceConfig.close();
-        } catch (IOException ignored) {
-
-        }
+        IOUtils.close(this.spaceConfig.getConfigMapper());
     }
 }

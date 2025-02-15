@@ -2,10 +2,13 @@ package top.lingyuzhao.diskMirror.core;
 
 import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.conf.Config;
+import top.lingyuzhao.diskMirror.core.filter.FileMatchManager;
 import top.lingyuzhao.diskMirror.core.ioStream.AutoCloseableInputStream;
 import top.lingyuzhao.diskMirror.utils.ProgressBar;
 import top.lingyuzhao.utils.IOUtils;
 import top.lingyuzhao.utils.StrUtils;
+import top.lingyuzhao.utils.dataContainer.KeyValue;
+import top.lingyuzhao.utils.transformation.Transformation;
 
 import java.io.*;
 import java.net.Socket;
@@ -113,7 +116,7 @@ public class TcpClientAdapter extends FSAdapter {
     }
 
     @Override
-    protected JSONObject pathProcessorRemove(String path, JSONObject inJson) throws IOException {
+    protected JSONObject pathProcessorRemove(String path, JSONObject inJson, FileMatchManager fileMatchManager, Transformation<KeyValue<Long, String>, Boolean> filter, boolean allowDirNoDelete) throws IOException {
         return getResJsonObject("remove", inJson);
     }
 
@@ -150,7 +153,7 @@ public class TcpClientAdapter extends FSAdapter {
 
     @Override
     public JSONObject remove(JSONObject jsonObject) throws IOException {
-        return this.pathProcessorRemove("", jsonObject);
+        return this.pathProcessorRemove("", jsonObject, FileMatchManager.ALLOW_ALL, null, false);
     }
 
     @Override

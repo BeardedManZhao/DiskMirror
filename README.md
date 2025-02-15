@@ -1619,6 +1619,10 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 
 ## 更新记录
 
+### 2025-02-05 1.4.6 版本开发中
+
+- 优化了删除文件时 使用文件的匹配的逻辑！同时修复了过滤器删除本地适配器文件的时候发生的错误！
+- 修复 `config` 调用 `loadSpaceConfig()` 之后，旧的SpaceConfig 数据会丢失的问题！
 
 ### 2025-02-04 1.4.4 版本发布
 

@@ -12,7 +12,10 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import top.lingyuzhao.diskMirror.conf.Config;
+import top.lingyuzhao.diskMirror.core.filter.FileMatchManager;
 import top.lingyuzhao.utils.IOUtils;
+import top.lingyuzhao.utils.dataContainer.KeyValue;
+import top.lingyuzhao.utils.transformation.Transformation;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -171,7 +174,7 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
      * }
      */
     @Override
-    protected JSONObject pathProcessorRemove(String path, JSONObject inJson) {
+    protected JSONObject pathProcessorRemove(String path, JSONObject inJson, FileMatchManager fileMatchManager, Transformation<KeyValue<Long, String>, Boolean> filter, boolean allowDirNoDelete) {
         throw unsupportedOperationException;
     }
 
