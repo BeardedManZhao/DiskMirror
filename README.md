@@ -76,7 +76,7 @@ url 等操作，这会大大减少您开发IO代码的时间。
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.4.4</version>
+        <version>1.4.6</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
