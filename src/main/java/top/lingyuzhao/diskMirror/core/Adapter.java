@@ -182,6 +182,17 @@ public interface Adapter extends Closeable {
     JSONObject reName(JSONObject jsonObject) throws IOException;
 
     /**
+     * 获取一个文件的下载地址
+     *
+     * @param jsonObject 请求对象
+     * @return 如果可以获取到下载地址，则返回下载地址
+     * @throws IOException 无法获取到下载地址 或 获取时失败了，则抛出异常
+     */
+    default String downLoadUrl(JSONObject jsonObject) throws IOException {
+        throw new IOException("This method is not implemented.");
+    }
+
+    /**
      * 将一个文件下载，使用数据流的方式来进行文件获取。
      *
      * @param jsonObject {

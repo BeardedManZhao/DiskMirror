@@ -187,7 +187,7 @@ public enum DiskMirror {
      * <p>
      * The current version of the disk mirror library
      */
-    public final static String VERSION = "1.4.6";
+    public final static String VERSION = "1.4.7";
 
     /**
      * 获取到当前 盘镜 的版本 以及 适配器的名称
@@ -318,7 +318,7 @@ public enum DiskMirror {
 
     @Override
     public String toString() {
-        return super.toString() + ":" + VERSION;
+        return super.toString() + ':' + VERSION;
     }
 
 }

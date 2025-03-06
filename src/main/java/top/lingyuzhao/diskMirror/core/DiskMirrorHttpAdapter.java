@@ -366,15 +366,27 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
         throw new UnsupportedOperationException(orDefault.toString());
     }
 
+    /**
+     * 获取到远程的下载地址 而非数据流
+     *
+     * @param jsonObject 请求参数
+     * @return 返回下载地址的字符串
+     * @throws IOException 请求发送过程出现错误则返回此异常对象
+     */
+    @Override
+    public String downLoadUrl(JSONObject jsonObject) throws IOException {
+        // 开远程的数据流
+        return this.downLoad + jsonObject.getString("userId") +
+                '/' + jsonObject.getString("type") +
+                "?fileName=" + URLEncoder.encode(jsonObject.getString("fileName"), this.charset.name()) +
+                "&sk=" + jsonObject.getOrDefault("secure.key", 0);
+    }
+
+
     @Override
     public InputStream downLoad(JSONObject jsonObject) throws IOException {
         // 开远程的数据流
-        return requestGetStream(new URL(
-                this.downLoad + jsonObject.getString("userId") +
-                        '/' + jsonObject.getString("type") +
-                        "?fileName=" + URLEncoder.encode(jsonObject.getString("fileName"), this.charset.name()) +
-                        "&sk=" + jsonObject.getOrDefault("secure.key", 0)
-        ));
+        return requestGetStream(new URL(this.downLoadUrl(jsonObject)));
     }
 
     /**
