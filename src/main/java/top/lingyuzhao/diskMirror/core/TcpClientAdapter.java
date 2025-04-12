@@ -46,7 +46,7 @@ public class TcpClientAdapter extends FSAdapter {
         try (
                 final Socket socket = new Socket((String) string[0], (Integer) string[1]);
                 final DataOutputStream metaO = new DataOutputStream(socket.getOutputStream());
-                final DataInputStream metaI = new DataInputStream(socket.getInputStream());
+                final DataInputStream metaI = new DataInputStream(socket.getInputStream())
 
         ) {
             metaO.writeUTF("upload");
@@ -80,7 +80,7 @@ public class TcpClientAdapter extends FSAdapter {
         try (
                 final Socket socket = new Socket((String) string[0], (Integer) string[1]);
                 final DataOutputStream metaO = new DataOutputStream(socket.getOutputStream());
-                final DataInputStream metaI = new DataInputStream(socket.getInputStream());
+                final DataInputStream metaI = new DataInputStream(socket.getInputStream())
 
         ) {
             metaO.writeUTF(command);
@@ -97,6 +97,11 @@ public class TcpClientAdapter extends FSAdapter {
     @Override
     protected JSONObject pathProcessorGetUrls(String path, String path_res, JSONObject inJson) throws IOException {
         return getResJsonObject("getUrls", inJson);
+    }
+
+    @Override
+    protected JSONObject pathProcessorGetUrls(String path, String path_res, String nowPath, JSONObject inJson) throws IOException {
+        return getResJsonObject("getUrlsNoRecursion", inJson);
     }
 
     @Override
@@ -130,7 +135,7 @@ public class TcpClientAdapter extends FSAdapter {
         try (
                 final Socket socket = new Socket((String) string[0], (Integer) string[1]);
                 final DataOutputStream metaO = new DataOutputStream(socket.getOutputStream());
-                final DataInputStream metaI = new DataInputStream(socket.getInputStream());
+                final DataInputStream metaI = new DataInputStream(socket.getInputStream())
 
         ) {
             metaO.writeUTF("useSize");
@@ -182,12 +187,12 @@ public class TcpClientAdapter extends FSAdapter {
     }
 
     @Override
-    public long diffUseSize(int id, String type, long size) throws IOException {
+    public long diffUseSize(int id, String type, long size) throws UnsupportedOperationException {
         throw new UnsupportedOperationException("The client does not support the operation: diffUseSize");
     }
 
     @Override
-    public long addUseSize(int id, String type, long size) throws IOException {
+    public long addUseSize(int id, String type, long size) throws UnsupportedOperationException {
         throw new UnsupportedOperationException("The client does not support the operation: addUseSize");
     }
 

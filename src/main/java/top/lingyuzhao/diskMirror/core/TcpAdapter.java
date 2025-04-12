@@ -88,6 +88,9 @@ public class TcpAdapter extends AdapterPacking {
                     case "getUrls":
                         outputStream.writeUTF(getUrls(parse).toString());
                         break;
+                    case "getUrlsNoRecursion":
+                        outputStream.writeUTF(getUrlsNoRecursion(parse).toString());
+                        break;
                     case "remove":
                         outputStream.writeUTF(remove(parse).toString());
                         break;

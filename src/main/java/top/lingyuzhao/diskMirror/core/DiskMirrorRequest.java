@@ -30,6 +30,14 @@ public class DiskMirrorRequest extends JSONObject {
         super(initialCapacity);
     }
 
+
+    /**
+     * @return 一个基础的请求对象
+     */
+    public static DiskMirrorRequest createFrom() {
+        return new DiskMirrorRequest(new JSONObject());
+    }
+
     /**
      * 关于此类的构造函数
      *
@@ -73,6 +81,18 @@ public class DiskMirrorRequest extends JSONObject {
     }
 
     /**
+     * 创建 getUrlsNoRecursion 请求
+     *
+     * @param userId   需要被获取到的空间的所属 id
+     * @param type     需要被获取到的空间的类型
+     * @param fileName 需要被获取到的文件的名称
+     * @return 请求对象！
+     */
+    public static DiskMirrorRequest getUrlsNoRecursion(int userId, Type type, String fileName) {
+        return setSpaceSk(userId).setType(type).setFileName(fileName);
+    }
+
+    /**
      * 创建 Upload 和 remove 请求
      *
      * @param userId   需要被获取到的空间的所属 id
@@ -105,7 +125,9 @@ public class DiskMirrorRequest extends JSONObject {
      * @return 请求对象！
      */
     public static DiskMirrorRequest mkdirs(int userId, Type type, String dirName) {
-        return getUrls(userId, type).setDirName(dirName);
+        return getUrls(userId, type)
+                .setDirName(dirName)
+                .setFileName(dirName);
     }
 
     /**

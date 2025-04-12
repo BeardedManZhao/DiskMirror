@@ -44,7 +44,7 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
     private final Charset charset;
     private final CloseableHttpClient httpClient;
     private final HttpPost httpPost;
-    private final URI upload, remove, getUrls, mkdirs, reName, version, useSize, setSpaceSk, transferDeposit, transferDepositStatus;
+    private final URI upload, remove, getUrls, getUrlsNoRecursion, mkdirs, reName, version, useSize, setSpaceSk, transferDeposit, transferDepositStatus;
     private final String downLoad;
     private final String getSpaceMaxSizeURL;
     private final URI setSpaceMaxSize;
@@ -75,6 +75,7 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
             version = new URI(url + "getVersion");
             remove = new URI(url + "remove");
             getUrls = new URI(url + "getUrls");
+            getUrlsNoRecursion = new URI(url + "getUrlsNoRecursion");
             mkdirs = new URI(url + "mkdirs");
             reName = new URI(url + "reName");
             useSize = new URI(url + "getUseSize");
@@ -142,6 +143,11 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
 
     @Override
     protected JSONObject pathProcessorGetUrls(String path, String path_res, JSONObject inJson) {
+        throw unsupportedOperationException;
+    }
+
+    @Override
+    protected JSONObject pathProcessorGetUrls(String path, String path_res, String nowPath, JSONObject inJson) {
         throw unsupportedOperationException;
     }
 
@@ -318,6 +324,12 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
     public JSONObject getUrls(JSONObject jsonObject) throws IOException {
         // 开始请求
         return this.request(jsonObject, this.getUrls);
+    }
+
+    @Override
+    public JSONObject getUrlsNoRecursion(JSONObject jsonObject) throws IOException {
+        // 开始请求
+        return this.request(jsonObject, this.getUrlsNoRecursion);
     }
 
     /**

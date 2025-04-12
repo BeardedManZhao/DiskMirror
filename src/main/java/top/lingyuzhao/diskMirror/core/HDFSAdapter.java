@@ -72,6 +72,15 @@ public class HDFSAdapter extends FSAdapter {
         return pathProcessorGetUrls(path, path_res, jsonObject, strings.length > 1 ? strings[1] : "");
     }
 
+    @Override
+    protected JSONObject pathProcessorGetUrls(String path, String path_res, String nowPath, JSONObject inJson) throws IOException {
+        final String[] strings = StrUtils.splitBy(path, '?', 2);
+        path = strings.length > 0 ? strings[0] : path;
+        path_res = StrUtils.splitBy(path_res, '?', 2)[0];
+        nowPath = StrUtils.splitBy(nowPath, '?', 2)[0];
+        return pathProcessorGetUrlsNoRecursion(nowPath, path, path_res, inJson, strings.length > 1 ? strings[1] : "");
+    }
+
 
     protected JSONObject pathProcessorGetUrls(String path, String path_res, JSONObject jsonObject, String paramStr) throws IOException {
         final Path path1 = new Path(path);
@@ -104,6 +113,31 @@ public class HDFSAdapter extends FSAdapter {
             }
         }
         jsonObject.put("useSize", this.getUseSize(jsonObject, path));
+        jsonObject.put(this.resK, this.resOkValue);
+        return jsonObject;
+    }
+
+    protected JSONObject pathProcessorGetUrlsNoRecursion(String nowPath, String spacePath, String path_res, JSONObject jsonObject, String paramStr) throws IOException {
+        final Path path1 = new Path(nowPath);
+        RemoteIterator<FileStatus> iterator = fileSystem.exists(path1) ? fileSystem.listStatusIterator(path1) : null;
+        final JSONArray urls = jsonObject.putArray("urls");
+        // 将所有的子文件添加到数组中
+        if (iterator != null) {
+            while (iterator.hasNext()) {
+                FileStatus subPath = iterator.next();
+                final JSONObject jsonObject1 = urls.addObject();
+                final Path path2 = subPath.getPath();
+                final String name = path2.getName();
+                final String fnNoParam = path_res + '/' + name, filePath = fnNoParam + "?" + paramStr;
+                jsonObject1.put("fileName", name);
+                jsonObject1.put("url", filePath);
+                jsonObject1.put("lastModified", subPath.getModificationTime());
+                jsonObject1.put("size", subPath.getLen());
+                jsonObject1.put("type", jsonObject.get("type"));
+                jsonObject1.put("isDir", subPath.isDirectory());
+            }
+        }
+        jsonObject.put("useSize", this.getUseSize(jsonObject, spacePath));
         jsonObject.put(this.resK, this.resOkValue);
         return jsonObject;
     }

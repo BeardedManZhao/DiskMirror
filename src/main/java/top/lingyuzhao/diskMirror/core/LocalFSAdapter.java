@@ -94,9 +94,50 @@ public final class LocalFSAdapter extends FSAdapter {
         return jsonObject;
     }
 
+    /**
+     * 不递归的获取文件列表 只可以获取到当前目录下的文件列表
+     *
+     * @param path       当前要迭代的目录路径
+     * @param spacePath  当前空间对应的目录路径
+     * @param path_res   可以用于拼接 url 的路径
+     * @param jsonObject 返回结果对象
+     * @param type       空间类型
+     * @return 结果
+     * @throws IOException 操作错误抛出
+     */
+    private JSONObject pathProcessorGetUrlsNoRecursion(File path, String spacePath, String path_res, JSONObject jsonObject, Type type) throws IOException {
+        // 开始进行文件获取
+        final File[] files = path.listFiles();
+        if (files == null) {
+            jsonObject.put("res", "空间 [" + path + "] 不可读!!!");
+            return jsonObject;
+        }
+        // 获取到协议前缀
+        final JSONArray urls = jsonObject.putArray("urls");
+        // 获取到文件所在空间类型
+        for (File file : files) {
+            final JSONObject jsonObject1 = urls.addObject();
+            final String name = file.getName();
+            jsonObject1.put("fileName", name);
+            jsonObject1.put("url", path_res + '/' + name);
+            jsonObject1.put("lastModified", file.lastModified());
+            jsonObject1.put("size", file.length());
+            jsonObject1.put("type", type);
+            jsonObject1.put("isDir", file.isDirectory());
+        }
+        jsonObject.put("useSize", this.getUseSize(jsonObject, spacePath));
+        jsonObject.put(this.resK, this.resOkValue);
+        return jsonObject;
+    }
+
     @Override
     protected JSONObject pathProcessorGetUrls(String path, String path_res, JSONObject jsonObject) throws IOException {
         return pathProcessorGetUrls(new File(path), path_res, jsonObject, jsonObject.getObject("type", Type.class));
+    }
+
+    @Override
+    protected JSONObject pathProcessorGetUrls(String path, String path_res, String nowPath, JSONObject inJson) throws IOException {
+        return pathProcessorGetUrlsNoRecursion(new File(nowPath), path, path_res, inJson, inJson.getObject("type", Type.class));
     }
 
     /**

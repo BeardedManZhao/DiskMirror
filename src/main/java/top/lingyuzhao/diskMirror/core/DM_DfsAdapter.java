@@ -112,6 +112,11 @@ public class DM_DfsAdapter extends FSAdapter {
     }
 
     @Override
+    protected JSONObject pathProcessorGetUrls(String path, String path_res, String nowPath, JSONObject inJson) throws IOException {
+        throw unsupportedOperationException;
+    }
+
+    @Override
     protected JSONObject pathProcessorMkDirs(String path, JSONObject inJson) {
         throw unsupportedOperationException;
     }
@@ -269,6 +274,11 @@ public class DM_DfsAdapter extends FSAdapter {
         // 进行矫正 这里不需要进行修改 只需要获取
         CorrectUseSize(jsonObject, false, false, 0, s);
         return jsonObject;
+    }
+
+    @Override
+    public JSONObject getUrlsNoRecursion(JSONObject jsonObject) {
+        throw unsupportedOperationException;
     }
 
     @Override

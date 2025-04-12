@@ -207,7 +207,7 @@ public interface Adapter extends Closeable {
     InputStream downLoad(JSONObject jsonObject) throws IOException;
 
     /**
-     * 将一个用户所有的 url 获取到
+     * 将一个空间中的所有文件目录结构获取到，此方法会进行递归，获取到根路径下的所有文件目录结构
      *
      * @param jsonObject {
      *                   userId      空间id,
@@ -226,6 +226,28 @@ public interface Adapter extends Closeable {
      * @throws IOException 操作异常
      */
     JSONObject getUrls(JSONObject jsonObject) throws IOException;
+
+    /**
+     * 将一个空间中的文件目录结构获取到，此方法不会进行递归，只会获取到指定路径的文件目录结构
+     *
+     * @param jsonObject {
+     *                   userId      空间id,
+     *                   type        文件类型,
+     *                   secure.key  加密密钥,
+     *                   fileName    要查询的路径
+     *                   }
+     * @return {
+     * userId:文件所属用户id,
+     * urls:[
+     * {
+     * url:文件的url
+     * type:文件类型
+     * }
+     * ]
+     * }
+     * @throws IOException 操作异常
+     */
+    JSONObject getUrlsNoRecursion(JSONObject jsonObject) throws IOException;
 
     /**
      * 将当前适配器对应的文件系统，指定空间的所有文件的路径获取到！

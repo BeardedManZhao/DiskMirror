@@ -172,6 +172,54 @@ public abstract class FSAdapter implements Adapter {
      */
     protected abstract JSONObject pathProcessorGetUrls(String path, String path_res, JSONObject inJson) throws IOException;
 
+
+    /**
+     * 路径处理器 接收一个路径 输出结果对象  需要注意的是 您需要在这里设置返回的 useSize
+     *
+     * @param path     路径对象 用于获取到文件空间使用量
+     * @param path_res 能够直接与协议前缀拼接的路径
+     * @param nowPath  当前要查询的路径
+     * @param inJson   文件输入的 json 对象
+     * @return 获取到的结果，在这里有一个示例 ```{
+     * "userId": 1024,
+     * "type": "Binary",
+     * "useSize": 787141,
+     * "useAgreement": true,
+     * "maxSize": 134217728,
+     * "urls": [
+     * {
+     * "fileName": "fsdownload",
+     * "url": "https://localhost:8080/1024/Binary//fsdownload",
+     * "lastModified": 1705762229601,
+     * "size": 0,
+     * "type": "Binary",
+     * "isDir": true,
+     * "urls": [
+     * {
+     * "fileName": "myFile.png",
+     * "url": "https://localhost:8080/1024/Binary//fsdownload/myFile.png",
+     * "lastModified": 1705762229664,
+     * "size": 293172,
+     * "type": "Binary",
+     * "isDir": false
+     * }
+     * ]
+     * },
+     * {
+     * "fileName": "test.png",
+     * "url": "https://localhost:8080/1024/Binary//test.png",
+     * "lastModified": 1702903450767,
+     * "size": 493969,
+     * "type": "Binary",
+     * "isDir": false
+     * }
+     * ],
+     * "res": "ok!!!!"
+     * }```
+     * @throws IOException 操作异常
+     */
+    protected abstract JSONObject pathProcessorGetUrls(String path, String path_res, String nowPath, JSONObject inJson) throws IOException;
+
     /**
      * 路径处理器 接收一个路径 输出结果对象
      *
@@ -479,6 +527,27 @@ public abstract class FSAdapter implements Adapter {
     @Override
     public JSONObject getUrls(JSONObject jsonObject) throws IOException {
         // 获取到路径
+        final String[] path = getUrlCheckHandler(jsonObject);
+        return pathProcessorGetUrls(path[0], path[1], jsonObject);
+    }
+
+    @Override
+    public JSONObject getUrlsNoRecursion(JSONObject jsonObject) throws IOException {
+        // 获取到路径
+        final String[] path = getUrlCheckHandler(jsonObject);
+        // 这个是按照路径来获取目录结构 不是递归的 这里传递的三个分别是 空间路径（无协议）, 空间路径（有协议）, 文件路径（无协议）
+        // 分别用于 使用量的计算，url的拼接，文件目录的迭代解析
+        return pathProcessorGetUrls(path[0], path[1], path[2], jsonObject);
+    }
+
+    /**
+     * 所有的 getUrl 操作都会先调用一下这个方法
+     *
+     * @param jsonObject 请求参数 会在其中设置一些东西，因此返回也需要返回这个
+     * @return path 代表的是解析到的路径
+     * @throws IOException 错误
+     */
+    private String[] getUrlCheckHandler(JSONObject jsonObject) throws IOException {
         final Config config = this.getConfig();
         Adapter.checkJsonObjRead(config, jsonObject);
         final String[] path = pathGeneration.function(
@@ -487,7 +556,7 @@ public abstract class FSAdapter implements Adapter {
         jsonObject.put("useSize", getUseSize(jsonObject, path[0]));
         jsonObject.put("useAgreement", !config.getString(Config.PROTOCOL_PREFIX).isEmpty());
         jsonObject.put("maxSize", config.getSpaceMaxSize(jsonObject.getString("userId")));
-        return pathProcessorGetUrls(path[0], path[1], jsonObject);
+        return path;
     }
 
     @Override

@@ -76,7 +76,7 @@ url 等操作，这会大大减少您开发IO代码的时间。
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.4.6</version>
+        <version>1.4.8</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -1619,7 +1619,36 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 
 ## 更新记录
 
-### 2025-02-05 1.4.7 版本开发中
+### 2025-04-12 1.4.8 版本发布
+
+- 修复 `DiskMirrorRequest.mkdir` 操作中，对目录的设置不生效的问题！
+- 新增 `getUrlsNoRecursion` 可以避免递归获取文件结构，而是直接获取到一层（已测试过 `LocalFSAdapter` 适配器，可用，其它适配器还未测试）！
+
+```java
+import com.alibaba.fastjson2.JSONObject;
+import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
+import top.lingyuzhao.diskMirror.core.Adapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+import top.lingyuzhao.diskMirror.core.DiskMirrorRequest;
+import top.lingyuzhao.diskMirror.core.Type;
+
+import java.io.IOException;
+
+/**
+ * @author zhao
+ */
+@DiskMirrorConfig()
+public final class MAIN {
+    public static void main(String[] args) throws IOException {
+        try (Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(MAIN.class)) {
+            JSONObject urlsNoRecursion = adapter.getUrlsNoRecursion(DiskMirrorRequest.getUrlsNoRecursion(1, Type.Binary, "/test"));
+            System.out.println(urlsNoRecursion);
+        }
+    }
+}
+```
+
+### 2025-02-05 1.4.7 版本发布
 
 - 对 http 适配器新增了一个 `downLoadUrl` 方法，用于获取到指定文件的下载地址！
 

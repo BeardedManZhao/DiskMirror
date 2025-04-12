@@ -143,6 +143,31 @@ public class AdapterPacking implements Adapter {
         return this.subAdapter.getUrls(jsonObject);
     }
 
+    /**
+     * 将一个用户所有的 url 获取到
+     *
+     * @param jsonObject {
+     *                   userId      空间id,
+     *                   type        文件类型,
+     *                   secure.key  加密密钥,
+     *                   fileName    要查询的路径
+     *                   }
+     * @return {
+     * userId:文件所属用户id,
+     * urls:[
+     * {
+     * url:文件的url
+     * type:文件类型
+     * }
+     * ]
+     * }
+     * @throws IOException 操作异常
+     */
+    @Override
+    public JSONObject getUrlsNoRecursion(JSONObject jsonObject) throws IOException {
+        return this.subAdapter.getUrlsNoRecursion(jsonObject);
+    }
+
     @Override
     public JSONObject getFilesPath(JSONObject jsonObject, Consumer<String> result) throws IOException {
         return this.subAdapter.getFilesPath(jsonObject, result);
