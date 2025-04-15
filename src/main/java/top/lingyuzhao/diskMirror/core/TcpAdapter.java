@@ -2,6 +2,7 @@ package top.lingyuzhao.diskMirror.core;
 
 import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.conf.Config;
+import top.lingyuzhao.utils.IOUtils;
 import top.lingyuzhao.utils.StrUtils;
 
 import java.io.*;
@@ -18,6 +19,7 @@ import java.net.Socket;
 public class TcpAdapter extends AdapterPacking {
 
     private final ServerSocket serverSocket, fileServerSocket;
+    private final String versionJsonString;
 
     /**
      * 构建一个适配器包装类，此类可以直接调用其所包装的适配器的方法，能够有效的实现将各种适配器对象接入到 FSAdapter 中。
@@ -40,6 +42,11 @@ public class TcpAdapter extends AdapterPacking {
         try {
             serverSocket = new ServerSocket(Integer.parseInt(string[0]));
             fileServerSocket = new ServerSocket(Integer.parseInt(string[1]));
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put(Config.RES_KEY, version());
+            this.versionJsonString = jsonObject.toString();
+        } catch (NumberFormatException e) {
+            throw new UnsupportedOperationException("您的 TCP 适配器的 '" + Config.FS_DEFAULT_FS + "' 设置有误，其应该是一个被逗号分割的两个数值，如：`元数据端口,文件流端口`", e);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -116,6 +123,9 @@ public class TcpAdapter extends AdapterPacking {
                     case "transferDepositStatus":
                         outputStream.writeUTF(transferDepositStatus(parse).toString());
                         break;
+                    case "version":
+                        outputStream.writeUTF(this.versionJsonString);
+                        break;
                 }
                 return;
             }
@@ -141,5 +151,12 @@ public class TcpAdapter extends AdapterPacking {
         } catch (Exception e) {
             throw new IOException("内部执行错误！", e);
         }
+    }
+
+    @Override
+    public void close() {
+        super.close();
+        IOUtils.close(serverSocket);
+        IOUtils.close(fileServerSocket);
     }
 }

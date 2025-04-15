@@ -211,5 +211,17 @@ public class TcpClientAdapter extends FSAdapter {
         throw new UnsupportedOperationException("The client does not support the operation: getSpaceMaxSize");
     }
 
-
+    /**
+     * @return 当前适配器对应的 toString 以及 版本号
+     * <p>
+     * The toString and version number corresponding to the current adapter
+     */
+    @Override
+    public String version() {
+        try {
+            return super.version() + "\n ↓↓↓ \n" + "remote → ↘↘\n" + getResJsonObject("version", new JSONObject()).getString(Config.RES_KEY);
+        } catch (IOException e) {
+            return super.version() + "\n ↓↓↓ \n" + "error → " + e;
+        }
+    }
 }

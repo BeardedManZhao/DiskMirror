@@ -519,4 +519,12 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
     public JSONObject getAllProgressBar(String id) {
         throw unsupportedOperationException;
     }
+
+    /**
+     * 关闭适配器
+     */
+    @Override
+    public void close() {
+        IOUtils.close(this.httpClient);
+    }
 }

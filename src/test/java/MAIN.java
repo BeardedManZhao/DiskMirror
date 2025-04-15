@@ -10,12 +10,15 @@ import java.io.IOException;
 /**
  * @author zhao
  */
-@DiskMirrorConfig()
+@DiskMirrorConfig(
+        fsDefaultFS = "127.0.0.1:10001,10002"
+)
 public final class MAIN {
     public static void main(String[] args) throws IOException {
-        try (Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(MAIN.class)) {
-            JSONObject urlsNoRecursion = adapter.getUrlsNoRecursion(DiskMirrorRequest.getUrlsNoRecursion(1, Type.Binary, "/test"));
-            System.out.println(urlsNoRecursion);
-        }
+        Adapter adapter = DiskMirror.TCP_CLIENT_Adapter.getAdapter(MAIN.class);
+        JSONObject urlsNoRecursion = adapter.getUrlsNoRecursion(
+                DiskMirrorRequest.getUrlsNoRecursion(1, Type.Binary, "/")
+        );
+        System.out.println(urlsNoRecursion);
     }
 }

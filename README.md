@@ -1619,6 +1619,13 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 
 ## 更新记录
 
+### 2025-04-15 1.4.9 版本发布
+
+- 变更版本号为 1.4.9
+- 对于 转存表 以及 空间使用量 使用了 `ConcurrentHashMap` 来保证线程安全！
+- TCP 以及 http 适配器的关闭操作进行了优化
+- TCP 适配器的版本号功能被支持！
+
 ### 2025-04-12 1.4.8 版本发布
 
 - 修复 `DiskMirrorRequest.mkdir` 操作中，对目录的设置不生效的问题！

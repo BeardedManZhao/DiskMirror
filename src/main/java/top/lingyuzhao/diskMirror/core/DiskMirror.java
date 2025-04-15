@@ -187,7 +187,7 @@ public enum DiskMirror {
      * <p>
      * The current version of the disk mirror library
      */
-    public final static String VERSION = "1.4.7";
+    public final static String VERSION = "1.4.9";
 
     /**
      * 获取到当前 盘镜 的版本 以及 适配器的名称
@@ -299,6 +299,18 @@ public enum DiskMirror {
             throw new UnsupportedOperationException(
                     "不支持您进行【" + super.toString() + "】适配器的实例化操作，因为您的项目中缺少必须的依赖，下面是依赖信息\nYou are not supported to instantiate the [" + super.toString() + "] adapter because your project lacks the necessary dependencies. Here is the dependency information\n" +
                             this.needDependent() + "\n+-----------------------+'\n" + diskMirror.needDependent()
+            );
+        }
+    }
+
+    public AdapterPacking getAdapterPacking(DiskMirror diskMirror, Class<?> configMain, Config adapterConfigMain) {
+        try {
+            final DiskMirrorConfig annotation0 = configMain.getAnnotation(DiskMirrorConfig.class);
+            return this.getAdapterPacking(diskMirror, new Config(annotation0), adapterConfigMain);
+        } catch (NoClassDefFoundError e) {
+            throw new UnsupportedOperationException(
+                    "不支持您进行【" + super.toString() + "】适配器的实例化操作，因为您的项目中缺少必须的依赖，下面是依赖信息\nYou are not supported to instantiate the [" + super.toString() + "] adapter because your project lacks the necessary dependencies. Here is the dependency information\n" +
+                            this.needDependent() + "+-----------------------+" + diskMirror.needDependent()
             );
         }
     }

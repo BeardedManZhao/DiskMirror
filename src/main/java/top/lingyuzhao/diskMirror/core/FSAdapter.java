@@ -18,6 +18,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
@@ -36,11 +37,11 @@ public abstract class FSAdapter implements Adapter {
     /**
      * 使用占用映射 key是空间id  value 就是空间中已使用的数量
      */
-    protected final HashMap<String, Long> REMEMBER_MAP = new HashMap<>();
+    protected final ConcurrentHashMap<String, Long> REMEMBER_MAP = new ConcurrentHashMap<>();
     /**
      * 转存操作记录类
      */
-    protected final HashMap<String, JSONObject> transferDepositMap = new HashMap<>();
+    protected final ConcurrentHashMap<String, JSONObject> transferDepositMap = new ConcurrentHashMap<>();
     /**
      * 是否禁止覆盖上传
      */
