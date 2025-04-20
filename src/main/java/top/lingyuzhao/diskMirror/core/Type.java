@@ -1,5 +1,8 @@
 package top.lingyuzhao.diskMirror.core;
 
+/**
+ * 盘镜空间类型 （这个类型并没有什么强制的限定要求，您可以只使用 Binary）
+ */
 public enum Type {
 
 
