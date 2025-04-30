@@ -3,6 +3,7 @@ package top.lingyuzhao.diskMirror.core;
 import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.conf.Config;
 import top.lingyuzhao.diskMirror.core.filter.FileMatchManager;
+import top.lingyuzhao.diskMirror.core.function.UseSizeRollBack;
 import top.lingyuzhao.diskMirror.core.ioStream.AutoCloseableInputStream;
 import top.lingyuzhao.diskMirror.utils.ProgressBar;
 import top.lingyuzhao.utils.IOUtils;
@@ -42,7 +43,7 @@ public class TcpClientAdapter extends FSAdapter {
 
 
     @Override
-    protected JSONObject pathProcessorUpload(String path, String path_res, JSONObject inJson, InputStream inputStream) throws IOException {
+    protected JSONObject pathProcessorUpload(String path, String path_res, JSONObject inJson, InputStream inputStream, UseSizeRollBack useSizeRollBack) throws IOException {
         try (
                 final Socket socket = new Socket((String) string[0], (Integer) string[1]);
                 final DataOutputStream metaO = new DataOutputStream(socket.getOutputStream());
@@ -148,7 +149,7 @@ public class TcpClientAdapter extends FSAdapter {
     public JSONObject upload(InputStream inputStream, JSONObject jsonObject, long streamSize) throws IOException {
         // 首先获取到使用的空间占用
         jsonObject.put("streamSize", streamSize < 0 ? inputStream.available() : streamSize);
-        return this.pathProcessorUpload("", "", jsonObject, inputStream);
+        return this.pathProcessorUpload("", "", jsonObject, inputStream, null);
     }
 
     @Override

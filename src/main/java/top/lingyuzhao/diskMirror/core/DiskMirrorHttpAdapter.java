@@ -13,6 +13,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import top.lingyuzhao.diskMirror.conf.Config;
 import top.lingyuzhao.diskMirror.core.filter.FileMatchManager;
+import top.lingyuzhao.diskMirror.core.function.UseSizeRollBack;
 import top.lingyuzhao.utils.IOUtils;
 import top.lingyuzhao.utils.dataContainer.KeyValue;
 import top.lingyuzhao.utils.transformation.Transformation;
@@ -137,7 +138,7 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
      * }
      */
     @Override
-    protected JSONObject pathProcessorUpload(String path, String path_res, JSONObject inJson, InputStream inputStream) {
+    protected JSONObject pathProcessorUpload(String path, String path_res, JSONObject inJson, InputStream inputStream, UseSizeRollBack useSizeRollBack) {
         throw unsupportedOperationException;
     }
 
@@ -210,13 +211,8 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
      * @return 用户空间的存储占用大小 字节为单位
      */
     @Override
-    protected long pathProcessorUseSize(String path, JSONObject inJson) throws IOException {
-        final JSONObject request = request(inJson, this.useSize);
-        final String string = request.getString(this.config.getString(Config.RES_KEY));
-        if (string.equals(this.config.getString(Config.OK_VALUE))) {
-            return request.getLongValue("useSize");
-        }
-        throw new IOException(string);
+    protected long pathProcessorUseSize(String path, JSONObject inJson) {
+        throw unsupportedOperationException;
     }
 
     /**
@@ -399,6 +395,25 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
     public InputStream downLoad(JSONObject jsonObject) throws IOException {
         // 开远程的数据流
         return requestGetStream(new URL(this.downLoadUrl(jsonObject)));
+    }
+
+    /**
+     * 获取用户使用空间大小
+     *
+     * @param jsonObject {
+     *                   userId      空间id,
+     *                   type        文件类型,
+     *                   }
+     * @return 空间已使用的大小
+     */
+    @Override
+    public long getUseSize(JSONObject jsonObject) throws IOException {
+        final JSONObject request = request(jsonObject, this.useSize);
+        final String string = request.getString(this.config.getString(Config.RES_KEY));
+        if (string.equals(this.config.getString(Config.OK_VALUE))) {
+            return request.getLongValue("useSize");
+        }
+        throw new IOException(string);
     }
 
     /**

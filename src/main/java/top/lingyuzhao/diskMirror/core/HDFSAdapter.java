@@ -6,6 +6,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import top.lingyuzhao.diskMirror.conf.Config;
 import top.lingyuzhao.diskMirror.core.filter.FileMatchManager;
+import top.lingyuzhao.diskMirror.core.function.UseSizeRollBack;
 import top.lingyuzhao.diskMirror.utils.ProgressBar;
 import top.lingyuzhao.utils.IOUtils;
 import top.lingyuzhao.utils.StrUtils;
@@ -42,11 +43,15 @@ public class HDFSAdapter extends FSAdapter {
 
 
     @Override
-    protected JSONObject pathProcessorUpload(String path, String path_res, JSONObject jsonObject, InputStream inputStream) throws IOException {
+    protected JSONObject pathProcessorUpload(String path, String path_res, JSONObject jsonObject, InputStream inputStream, UseSizeRollBack useSizeRollBack) throws IOException {
         // 首先获取到 HDFS 中的数据流
         final Path path1 = new Path(config.get(Config.FS_DEFAULT_FS) + path);
-        if (this.isNotOverWrite && fileSystem.exists(path1)) {
-            throw new IOException("文件《" + jsonObject.getString("fileName") + "》已经存在!");
+        if (fileSystem.exists(path1)) {
+            if (this.isNotOverWrite) {
+                throw new IOException("文件《" + jsonObject.getString("fileName") + "》已经存在!");
+            }
+            // 回滚使用空间
+            useSizeRollBack.accept(jsonObject);
         }
         final ProgressBar progressBar = new ProgressBar(jsonObject.getString("userId"), jsonObject.getString("fileName"));
         final Long streamSize = jsonObject.getLong("streamSize");
@@ -112,8 +117,6 @@ public class HDFSAdapter extends FSAdapter {
                 }
             }
         }
-        jsonObject.put("useSize", this.getUseSize(jsonObject, path));
-        jsonObject.put(this.resK, this.resOkValue);
         return jsonObject;
     }
 
@@ -177,7 +180,7 @@ public class HDFSAdapter extends FSAdapter {
                     useSize = this.rDelete(path1, filter);
                 }
             }
-            inJson.put("useSize", this.diffUseSize(inJson.getIntValue("userId"), inJson.getString("type"), useSize, true));
+            inJson.put("useSize", this.diffUseSize(inJson.getIntValue("userId"), inJson.getString("type"), useSize));
             inJson.put(this.resK, this.resOkValue);
         } catch (IOException e) {
             inJson.put(this.resK, "删除失败:" + e);

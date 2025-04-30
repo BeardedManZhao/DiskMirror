@@ -77,7 +77,7 @@ url 等操作，这会大大减少您开发IO代码的时间。
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.4.9</version>
+        <version>1.5.0</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -1652,6 +1652,11 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 
 ## 更新记录
 
+### 2025-04-30 1.5.0 版本发布【稳定版本】
+
+- 变更版本号号为 1.5.0
+- 对于允许覆写情况下的空间使用量计算错误已修复！
+
 ### 2025-04-15 1.4.9 版本发布
 
 - 变更版本号为 1.4.9
@@ -2074,7 +2079,7 @@ public final class MAIN2 {
 - 修复当程序启动之后，最先调用的是 `remove` 方法时，会导致 `useSize` 不能够正确统计的情况。
 - 新增 `TCP_Adapter` 和 `TCP_CLIENT_Adapter` 适配器，它们可以互相配合，实现通过 TCP 协议来进行文件数据的传输等效果！
 
-### 2024-04-12 1.2.0 版本发布【稳定版】
+### 2024-04-12 1.2.0 版本发布【稳定版本】
 
 - 对于所有的适配器，提供了 `transferDeposit` 函数，用来将一个 url 中的文件数据转存！
 

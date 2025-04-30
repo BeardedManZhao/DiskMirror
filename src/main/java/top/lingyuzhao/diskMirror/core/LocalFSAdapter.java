@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.conf.Config;
 import top.lingyuzhao.diskMirror.core.filter.FileMatchManager;
+import top.lingyuzhao.diskMirror.core.function.UseSizeRollBack;
 import top.lingyuzhao.diskMirror.utils.ProgressBar;
 import top.lingyuzhao.utils.IOUtils;
 import top.lingyuzhao.utils.dataContainer.KeyValue;
@@ -32,17 +33,16 @@ public final class LocalFSAdapter extends FSAdapter {
     }
 
     @Override
-    protected JSONObject pathProcessorUpload(String path, String path_res, JSONObject jsonObject, InputStream inputStream) throws IOException {
+    protected JSONObject pathProcessorUpload(String path, String path_res, JSONObject jsonObject, InputStream inputStream, UseSizeRollBack consumer) throws IOException {
         final File file = new File(path);
         final File parentFile = file.getParentFile();
-        if (!parentFile.exists()) {
-            final boolean mkDirs = parentFile.mkdirs();
-            if (!mkDirs) {
-                jsonObject.put("res", "文件目录：" + parentFile.getPath() + " 已尝试创建，但是创建操作失败了!!!");
+        Files.createDirectories(parentFile.toPath());
+        if (file.exists()) {
+            if (this.isNotOverWrite) {
+                throw new IOException("文件《" + jsonObject.getString("fileName") + "》已经存在!");
             }
-        }
-        if (this.isNotOverWrite && file.exists()) {
-            throw new IOException("文件《" + jsonObject.getString("fileName") + "》已经存在!");
+            // 回滚
+            consumer.accept(jsonObject);
         }
         final ProgressBar progressBar = new ProgressBar(jsonObject.getString("userId"), jsonObject.getString("fileName"));
         final Long streamSize = jsonObject.getLong("streamSize");
@@ -83,14 +83,10 @@ public final class LocalFSAdapter extends FSAdapter {
             if (file.isDirectory()) {
                 jsonObject1.put("isDir", true);
                 jsonObject1.putAll(this.pathProcessorGetUrls(file, filePath, jsonObject1.clone(), type));
-                jsonObject1.remove("useSize");
-                jsonObject1.remove(this.resK);
             } else {
                 jsonObject1.put("isDir", false);
             }
         }
-        jsonObject.put("useSize", this.getUseSize(jsonObject, path.getPath()));
-        jsonObject.put(this.resK, this.resOkValue);
         return jsonObject;
     }
 
@@ -98,14 +94,12 @@ public final class LocalFSAdapter extends FSAdapter {
      * 不递归的获取文件列表 只可以获取到当前目录下的文件列表
      *
      * @param path       当前要迭代的目录路径
-     * @param spacePath  当前空间对应的目录路径
      * @param path_res   可以用于拼接 url 的路径
      * @param jsonObject 返回结果对象
      * @param type       空间类型
      * @return 结果
-     * @throws IOException 操作错误抛出
      */
-    private JSONObject pathProcessorGetUrlsNoRecursion(File path, String spacePath, String path_res, JSONObject jsonObject, Type type) throws IOException {
+    private JSONObject pathProcessorGetUrlsNoRecursion(File path, String path_res, JSONObject jsonObject, Type type) {
         // 开始进行文件获取
         final File[] files = path.listFiles();
         if (files == null) {
@@ -125,19 +119,21 @@ public final class LocalFSAdapter extends FSAdapter {
             jsonObject1.put("type", type);
             jsonObject1.put("isDir", file.isDirectory());
         }
-        jsonObject.put("useSize", this.getUseSize(jsonObject, spacePath));
-        jsonObject.put(this.resK, this.resOkValue);
         return jsonObject;
     }
 
     @Override
     protected JSONObject pathProcessorGetUrls(String path, String path_res, JSONObject jsonObject) throws IOException {
-        return pathProcessorGetUrls(new File(path), path_res, jsonObject, jsonObject.getObject("type", Type.class));
+        JSONObject jsonObject1 = pathProcessorGetUrls(new File(path), path_res, jsonObject, jsonObject.getObject("type", Type.class));
+        jsonObject1.put(this.resK, this.resOkValue);
+        return jsonObject1;
     }
 
     @Override
-    protected JSONObject pathProcessorGetUrls(String path, String path_res, String nowPath, JSONObject inJson) throws IOException {
-        return pathProcessorGetUrlsNoRecursion(new File(nowPath), path, path_res, inJson, inJson.getObject("type", Type.class));
+    protected JSONObject pathProcessorGetUrls(String path, String path_res, String nowPath, JSONObject inJson) {
+        JSONObject jsonObject = pathProcessorGetUrlsNoRecursion(new File(nowPath), path_res, inJson, inJson.getObject("type", Type.class));
+        jsonObject.put(this.resK, this.resOkValue);
+        return jsonObject;
     }
 
     /**
@@ -176,7 +172,7 @@ public final class LocalFSAdapter extends FSAdapter {
 
         if (file.delete()) {
             // 删除成功
-            jsonObject.put("useSize", this.diffUseSize(jsonObject.getIntValue("userId"), jsonObject.getString("type"), length, true));
+            jsonObject.put("useSize", this.diffUseSize(jsonObject.getIntValue("userId"), jsonObject.getString("type"), length));
             jsonObject.put(this.resK, this.resOkValue);
         } else {
             jsonObject.put(this.resK, "删除失败!!!");
