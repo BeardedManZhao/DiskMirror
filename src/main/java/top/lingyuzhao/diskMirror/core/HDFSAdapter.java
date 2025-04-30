@@ -6,9 +6,9 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import top.lingyuzhao.diskMirror.conf.Config;
 import top.lingyuzhao.diskMirror.core.filter.FileMatchManager;
-import top.lingyuzhao.diskMirror.core.function.UseSizeRollBack;
 import top.lingyuzhao.diskMirror.utils.ProgressBar;
 import top.lingyuzhao.utils.IOUtils;
+import top.lingyuzhao.utils.IOUtils2;
 import top.lingyuzhao.utils.StrUtils;
 import top.lingyuzhao.utils.dataContainer.KeyValue;
 import top.lingyuzhao.utils.transformation.Transformation;
@@ -43,22 +43,17 @@ public class HDFSAdapter extends FSAdapter {
 
 
     @Override
-    protected JSONObject pathProcessorUpload(String path, String path_res, JSONObject jsonObject, InputStream inputStream, UseSizeRollBack useSizeRollBack) throws IOException {
+    protected JSONObject pathProcessorUpload(String path, String path_res, JSONObject jsonObject, InputStream inputStream, ProgressBar progressBar) throws IOException {
         // 首先获取到 HDFS 中的数据流
         final Path path1 = new Path(config.get(Config.FS_DEFAULT_FS) + path);
         if (fileSystem.exists(path1)) {
             if (this.isNotOverWrite) {
                 throw new IOException("文件《" + jsonObject.getString("fileName") + "》已经存在!");
             }
-            // 回滚使用空间
-            useSizeRollBack.accept(jsonObject);
         }
-        final ProgressBar progressBar = new ProgressBar(jsonObject.getString("userId"), jsonObject.getString("fileName"));
-        final Long streamSize = jsonObject.getLong("streamSize");
-        progressBar.setMaxSize(streamSize);
         try (final FSDataOutputStream fsDataOutputStream = fileSystem.create(path1)) {
             // 输出数据
-            IOUtils.copy(streamSize, inputStream, fsDataOutputStream, progressBar);
+            IOUtils2.copy(inputStream, fsDataOutputStream, progressBar);
         } finally {
             progressBar.function3(0);
             IOUtils.close(inputStream);

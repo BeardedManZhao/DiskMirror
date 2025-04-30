@@ -2,7 +2,7 @@
 
 [<img src="https://api.gitsponsors.com/api/badge/img?id=729754597" height="20">](https://api.gitsponsors.com/api/badge/link?p=Kb4oezU+2A832W0+VM9ivjADnHekHcp3XbfbuoHa8RTBVo9kXlcWASHs6MuoXAtTvfnZdJUUW2DpGzmFGSp7FEEe2SAe2Z9lgGgucBdQvlU3gWvKqUeif4zMz6138lzPZsctY5fRwr0KhdEcvynrUA==)
 
-# DiskMirror 
+# DiskMirror
 
 盘镜（DiskMirror）是一款开源文件系统管理框架，旨在通过提供一系列适配器来简化不同存储系统间的文件操作。无论是本地文件系统、Hadoop分布式文件系统（HDFS），还是自定义的远程存储解决方案，盘镜都能帮助开发者轻松地进行统一管理和操作。通过减少重复编码工作量，提高开发效率，盘镜为现代应用提供了灵活且高效的文件存储解决方案。
 
@@ -77,7 +77,7 @@ url 等操作，这会大大减少您开发IO代码的时间。
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.5.0</version>
+        <version>1.5.1</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -92,10 +92,11 @@ url 等操作，这会大大减少您开发IO代码的时间。
     </dependency>
     <!-- 从 disk Mirror 1.1.0 版本开始 请确保 zhao-utils 的版本 >= 1.0.20240121 -->
     <!-- 从 disk Mirror 1.3.0 版本开始 请确保 zhao-utils 的版本 >= 1.0.20241026 -->
+    <!-- 从 disk Mirror 1.5.1 版本开始 请确保 zhao-utils 的版本 >= 1.2.20250430 -->
     <dependency>
         <groupId>io.github.BeardedManZhao</groupId>
         <artifactId>zhao-utils</artifactId>
-        <version>1.0.20241026</version>
+        <version>1.2.20250430</version>
         <!--        <scope>provided</scope>-->
     </dependency>
     <!-- 如果需要对接 HDFS 才导入 如果不需要就不导入此依赖 -->
@@ -127,7 +128,9 @@ url 等操作，这会大大减少您开发IO代码的时间。
 
 > 在下面的表展示的就是各种常见的返回结果中的字段，diskMirror 中所有的返回值中，如果存在某个字段，则字段一定遵循下面的规则！
 > 当然，您设置的也需要遵循下面的规则！
-> 值得一提的是，不论是 [DiskMirror后端服务器](https://github.com/BeardedManZhao/diskmirror-backEnd-spring-boot.git) 还是 [DiskMirrorTCP服务器](http://github.com/BeardedManZhao/diskMirror-backEnd-tcp-Java.git)，都遵循下面的规则，您可以直接使用 API 与其对接~
+> 值得一提的是，不论是 [DiskMirror后端服务器](https://github.com/BeardedManZhao/diskmirror-backEnd-spring-boot.git)
+> 还是 [DiskMirrorTCP服务器](http://github.com/BeardedManZhao/diskMirror-backEnd-tcp-Java.git)，都遵循下面的规则，您可以直接使用
+> API 与其对接~
 
 | 参数名称         | 参数类型    | 参数解释                                                              | 参数类型  |
 |--------------|---------|-------------------------------------------------------------------|:------|
@@ -149,8 +152,10 @@ url 等操作，这会大大减少您开发IO代码的时间。
 
 适配器就是在 盘镜 中进行数据的传输的通道，而如果想要使用 盘镜，就需要实例化适配器，下面我们将演示如何实例化本地文件系统的适配器。
 
-> 本文章中有 JSONObject 和 DiskMirrorRequest 两种请求构造方法，DiskMirrorRequest是一种语法糖，相较于构建 json 要简单和简洁，之所以要在这里展示。
-> json 的请求也并不是完全无用，如果您需要在没有被我们封装过的环境中对接 diskMirror 的服务器，您可以根据这里的 json 请求来构造请求！
+> 本文章中有 JSONObject 和 DiskMirrorRequest 两种请求构造方法，DiskMirrorRequest是一种语法糖，相较于构建 json
+> 要简单和简洁，之所以要在这里展示。
+> json 的请求也并不是完全无用，如果您需要在没有被我们封装过的环境中对接 diskMirror 的服务器，您可以根据这里的 json
+> 请求来构造请求！
 
 #### 使用配置类实例化盘镜
 
@@ -399,7 +404,8 @@ public final class MAIN {
 
 ### 从适配器中读取数据
 
-在这里我们将演示如何从适配器中读取数据，并将读取的数据的 url 返回给您，当您从适配器中读取数据的时候，盘镜中的适配器将自动的根据您设置的各种参数将文件系统结构返回给您!
+在这里我们将演示如何从适配器中读取数据，并将读取的数据的 url
+返回给您，当您从适配器中读取数据的时候，盘镜中的适配器将自动的根据您设置的各种参数将文件系统结构返回给您!
 
 #### 读取完整的文件系统目录
 
@@ -1652,6 +1658,37 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 
 ## 更新记录
 
+### 2025-04-30 1.5.1 版本发布
+
+- 变更版本号为 1.5.1
+- 优化上传操作中对于字节数值的计算规则，增强性能！
+- 新增 ddos 防御器
+```java
+import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
+import top.lingyuzhao.diskMirror.core.Adapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+import top.lingyuzhao.diskMirror.core.DiskMirrorRequest;
+import top.lingyuzhao.diskMirror.core.Type;
+import top.lingyuzhao.diskMirror.core.module.DDosCheckModule;
+import top.lingyuzhao.diskMirror.core.module.ModuleManager;
+
+import java.io.IOException;
+
+@DiskMirrorConfig
+public final class MAIN {
+    public static void main(String[] args) throws IOException {
+        // 注册一个 ddos 验证器 防御写操作的ddos 这里设置的是 1000 毫秒内不能超过5次请求
+        // 由于注册到了读操作 因此是 1000 毫秒内不能超过5次读取请求
+        ModuleManager.registerModuleRead(new DDosCheckModule("ddos", "一个用于防ddos的模块", 1000, 5));
+        Adapter adapter = DiskMirror.LocalFSAdapter.getAdapter(MAIN.class);
+        System.out.println(adapter.version());
+        for (int i = 0; i < 20; i++) {
+            System.out.println(adapter.getUrls(DiskMirrorRequest.getUrls(47, Type.Binary)));
+        }
+    }
+}
+```
+
 ### 2025-04-30 1.5.0 版本发布【稳定版本】
 
 - 变更版本号号为 1.5.0
@@ -1710,7 +1747,9 @@ public final class MAIN {
 
 - 经过长时间的迭代和使用，此版本的目前修正了所有的 bug，并且进行了一些优化。
 - 为 http 适配器中的 download 操作不支持中文的问题。下面是一个示例！
+
 ```java
+
 @DiskMirrorConfig(
         fsDefaultFS = "https://xxx.com",
         // 设置下载时 要使用的字符集 用于进行 url 编码等操作！
@@ -1746,7 +1785,8 @@ public final class MAIN {
 
 ### 2024-12-26 1.3.8 版本发布
 
-- 新增配置项目 `IS_NOT_OVER_WRITE` 以及 `@DiskMirrorConfig(isNotOverWrite = false)`, 可以通过设置此项目来配置 是否允许覆盖同名文件！
+- 新增配置项目 `IS_NOT_OVER_WRITE` 以及 `@DiskMirrorConfig(isNotOverWrite = false)`, 可以通过设置此项目来配置
+  是否允许覆盖同名文件！
 - 将一些频繁从 config 获取的数据，改用 final 类全局变量存储，提高性能。
 
 ### 2024-12-06 1.3.6 版本发布

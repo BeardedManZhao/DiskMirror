@@ -3,7 +3,6 @@ package top.lingyuzhao.diskMirror.core;
 import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.conf.Config;
 import top.lingyuzhao.diskMirror.core.filter.FileMatchManager;
-import top.lingyuzhao.diskMirror.core.function.UseSizeRollBack;
 import top.lingyuzhao.diskMirror.core.module.HandleModule;
 import top.lingyuzhao.diskMirror.core.module.SkCheckModule;
 import top.lingyuzhao.diskMirror.utils.JsonUtils;
@@ -114,11 +113,11 @@ public abstract class FSAdapter implements Adapter {
     /**
      * 路径处理器 接收一个路径 输出结果对象，这里不强制在返回的地方设置 useSize，会自动获取数据量，当然 如果您希望从自己的算法中获取 useSize 您可以进行设置
      *
-     * @param path         路径对象
-     * @param path_res     能够直接与协议前缀拼接的路径
-     * @param inJson       输入参数 json 对象
-     * @param inputStream  文件数据流
-     * @param needRollBack 是否需要回滚使用量
+     * @param path        路径对象
+     * @param path_res    能够直接与协议前缀拼接的路径
+     * @param inJson      输入参数 json 对象
+     * @param inputStream 文件数据流
+     * @param progressBar 文件上传进度条对象 需要在这里设置进度
      * @return {
      * res:上传结果/错误,
      * url:上传之后的 url,
@@ -127,7 +126,7 @@ public abstract class FSAdapter implements Adapter {
      * }
      * @throws IOException 操作异常
      */
-    protected abstract JSONObject pathProcessorUpload(String path, String path_res, JSONObject inJson, InputStream inputStream, UseSizeRollBack needRollBack) throws IOException;
+    protected abstract JSONObject pathProcessorUpload(String path, String path_res, JSONObject inJson, InputStream inputStream, final ProgressBar progressBar) throws IOException;
 
     /**
      * 路径处理器 接收一个路径 输出结果对象  需要注意的是 您需要在这里设置返回的 useSize
@@ -398,30 +397,20 @@ public abstract class FSAdapter implements Adapter {
         final Integer userId = jsonObject.getInteger("userId");
         final String type = jsonObject.getString("type");
 
-        // 首先获取到使用的空间占用
-        final long inputSize = streamSize > 0 ? streamSize : inputStream.available();
-        if (inputSize < 0) {
-            // 代表数据流不合法，在这里清理缓存 为了重新计算数据占用
-            this.removeUseSize(userId, type);
-        }
-        final UseSizeRollBack useSizeRollBack = new UseSizeRollBack(this, userId, type, inputSize);
-        final long l = this.addUseSize(userId, type, inputSize);
         final long maxSize = config.getSpaceMaxSize(userId.toString());
+        long useSize = this.getUseSize(jsonObject, "");
         jsonObject.put("useAgreement", !config.getString(Config.PROTOCOL_PREFIX).isEmpty());
-        if (l > maxSize) {
-            jsonObject.put("useSize", this.diffUseSize(userId, type, inputSize));
-            throw new IOException("id为 " + userId + " 的 " + type + " 空间不足，因为上传《" + jsonObject.getString("fileName") + "》之后的字节数【" + l + "】 > 最大字节数【" + maxSize + "】");
+        if (useSize >= maxSize) {
+            throw new IOException("id为 " + userId + " 的 " + type + " 空间不足，因为当前占用【" + useSize + "】 > 最大字节数【" + maxSize + "】");
         }
+        final long inputSize = streamSize < 0 ? inputStream.available() : streamSize;
         jsonObject.put("streamSize", inputSize);
-        try {
-            final JSONObject jsonObject1 = pathProcessorUpload(path[2], path[3], jsonObject, this.handler(inputStream, jsonObject), useSizeRollBack);
-            jsonObject1.put("useSize", l);
-            jsonObject1.put("maxSize", maxSize);
-            return jsonObject1;
-        } catch (IOException | RuntimeException e) {
-            jsonObject.put("useSize", this.diffUseSize(userId, type, inputSize));
-            throw e;
-        }
+        final ProgressBar progressBar = new ProgressBar(jsonObject.getString("userId"), jsonObject.getString("fileName"));
+        progressBar.setMaxSize(inputSize);
+        final JSONObject jsonObject1 = pathProcessorUpload(path[2], path[3], jsonObject, this.handler(inputStream, jsonObject), progressBar);
+        jsonObject1.put("useSize", this.addUseSize(userId, type, progressBar.getCount()));
+        jsonObject1.put("maxSize", maxSize);
+        return jsonObject1;
     }
 
     @Override

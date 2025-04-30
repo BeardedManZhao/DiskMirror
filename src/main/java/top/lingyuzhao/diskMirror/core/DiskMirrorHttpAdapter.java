@@ -13,7 +13,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import top.lingyuzhao.diskMirror.conf.Config;
 import top.lingyuzhao.diskMirror.core.filter.FileMatchManager;
-import top.lingyuzhao.diskMirror.core.function.UseSizeRollBack;
+import top.lingyuzhao.diskMirror.utils.ProgressBar;
 import top.lingyuzhao.utils.IOUtils;
 import top.lingyuzhao.utils.dataContainer.KeyValue;
 import top.lingyuzhao.utils.transformation.Transformation;
@@ -70,6 +70,7 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
             this.httpClient = HttpClients.createDefault();
         }
         final String url = config.getString(Config.FS_DEFAULT_FS) + '/' + controller + '/';
+        System.out.println(url);
         this.httpPost = new HttpPost(url);
         try {
             upload = new URI(url + "add");
@@ -138,7 +139,7 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
      * }
      */
     @Override
-    protected JSONObject pathProcessorUpload(String path, String path_res, JSONObject inJson, InputStream inputStream, UseSizeRollBack useSizeRollBack) {
+    protected JSONObject pathProcessorUpload(String path, String path_res, JSONObject inJson, InputStream inputStream, ProgressBar progressBar) {
         throw unsupportedOperationException;
     }
 

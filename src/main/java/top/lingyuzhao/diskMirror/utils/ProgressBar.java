@@ -58,7 +58,7 @@ public class ProgressBar extends ProgressFileNumber {
 
     @Override
     public void function1(Integer type) {
-        hash.computeIfAbsent(this.spaceId, k -> new JSONObject()).put(this.progressId, this);
+        getBySpaceId(this.spaceId).put(this.progressId, this);
     }
 
     @Override

@@ -4,9 +4,9 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.conf.Config;
 import top.lingyuzhao.diskMirror.core.filter.FileMatchManager;
-import top.lingyuzhao.diskMirror.core.function.UseSizeRollBack;
 import top.lingyuzhao.diskMirror.utils.ProgressBar;
 import top.lingyuzhao.utils.IOUtils;
+import top.lingyuzhao.utils.IOUtils2;
 import top.lingyuzhao.utils.dataContainer.KeyValue;
 import top.lingyuzhao.utils.transformation.Transformation;
 
@@ -33,7 +33,7 @@ public final class LocalFSAdapter extends FSAdapter {
     }
 
     @Override
-    protected JSONObject pathProcessorUpload(String path, String path_res, JSONObject jsonObject, InputStream inputStream, UseSizeRollBack consumer) throws IOException {
+    protected JSONObject pathProcessorUpload(String path, String path_res, JSONObject jsonObject, InputStream inputStream, final ProgressBar progressBar) throws IOException {
         final File file = new File(path);
         final File parentFile = file.getParentFile();
         Files.createDirectories(parentFile.toPath());
@@ -41,15 +41,10 @@ public final class LocalFSAdapter extends FSAdapter {
             if (this.isNotOverWrite) {
                 throw new IOException("文件《" + jsonObject.getString("fileName") + "》已经存在!");
             }
-            // 回滚
-            consumer.accept(jsonObject);
         }
-        final ProgressBar progressBar = new ProgressBar(jsonObject.getString("userId"), jsonObject.getString("fileName"));
-        final Long streamSize = jsonObject.getLong("streamSize");
-        progressBar.setMaxSize(streamSize);
         try (final BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(new FileOutputStream(file))) {
             // 然后获取到数据输出流 输出数据
-            IOUtils.copy(streamSize, inputStream, bufferedOutputStream, progressBar);
+            IOUtils2.copy(inputStream, bufferedOutputStream, progressBar);
         } finally {
             progressBar.function3(0);
             IOUtils.close(inputStream);

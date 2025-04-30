@@ -4,8 +4,8 @@ import com.alibaba.fastjson2.JSONException;
 import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.conf.Config;
 import top.lingyuzhao.diskMirror.core.filter.FileMatchManager;
-import top.lingyuzhao.diskMirror.core.function.UseSizeRollBack;
 import top.lingyuzhao.diskMirror.utils.JsonUtils;
+import top.lingyuzhao.diskMirror.utils.ProgressBar;
 import top.lingyuzhao.utils.StrUtils;
 import top.lingyuzhao.utils.dataContainer.KeyValue;
 import top.lingyuzhao.utils.transformation.Transformation;
@@ -103,7 +103,7 @@ public class DM_DfsAdapter extends FSAdapter {
     }
 
     @Override
-    protected JSONObject pathProcessorUpload(String path, String path_res, JSONObject inJson, InputStream inputStream, UseSizeRollBack useSizeRollBack) {
+    protected JSONObject pathProcessorUpload(String path, String path_res, JSONObject inJson, InputStream inputStream, ProgressBar progressBar) {
         throw unsupportedOperationException;
     }
 

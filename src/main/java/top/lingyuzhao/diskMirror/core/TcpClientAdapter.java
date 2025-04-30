@@ -3,7 +3,6 @@ package top.lingyuzhao.diskMirror.core;
 import com.alibaba.fastjson2.JSONObject;
 import top.lingyuzhao.diskMirror.conf.Config;
 import top.lingyuzhao.diskMirror.core.filter.FileMatchManager;
-import top.lingyuzhao.diskMirror.core.function.UseSizeRollBack;
 import top.lingyuzhao.diskMirror.core.ioStream.AutoCloseableInputStream;
 import top.lingyuzhao.diskMirror.utils.ProgressBar;
 import top.lingyuzhao.utils.IOUtils;
@@ -43,7 +42,7 @@ public class TcpClientAdapter extends FSAdapter {
 
 
     @Override
-    protected JSONObject pathProcessorUpload(String path, String path_res, JSONObject inJson, InputStream inputStream, UseSizeRollBack useSizeRollBack) throws IOException {
+    protected JSONObject pathProcessorUpload(String path, String path_res, JSONObject inJson, InputStream inputStream, ProgressBar progressBar) throws IOException {
         try (
                 final Socket socket = new Socket((String) string[0], (Integer) string[1]);
                 final DataOutputStream metaO = new DataOutputStream(socket.getOutputStream());
@@ -57,8 +56,6 @@ public class TcpClientAdapter extends FSAdapter {
             if (s.equals("ok")) {
                 final Long streamSize = inJson.getLong("streamSize");
                 metaO.writeLong(streamSize);
-                final ProgressBar progressBar = new ProgressBar(inJson.getString("userId"), inJson.getString("fileName"));
-                progressBar.setMaxSize(streamSize);
                 try (final Socket socket1 = new Socket((String) string[0], (Integer) string[2]);
                      final BufferedOutputStream fileO = new BufferedOutputStream(socket1.getOutputStream())) {
                     IOUtils.copy(streamSize, inputStream, fileO, progressBar);
