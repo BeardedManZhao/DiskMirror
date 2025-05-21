@@ -94,7 +94,7 @@ public class HDFSAdapter extends FSAdapter {
                 final Path path2 = subPath.getPath();
                 final String name = path2.getName();
                 final String filePath_HDFS = path + '/' + name;
-                final String fnNoParam = path_res + '/' + name;
+                final String fnNoParam = path_res + name;
                 final String filePath = fnNoParam + "?" + paramStr;
                 jsonObject1.put("fileName", name);
                 jsonObject1.put("url", filePath);
@@ -106,7 +106,7 @@ public class HDFSAdapter extends FSAdapter {
                 } else {
                     // 如果是目录就继续获取到子目录
                     jsonObject1.put("isDir", true);
-                    jsonObject1.putAll(this.pathProcessorGetUrls(filePath_HDFS, fnNoParam, jsonObject1.clone(), paramStr));
+                    jsonObject1.putAll(this.pathProcessorGetUrls(filePath_HDFS, fnNoParam + '/', jsonObject1.clone(), paramStr));
                     jsonObject1.remove("useSize");
                     jsonObject1.remove(this.resK);
                 }
@@ -115,24 +115,36 @@ public class HDFSAdapter extends FSAdapter {
         return jsonObject;
     }
 
+    private static String extractedFileMetaToJsonGetUrlPrefix(String path_res, JSONObject jsonObject, String paramStr, FileStatus subPath, JSONObject jsonObject1) {
+        final Path path2 = subPath.getPath();
+        final String name = path2.getName();
+        final String fnNoParam = path_res + name, filePath = fnNoParam + "?" + paramStr;
+        jsonObject1.put("fileName", name);
+        jsonObject1.put("url", filePath);
+        jsonObject1.put("lastModified", subPath.getModificationTime());
+        jsonObject1.put("size", subPath.getLen());
+        jsonObject1.put("type", jsonObject.get("type"));
+        jsonObject1.put("isDir", subPath.isDirectory());
+        return fnNoParam;
+    }
+
     protected JSONObject pathProcessorGetUrlsNoRecursion(String nowPath, String spacePath, String path_res, JSONObject jsonObject, String paramStr) throws IOException {
         final Path path1 = new Path(nowPath);
-        RemoteIterator<FileStatus> iterator = fileSystem.exists(path1) ? fileSystem.listStatusIterator(path1) : null;
+        final boolean exists = fileSystem.exists(path1);
+        if (!exists) {
+            jsonObject.put("res", "空间 [" + nowPath + "] 不存在!!!");
+            return jsonObject;
+        }
+        final RemoteIterator<FileStatus> iterator = fileSystem.listStatusIterator(path1);
+        // 提取出被操作的文件/目录的元数据
+        final String s = extractedFileMetaToJsonGetUrlPrefix(path_res, jsonObject, paramStr, fileSystem.getFileStatus(path1), jsonObject) + '/';
         final JSONArray urls = jsonObject.putArray("urls");
-        // 将所有的子文件添加到数组中
+        // 然后再将所有的子文件添加到数组中
         if (iterator != null) {
             while (iterator.hasNext()) {
-                FileStatus subPath = iterator.next();
+                final FileStatus subPath = iterator.next();
                 final JSONObject jsonObject1 = urls.addObject();
-                final Path path2 = subPath.getPath();
-                final String name = path2.getName();
-                final String fnNoParam = path_res + '/' + name, filePath = fnNoParam + "?" + paramStr;
-                jsonObject1.put("fileName", name);
-                jsonObject1.put("url", filePath);
-                jsonObject1.put("lastModified", subPath.getModificationTime());
-                jsonObject1.put("size", subPath.getLen());
-                jsonObject1.put("type", jsonObject.get("type"));
-                jsonObject1.put("isDir", subPath.isDirectory());
+                extractedFileMetaToJsonGetUrlPrefix(s, jsonObject, paramStr, subPath, jsonObject1);
             }
         }
         jsonObject.put("useSize", this.getUseSize(jsonObject, spacePath));

@@ -1658,6 +1658,12 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 
 ## 更新记录
 
+### 2025-05-19 1.5.2 版本发布
+
+- 变更版本号为 1.5.2
+- 优化 `getUrlsNoRecursion` 的返回结果，让其不仅仅可以返回子文件结构，还可以返回被操作的文件/目录其本身的元数据！
+- 优化 url 拼接方法，修复了 `getUrlsNoRecursion` 的 url 拼接错误，修复了双斜杠问题！
+
 ### 2025-04-30 1.5.1 版本发布
 
 - 变更版本号为 1.5.1

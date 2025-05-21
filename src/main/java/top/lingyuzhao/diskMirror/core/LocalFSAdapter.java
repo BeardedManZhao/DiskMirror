@@ -55,7 +55,22 @@ public final class LocalFSAdapter extends FSAdapter {
         return jsonObject;
     }
 
-    private JSONObject pathProcessorGetUrls(File path, String path_res, JSONObject jsonObject, Type type) throws IOException {
+    private static JSONObject extractedFileOrDirMeta(String path_res, Type type, File file) {
+        return extractedFileOrDirMetaToJson(path_res, type, file, new JSONObject());
+    }
+
+    private static JSONObject extractedFileOrDirMetaToJson(String path_res, Type type, File file, JSONObject jsonObject1) {
+        final String name = file.getName();
+        jsonObject1.put("fileName", name);
+        jsonObject1.put("url", path_res + name);
+        jsonObject1.put("lastModified", file.lastModified());
+        jsonObject1.put("size", file.length());
+        jsonObject1.put("type", type);
+        jsonObject1.put("isDir", file.isDirectory());
+        return jsonObject1;
+    }
+
+    private JSONObject pathProcessorGetUrls(File path, String path_res, JSONObject jsonObject, Type type) {
         // 开始进行文件获取
         final File[] files = path.listFiles();
         if (files == null) {
@@ -68,7 +83,7 @@ public final class LocalFSAdapter extends FSAdapter {
         for (File file : files) {
             final JSONObject jsonObject1 = urls.addObject();
             final String name = file.getName();
-            final String filePath = path_res + '/' + name;
+            final String filePath = path_res + name;
             jsonObject1.put("fileName", name);
             jsonObject1.put("url", filePath);
             jsonObject1.put("lastModified", file.lastModified());
@@ -77,7 +92,7 @@ public final class LocalFSAdapter extends FSAdapter {
             // 查看当前的是否是一个目录 如果是目录就继续获取到子目录
             if (file.isDirectory()) {
                 jsonObject1.put("isDir", true);
-                jsonObject1.putAll(this.pathProcessorGetUrls(file, filePath, jsonObject1.clone(), type));
+                jsonObject1.putAll(this.pathProcessorGetUrls(file, filePath + '/', jsonObject1.clone(), type));
             } else {
                 jsonObject1.put("isDir", false);
             }
@@ -95,30 +110,28 @@ public final class LocalFSAdapter extends FSAdapter {
      * @return 结果
      */
     private JSONObject pathProcessorGetUrlsNoRecursion(File path, String path_res, JSONObject jsonObject, Type type) {
+        if (!path.exists()) {
+            jsonObject.put("res", "空间 [" + path + "] 不存在!!!");
+            return jsonObject;
+        }
+        final JSONArray urls = jsonObject.putArray("urls");
+        jsonObject.put(this.resK, this.resOkValue);
+        extractedFileOrDirMetaToJson(path_res, type, path, jsonObject);
         // 开始进行文件获取
         final File[] files = path.listFiles();
         if (files == null) {
-            jsonObject.put("res", "空间 [" + path + "] 不可读!!!");
             return jsonObject;
         }
-        // 获取到协议前缀
-        final JSONArray urls = jsonObject.putArray("urls");
         // 获取到文件所在空间类型
+        path_res = path_res + path.getName() + '/';
         for (File file : files) {
-            final JSONObject jsonObject1 = urls.addObject();
-            final String name = file.getName();
-            jsonObject1.put("fileName", name);
-            jsonObject1.put("url", path_res + '/' + name);
-            jsonObject1.put("lastModified", file.lastModified());
-            jsonObject1.put("size", file.length());
-            jsonObject1.put("type", type);
-            jsonObject1.put("isDir", file.isDirectory());
+            urls.add(extractedFileOrDirMeta(path_res, type, file));
         }
         return jsonObject;
     }
 
     @Override
-    protected JSONObject pathProcessorGetUrls(String path, String path_res, JSONObject jsonObject) throws IOException {
+    protected JSONObject pathProcessorGetUrls(String path, String path_res, JSONObject jsonObject) {
         JSONObject jsonObject1 = pathProcessorGetUrls(new File(path), path_res, jsonObject, jsonObject.getObject("type", Type.class));
         jsonObject1.put(this.resK, this.resOkValue);
         return jsonObject1;
@@ -126,9 +139,7 @@ public final class LocalFSAdapter extends FSAdapter {
 
     @Override
     protected JSONObject pathProcessorGetUrls(String path, String path_res, String nowPath, JSONObject inJson) {
-        JSONObject jsonObject = pathProcessorGetUrlsNoRecursion(new File(nowPath), path_res, inJson, inJson.getObject("type", Type.class));
-        jsonObject.put(this.resK, this.resOkValue);
-        return jsonObject;
+        return pathProcessorGetUrlsNoRecursion(new File(nowPath), path_res, inJson, inJson.getObject("type", Type.class));
     }
 
     /**

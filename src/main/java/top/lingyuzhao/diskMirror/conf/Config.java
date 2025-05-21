@@ -174,7 +174,7 @@ public class Config extends JSONObject {
                     s2 = rootDir + s3;
             // 生成参数字符串
             if (stringBuilder.length() > 0) {
-                final String s = "?" + stringBuilder;
+                final String s = '?' + stringBuilder.toString();
                 return new String[]{
                         s2 + s,
                         s1 + s,
