@@ -90,6 +90,11 @@ url 等操作，这会大大减少您开发IO代码的时间。
         <artifactId>jedis</artifactId>
         <version>4.0.1</version>
     </dependency>
+    <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-pool2</artifactId>
+        <version>2.11.1</version> <!-- 使用最新稳定版本 -->
+    </dependency>
     <!-- 从 disk Mirror 1.1.0 版本开始 请确保 zhao-utils 的版本 >= 1.0.20240121 -->
     <!-- 从 disk Mirror 1.3.0 版本开始 请确保 zhao-utils 的版本 >= 1.0.20241026 -->
     <!-- 从 disk Mirror 1.5.1 版本开始 请确保 zhao-utils 的版本 >= 1.2.20250430 -->
@@ -1657,6 +1662,11 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 ```
 
 ## 更新记录
+
+### 2025-05-22 1.5.3 版本发布
+
+- 变更版本号为 1.5.3
+- 优化 jedis 管理配置的时候，使用连接池！
 
 ### 2025-05-19 1.5.2 版本发布
 

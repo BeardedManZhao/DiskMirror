@@ -187,7 +187,7 @@ public enum DiskMirror {
      * <p>
      * The current version of the disk mirror library
      */
-    public final static String VERSION = "1.5.2";
+    public final static String VERSION = "1.5.3";
 
     /**
      * 获取到当前 盘镜 的版本 以及 适配器的名称

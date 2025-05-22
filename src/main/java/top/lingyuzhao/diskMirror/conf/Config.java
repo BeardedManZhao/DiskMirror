@@ -79,6 +79,21 @@ public class Config extends JSONObject {
      */
     public final static String REDIS_PASSWORD = "redis.password";
 
+    /**
+     * redis 连接池 最小空闲连接数
+     */
+    public final static String REDIS_POOL_MIN_IDLE = "redis.pool.min.idle";
+
+    /**
+     * redis 配置项 最大空闲连接数
+     */
+    public final static String REDIS_POOL_MAX_IDLE = "redis.pool.max.idle";
+
+    /**
+     * redis 连接池 最大连接数
+     */
+    public final static String REDIS_POOL_MAX_TOTAL = "redis.pool.max.total";
+
     private final SpaceConfig spaceConfig;
 
     /**
