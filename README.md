@@ -75,9 +75,9 @@ url 等操作，这会大大减少您开发IO代码的时间。
 
 <dependencies>
     <dependency>
-        <groupId>io.github.BeardedManZhao</groupId>
+        <groupId>io.github.beardedmanzhao</groupId>
         <artifactId>diskMirror</artifactId>
-        <version>1.5.1</version>
+        <version>1.5.4</version>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
@@ -98,8 +98,9 @@ url 等操作，这会大大减少您开发IO代码的时间。
     <!-- 从 disk Mirror 1.1.0 版本开始 请确保 zhao-utils 的版本 >= 1.0.20240121 -->
     <!-- 从 disk Mirror 1.3.0 版本开始 请确保 zhao-utils 的版本 >= 1.0.20241026 -->
     <!-- 从 disk Mirror 1.5.1 版本开始 请确保 zhao-utils 的版本 >= 1.2.20250430 -->
+    <!-- 从 disk Mirror 1.5.4 版本开始 请确保 zhao-utils 的groupID 全小写 -->
     <dependency>
-        <groupId>io.github.BeardedManZhao</groupId>
+        <groupId>io.github.beardedmanzhao</groupId>
         <artifactId>zhao-utils</artifactId>
         <version>1.2.20250430</version>
         <!--        <scope>provided</scope>-->
@@ -1662,6 +1663,44 @@ top.lingyuzhao.diskMirror.core.TcpClientAdapter@5b275dab:V1.2.1
 ```
 
 ## 更新记录
+
+### 2025-08-21 1.5.4 版本发布
+
+- 更新版本号 1.5.4
+- `DiskMirrorHttpAdapter` 支持了分片下载
+- 优化了依赖中 `zhao-utils` 的 groupID
+
+```java
+import top.lingyuzhao.diskMirror.conf.DiskMirrorConfig;
+import top.lingyuzhao.diskMirror.core.Adapter;
+import top.lingyuzhao.diskMirror.core.DiskMirror;
+import top.lingyuzhao.diskMirror.core.DiskMirrorRequest;
+import top.lingyuzhao.diskMirror.core.Type;
+import top.lingyuzhao.utils.IOUtils;
+
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
+/**
+ * @author zhao
+ */
+@DiskMirrorConfig(
+        fsDefaultFS = "https://diskmirror.lingyuzhao.top/DiskMirrorBackEnd"
+)
+public final class MAIN2 {
+    public static void main(String[] args) throws IOException {
+        Adapter adapter = DiskMirror.DiskMirrorHttpAdapter.getAdapter(MAIN2.class);
+        try (
+                // 下载 文件 并且设定 下载的区间 单位 Byte
+                InputStream inputStream = adapter.downLoad(DiskMirrorRequest.download(-999999999, Type.Binary, "/share/6af46c0b626935d9af41f90c5e5825aefb0ddc980e11013f308ac71201ea8dac.mp4"), "0", "4000");
+                FileOutputStream fileOutputStream = new FileOutputStream("D:/6af46c0b626935d9af41f90c5e5825aefb0ddc980e11013f308ac71201ea8dac.mp4")
+        ) {
+            IOUtils.copy(inputStream, fileOutputStream, false);
+        }
+    }
+}
+```
 
 ### 2025-05-22 1.5.3 版本发布
 

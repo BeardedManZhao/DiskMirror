@@ -20,10 +20,7 @@ import top.lingyuzhao.utils.transformation.Transformation;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLEncoder;
+import java.net.*;
 import java.nio.charset.Charset;
 
 /**
@@ -70,7 +67,6 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
             this.httpClient = HttpClients.createDefault();
         }
         final String url = config.getString(Config.FS_DEFAULT_FS) + '/' + controller + '/';
-        System.out.println(url);
         this.httpPost = new HttpPost(url);
         try {
             upload = new URI(url + "add");
@@ -398,6 +394,12 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
         return requestGetStream(new URL(this.downLoadUrl(jsonObject)));
     }
 
+    @Override
+    public InputStream downLoad(JSONObject jsonObject, String start, String end) throws IOException {
+        // 开远程的数据流
+        return requestGetStreamWithRange(new URL(this.downLoadUrl(jsonObject)), start, end);
+    }
+
     /**
      * 获取用户使用空间大小
      *
@@ -415,6 +417,39 @@ public class DiskMirrorHttpAdapter extends FSAdapter {
             return request.getLongValue("useSize");
         }
         throw new IOException(string);
+    }
+
+    /**
+     * 带 Range 请求头的请求发送格式 并以数据流做返回值
+     *
+     * @param urlPath 数据对应的路径 的 url 对象
+     * @param start   开始字节位置（包含）
+     * @param end     结束字节位置（包含）
+     * @return 从远程服务器获取的响应处理结果
+     * @throws IOException 请求发送过程出现错误则返回此异常对象
+     */
+    protected InputStream requestGetStreamWithRange(URL urlPath, String start, String end) throws IOException {
+        try {
+            HttpURLConnection connection = (HttpURLConnection) urlPath.openConnection();
+
+            // 设置 Range 请求头，格式为 bytes=start-end
+            // 这个格式与浏览器使用的格式完全一致，服务器能够正确识别
+            connection.setRequestProperty("Range", "bytes=" + start + "-" + end);
+
+            // 设置请求方法
+            connection.setRequestMethod("GET");
+
+            // 检查响应码
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_PARTIAL || responseCode == HttpURLConnection.HTTP_OK) {
+                return connection.getInputStream();
+            } else {
+                throw new IOException("Server returned HTTP response code: " + responseCode + " for URL: " + urlPath);
+            }
+
+        } catch (IOException e) {
+            throw new IOException("error:" + urlPath, e);
+        }
     }
 
     /**

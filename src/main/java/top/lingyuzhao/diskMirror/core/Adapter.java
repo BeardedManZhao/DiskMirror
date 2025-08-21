@@ -332,6 +332,19 @@ public interface Adapter extends Closeable {
     JSONObject transferDepositStatus(JSONObject jsonObject);
 
     /**
+     * 尝试使用带范围下载
+     *
+     * @param jsonObject 请求对象
+     * @param start      范围下载的开始位置
+     * @param end        范围下载的结束位置
+     * @return 输入流
+     * @throws IOException 操作异常
+     */
+    default InputStream downLoad(JSONObject jsonObject, String start, String end) throws IOException {
+        return downLoad(jsonObject);
+    }
+
+    /**
      * 获取用户使用空间大小
      *
      * @param jsonObject {
